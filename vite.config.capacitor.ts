@@ -21,6 +21,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      'node:async_hooks': path.resolve(__dirname, './src/lib/async-hooks-polyfill.ts'),
+      'async_hooks': path.resolve(__dirname, './src/lib/async-hooks-polyfill.ts'),
     },
     dedupe: ['react', 'react-dom'],
   },

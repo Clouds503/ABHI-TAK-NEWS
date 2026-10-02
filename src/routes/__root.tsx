@@ -108,7 +108,7 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function AuthGate({ children }: { children: ReactNode }) {
   const { user, loading, needsOnboarding } = useAuth();
-  const navigate = useRouter().navigate;
+  const router = useRouter();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const onAuthPage = path.startsWith("/auth");
   const onOnboarding = path.startsWith("/onboarding");
@@ -116,11 +116,11 @@ function AuthGate({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (loading) return;
     if (!user && !onAuthPage) {
-      navigate({ to: "/auth", search: { redirect: path }, replace: true });
+      router.navigate({ to: "/auth", search: { redirect: path }, replace: true });
     } else if (user && needsOnboarding && !onOnboarding) {
-      navigate({ to: "/onboarding", replace: true });
+      router.navigate({ to: "/onboarding", replace: true });
     }
-  }, [loading, user, needsOnboarding, onAuthPage, onOnboarding, path, navigate]);
+  }, [loading, user, needsOnboarding, onAuthPage, onOnboarding, path, router]);
 
   const blocked = !onAuthPage && (loading || !user || (needsOnboarding && !onOnboarding));
   if (blocked) {
