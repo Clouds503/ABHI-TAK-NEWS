@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Shield } from "lucide-react";
 import { Logo } from "@/components/AppShell";
 import { useI18n } from "@/lib/i18n";
 
@@ -15,7 +16,7 @@ export const Route = createFileRoute("/about")({
 });
 
 function About() {
-  const { lang } = useI18n();
+  const { lang, t } = useI18n();
   return (
     <div className="px-4 py-8">
       <Logo className="h-20 w-20" />
@@ -25,6 +26,15 @@ function About() {
           ? "Abhi Tak is a district-focused digital news network covering every town and village of District Bijnor — from Nagina and Dhampur to Najibabad, Chandpur and beyond. Through Jan Ki Awaaz, residents can raise local issues and follow them until they are resolved."
           : "अभी तक जनपद बिजनौर के हर कस्बे और गांव की ख़बरें आप तक पहुंचाने वाला डिजिटल समाचार नेटवर्क है — नगीना, धामपुर से लेकर नजीबाबाद, चांदपुर तक। जन की आवाज़ के ज़रिए नागरिक अपनी स्थानीय समस्याएं उठा सकते हैं और उनके समाधान तक नज़र रख सकते हैं।"}
       </p>
+      <div className="mt-8 border-t pt-6">
+        <Link
+          to="/privacy"
+          className="inline-flex items-center gap-2 rounded-lg border bg-card px-4 py-2.5 text-sm font-medium hover:bg-muted"
+        >
+          <Shield className="h-4 w-4 text-primary" />
+          {t("privacy")}
+        </Link>
+      </div>
     </div>
   );
 }

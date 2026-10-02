@@ -17,6 +17,7 @@ import { Route as EpaperRouteImport } from './routes/epaper'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as LiveRouteImport } from './routes/live'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReelsRouteImport } from './routes/reels'
 import { Route as VideosRouteImport } from './routes/videos'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
@@ -73,6 +74,11 @@ const LiveRoute = LiveRouteImport.update({
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReelsRoute = ReelsRouteImport.update({
@@ -177,6 +183,7 @@ export interface FileRoutesByFullPath {
   '/events': typeof EventsRoute
   '/live': typeof LiveRoute
   '/onboarding': typeof OnboardingRoute
+  '/privacy': typeof PrivacyRoute
   '/reels': typeof ReelsRoute
   '/videos': typeof VideosRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
@@ -204,6 +211,7 @@ export interface FileRoutesByTo {
   '/events': typeof EventsRoute
   '/live': typeof LiveRoute
   '/onboarding': typeof OnboardingRoute
+  '/privacy': typeof PrivacyRoute
   '/reels': typeof ReelsRoute
   '/videos': typeof VideosRoute
   '/my-issues': typeof AuthenticatedMyIssuesRoute
@@ -232,6 +240,7 @@ export interface FileRoutesById {
   '/events': typeof EventsRoute
   '/live': typeof LiveRoute
   '/onboarding': typeof OnboardingRoute
+  '/privacy': typeof PrivacyRoute
   '/reels': typeof ReelsRoute
   '/videos': typeof VideosRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
@@ -261,6 +270,7 @@ export interface FileRouteTypes {
     | '/events'
     | '/live'
     | '/onboarding'
+    | '/privacy'
     | '/reels'
     | '/videos'
     | '/admin'
@@ -288,6 +298,7 @@ export interface FileRouteTypes {
     | '/events'
     | '/live'
     | '/onboarding'
+    | '/privacy'
     | '/reels'
     | '/videos'
     | '/my-issues'
@@ -315,6 +326,7 @@ export interface FileRouteTypes {
     | '/events'
     | '/live'
     | '/onboarding'
+    | '/privacy'
     | '/reels'
     | '/videos'
     | '/_authenticated/admin'
@@ -344,6 +356,7 @@ export interface RootRouteChildren {
   EventsRoute: typeof EventsRoute
   LiveRoute: typeof LiveRoute
   OnboardingRoute: typeof OnboardingRoute
+  PrivacyRoute: typeof PrivacyRoute
   ReelsRoute: typeof ReelsRoute
   VideosRoute: typeof VideosRoute
   JanKiAwaazIdRoute: typeof JanKiAwaazIdRoute
@@ -409,6 +422,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reels': {
@@ -589,6 +609,7 @@ const rootRouteChildren: RootRouteChildren = {
   EventsRoute: EventsRoute,
   LiveRoute: LiveRoute,
   OnboardingRoute: OnboardingRoute,
+  PrivacyRoute: PrivacyRoute,
   ReelsRoute: ReelsRoute,
   VideosRoute: VideosRoute,
   JanKiAwaazIdRoute: JanKiAwaazIdRoute,

@@ -230,6 +230,7 @@ function SideMenu({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boo
           </button>
           <button onClick={toggleDark} className={cn(row, "w-full")}><Moon className="h-4 w-4 dark:hidden" /><Sun className="hidden h-4 w-4 dark:block" />{t("appearance")}</button>
           <Link to="/about" onClick={close} className={row}><Info className="h-4 w-4" />{t("about")}</Link>
+          <Link to="/privacy" onClick={close} className={row}><Shield className="h-4 w-4" />{t("privacy")}</Link>
           {user ? (
             <button onClick={async () => { await supabase.auth.signOut(); close(); }} className={cn(row, "w-full")}><LogOut className="h-4 w-4" />{t("signOut")}</button>
           ) : (
