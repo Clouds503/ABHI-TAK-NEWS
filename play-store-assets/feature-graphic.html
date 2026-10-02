@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8">
+  <title>Google Play Feature Graphic</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Mukta:wght@500;600;700;800&family=Noto+Serif+Devanagari:wght@700;800&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 1024px;
+      height: 500px;
+      overflow: hidden;
+      font-family: 'Mukta', sans-serif;
+      background: #0d0103;
+      color: #ffffff;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      position: relative;
+      width: 1024px;
+      height: 500px;
+      display: flex;
+      align-items: center;
+      background: radial-gradient(circle at 22% 50%, #b80000 0%, #4a0002 45%, #150002 85%, #0a0001 100%);
+      padding: 0 45px;
+      overflow: hidden;
+    }
+
+    /* Ambient glow & tech lines */
+    .glow-burst {
+      position: absolute;
+      left: 50px;
+      top: 50px;
+      width: 380px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(255, 40, 40, 0.4) 0%, rgba(212, 0, 0, 0.15) 50%, transparent 75%);
+      filter: blur(40px);
+      pointer-events: none;
+    }
+
+    .grid-lines {
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 550px;
+      height: 500px;
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+      mask-image: linear-gradient(to right, transparent, black 35%);
+      -webkit-mask-image: linear-gradient(to right, transparent, black 35%);
+    }
+
+    /* Decorative top/bottom gold-red broadcast bars */
+    .top-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, #D40000 0%, #FFC837 50%, #D40000 100%);
+      box-shadow: 0 0 10px rgba(255, 200, 50, 0.5);
+    }
+    .bottom-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, #D40000 0%, #FFC837 50%, #D40000 100%);
+      box-shadow: 0 0 10px rgba(255, 200, 50, 0.5);
+    }
+
+    /* Left Logo section */
+    .logo-box {
+      position: relative;
+      width: 350px;
+      height: 350px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+    }
+
+    .logo-img {
+      width: 330px;
+      height: 330px;
+      object-fit: contain;
+      border-radius: 28px;
+      box-shadow: 
+        0 20px 45px rgba(0, 0, 0, 0.8),
+        0 0 50px rgba(212, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 215, 0, 0.25);
+    }
+
+    /* Right Details section */
+    .content-box {
+      margin-left: 45px;
+      flex: 1;
+      z-index: 2;
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(212, 0, 0, 0.35);
+      border: 1px solid rgba(255, 50, 50, 0.6);
+      padding: 4px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #ffb3b3;
+      margin-bottom: 8px;
+    }
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ff2222;
+      box-shadow: 0 0 8px #ff0000;
+      animation: pulse 1.5s infinite;
+    }
+
+    .title-hi {
+      font-family: 'Noto Serif Devanagari', serif;
+      font-size: 48px;
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+      color: #ffffff;
+      text-shadow: 0 3px 12px rgba(0,0,0,0.8);
+    }
+
+    .title-en {
+      font-family: 'Outfit', sans-serif;
+      font-size: 21px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      color: #FFC837;
+      text-transform: uppercase;
+      margin-top: 3px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.7);
+    }
+
+    .tagline {
+      font-size: 19px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.9);
+      margin-top: 6px;
+      border-left: 3.5px solid #D40000;
+      padding-left: 10px;
+    }
+
+    /* Features 2x2 grid */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px 14px;
+      margin-top: 18px;
+    }
+
+    .feature-card {
+      background: rgba(30, 6, 10, 0.65);
+      border: 1px solid rgba(212, 0, 0, 0.45);
+      backdrop-filter: blur(8px);
+      border-radius: 10px;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+
+    .feature-icon-svg {
+      width: 22px;
+      height: 22px;
+      fill: none;
+      stroke: #FFC837;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex-shrink: 0;
+    }
+
+    .feature-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .feature-title {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.2;
+    }
+
+    .feature-sub {
+      font-size: 11.5px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.65);
+      line-height: 1.1;
+    }
+
+    /* Towns footer */
+    .towns-strip {
+      margin-top: 16px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #FFC837;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      opacity: 0.95;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="top-bar"></div>
+    <div class="bottom-bar"></div>
+    <div class="glow-burst"></div>
+    <div class="grid-lines"></div>
+
+    <!-- Left Logo -->
+    <div class="logo-box">
+      <img src="../public/pwa-512.png" alt="Abhi Tak News" class="logo-img">
+    </div>
+
+    <!-- Right Content -->
+    <div class="content-box">
+      <div class="live-badge">
+        <span class="live-dot"></span>
+        जनपद बिजनौर · 24x7 Digital Network
+      </div>
+      <h1 class="title-hi">अभी तक न्यूज़</h1>
+      <div class="title-en">ABHI TAK NEWS • DISTRICT BIJNOR</div>
+      <div class="tagline">आपकी समस्या, आपकी आवाज़ — ज़िले का विश्वसनीय नेटवर्क</div>
+
+      <!-- Features -->
+      <div class="features-grid">
+        <div class="feature-card">
+          <svg class="feature-icon-svg" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <div class="feature-text">
+            <span class="feature-title">लाइव टीवी व वीडियो</span>
+            <span class="feature-sub">24x7 Live TV & Videos</span>
+          </div>
+        </div>
+        <div class="feature-card">
+          <svg class="feature-icon-svg" viewBox="0 0 24 24"><path d="m3 11 18-5v12L3 14v-3z"></path><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"></path></svg>
+          <div class="feature-text">
+            <span class="feature-title">जन की आवाज़ (JKA)</span>
+            <span class="feature-sub">Citizen Grievance Voice</span>
+          </div>
+        </div>
+        <div class="feature-card">
+          <svg class="feature-icon-svg" viewBox="0 0 24 24"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"></path><path d="M18 14h-8"></path><path d="M15 18h-5"></path><path d="M10 6h8v4h-8V6Z"></path></svg>
+          <div class="feature-text">
+            <span class="feature-title">दैनिक ई-पेपर व रील्स</span>
+            <span class="feature-sub">Daily E-Paper & Shorts</span>
+          </div>
+        </div>
+        <div class="feature-card">
+          <svg class="feature-icon-svg" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+          <div class="feature-text">
+            <span class="feature-title">ताज़ा ब्रेकिंग न्यूज़</span>
+            <span class="feature-sub">Instant Breaking Alerts</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Towns Strip -->
+      <div class="towns-strip">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFC837" stroke-width="2.5"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+        <span>बिजनौर • नगीना • धामपुर • नजीबाबाद • चांदपुर • कीरतपुर • नूरपुर • स्योहारा</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
