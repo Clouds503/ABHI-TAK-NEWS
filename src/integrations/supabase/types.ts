@@ -14,6 +14,35 @@ export type Database = {
   }
   public: {
     Tables: {
+      article_likes: {
+        Row: {
+          article_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_likes_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_activity_logs: {
         Row: {
           action: string
@@ -116,6 +145,7 @@ export type Database = {
           body_en: string | null
           body_hi: string | null
           category_id: string | null
+          city_id: string | null
           cover_url: string | null
           created_at: string
           id: string
@@ -131,6 +161,7 @@ export type Database = {
           town_id: string | null
           updated_at: string
           views: number
+          village_id: string | null
         }
         Insert: {
           author_id?: string | null
@@ -138,6 +169,7 @@ export type Database = {
           body_en?: string | null
           body_hi?: string | null
           category_id?: string | null
+          city_id?: string | null
           cover_url?: string | null
           created_at?: string
           id?: string
@@ -153,6 +185,7 @@ export type Database = {
           town_id?: string | null
           updated_at?: string
           views?: number
+          village_id?: string | null
         }
         Update: {
           author_id?: string | null
@@ -160,6 +193,7 @@ export type Database = {
           body_en?: string | null
           body_hi?: string | null
           category_id?: string | null
+          city_id?: string | null
           cover_url?: string | null
           created_at?: string
           id?: string
@@ -175,6 +209,7 @@ export type Database = {
           town_id?: string | null
           updated_at?: string
           views?: number
+          village_id?: string | null
         }
         Relationships: [
           {
@@ -185,14 +220,29 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "articles_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "articles_town_id_fkey"
             columns: ["town_id"]
             isOneToOne: false
             referencedRelation: "towns"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "articles_village_id_fkey"
+            columns: ["village_id"]
+            isOneToOne: false
+            referencedRelation: "villages"
+            referencedColumns: ["id"]
+          },
         ]
       }
+
       bookmarks: {
         Row: {
           article_id: string
@@ -221,6 +271,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      cities: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name_en: string
+          name_hi: string
+          slug: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name_en: string
+          name_hi: string
+          slug: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name_en?: string
+          name_hi?: string
+          slug?: string
+          sort_order?: number
+        }
+        Relationships: []
       }
       categories: {
         Row: {

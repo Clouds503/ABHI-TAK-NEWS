@@ -31,10 +31,13 @@ import { Route as TownSlugRouteImport } from './routes/town.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminAdsRouteImport } from './routes/_authenticated/admin.ads'
 import { Route as AuthenticatedAdminArticlesRouteImport } from './routes/_authenticated/admin.articles'
+import { Route as AuthenticatedAdminCitiesRouteImport } from './routes/_authenticated/admin.cities'
 import { Route as AuthenticatedAdminEventsRouteImport } from './routes/_authenticated/admin.events'
 import { Route as AuthenticatedAdminModerationRouteImport } from './routes/_authenticated/admin.moderation'
 import { Route as AuthenticatedAdminReelsRouteImport } from './routes/_authenticated/admin.reels'
+import { Route as AuthenticatedAdminTownsRouteImport } from './routes/_authenticated/admin.towns'
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
+import { Route as AuthenticatedAdminVillagesRouteImport } from './routes/_authenticated/admin.villages'
 import { Route as ApiPublicCampaignEventRouteImport } from './routes/api/public/campaign-event'
 
 const IndexRoute = IndexRouteImport.update({
@@ -147,6 +150,12 @@ const AuthenticatedAdminArticlesRoute =
     path: '/articles',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminCitiesRoute =
+  AuthenticatedAdminCitiesRouteImport.update({
+    id: '/cities',
+    path: '/cities',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminEventsRoute =
   AuthenticatedAdminEventsRouteImport.update({
     id: '/events',
@@ -164,11 +173,22 @@ const AuthenticatedAdminReelsRoute = AuthenticatedAdminReelsRouteImport.update({
   path: '/reels',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminTownsRoute = AuthenticatedAdminTownsRouteImport.update({
+  id: '/towns',
+  path: '/towns',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersRouteImport.update({
   id: '/users',
   path: '/users',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminVillagesRoute =
+  AuthenticatedAdminVillagesRouteImport.update({
+    id: '/villages',
+    path: '/villages',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const ApiPublicCampaignEventRoute = ApiPublicCampaignEventRouteImport.update({
   id: '/api/public/campaign-event',
   path: '/api/public/campaign-event',
@@ -196,10 +216,13 @@ export interface FileRoutesByFullPath {
   '/jan-ki-awaaz/': typeof JanKiAwaazIndexRoute
   '/admin/ads': typeof AuthenticatedAdminAdsRoute
   '/admin/articles': typeof AuthenticatedAdminArticlesRoute
+  '/admin/cities': typeof AuthenticatedAdminCitiesRoute
   '/admin/events': typeof AuthenticatedAdminEventsRoute
   '/admin/moderation': typeof AuthenticatedAdminModerationRoute
   '/admin/reels': typeof AuthenticatedAdminReelsRoute
+  '/admin/towns': typeof AuthenticatedAdminTownsRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/admin/villages': typeof AuthenticatedAdminVillagesRoute
   '/api/public/campaign-event': typeof ApiPublicCampaignEventRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
 }
@@ -223,10 +246,13 @@ export interface FileRoutesByTo {
   '/jan-ki-awaaz': typeof JanKiAwaazIndexRoute
   '/admin/ads': typeof AuthenticatedAdminAdsRoute
   '/admin/articles': typeof AuthenticatedAdminArticlesRoute
+  '/admin/cities': typeof AuthenticatedAdminCitiesRoute
   '/admin/events': typeof AuthenticatedAdminEventsRoute
   '/admin/moderation': typeof AuthenticatedAdminModerationRoute
   '/admin/reels': typeof AuthenticatedAdminReelsRoute
+  '/admin/towns': typeof AuthenticatedAdminTownsRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/admin/villages': typeof AuthenticatedAdminVillagesRoute
   '/api/public/campaign-event': typeof ApiPublicCampaignEventRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
 }
@@ -253,10 +279,13 @@ export interface FileRoutesById {
   '/jan-ki-awaaz/': typeof JanKiAwaazIndexRoute
   '/_authenticated/admin/ads': typeof AuthenticatedAdminAdsRoute
   '/_authenticated/admin/articles': typeof AuthenticatedAdminArticlesRoute
+  '/_authenticated/admin/cities': typeof AuthenticatedAdminCitiesRoute
   '/_authenticated/admin/events': typeof AuthenticatedAdminEventsRoute
   '/_authenticated/admin/moderation': typeof AuthenticatedAdminModerationRoute
   '/_authenticated/admin/reels': typeof AuthenticatedAdminReelsRoute
+  '/_authenticated/admin/towns': typeof AuthenticatedAdminTownsRoute
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
+  '/_authenticated/admin/villages': typeof AuthenticatedAdminVillagesRoute
   '/api/public/campaign-event': typeof ApiPublicCampaignEventRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
@@ -283,10 +312,13 @@ export interface FileRouteTypes {
     | '/jan-ki-awaaz/'
     | '/admin/ads'
     | '/admin/articles'
+    | '/admin/cities'
     | '/admin/events'
     | '/admin/moderation'
     | '/admin/reels'
+    | '/admin/towns'
     | '/admin/users'
+    | '/admin/villages'
     | '/api/public/campaign-event'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
@@ -310,10 +342,13 @@ export interface FileRouteTypes {
     | '/jan-ki-awaaz'
     | '/admin/ads'
     | '/admin/articles'
+    | '/admin/cities'
     | '/admin/events'
     | '/admin/moderation'
     | '/admin/reels'
+    | '/admin/towns'
     | '/admin/users'
+    | '/admin/villages'
     | '/api/public/campaign-event'
     | '/admin'
   id:
@@ -339,10 +374,13 @@ export interface FileRouteTypes {
     | '/jan-ki-awaaz/'
     | '/_authenticated/admin/ads'
     | '/_authenticated/admin/articles'
+    | '/_authenticated/admin/cities'
     | '/_authenticated/admin/events'
     | '/_authenticated/admin/moderation'
     | '/_authenticated/admin/reels'
+    | '/_authenticated/admin/towns'
     | '/_authenticated/admin/users'
+    | '/_authenticated/admin/villages'
     | '/api/public/campaign-event'
     | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
@@ -522,6 +560,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminArticlesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/cities': {
+      id: '/_authenticated/admin/cities'
+      path: '/cities'
+      fullPath: '/admin/cities'
+      preLoaderRoute: typeof AuthenticatedAdminCitiesRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/events': {
       id: '/_authenticated/admin/events'
       path: '/events'
@@ -543,11 +588,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminReelsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/towns': {
+      id: '/_authenticated/admin/towns'
+      path: '/towns'
+      fullPath: '/admin/towns'
+      preLoaderRoute: typeof AuthenticatedAdminTownsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/users': {
       id: '/_authenticated/admin/users'
       path: '/users'
       fullPath: '/admin/users'
       preLoaderRoute: typeof AuthenticatedAdminUsersRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/villages': {
+      id: '/_authenticated/admin/villages'
+      path: '/villages'
+      fullPath: '/admin/villages'
+      preLoaderRoute: typeof AuthenticatedAdminVillagesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/api/public/campaign-event': {
@@ -563,20 +622,26 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAdsRoute: typeof AuthenticatedAdminAdsRoute
   AuthenticatedAdminArticlesRoute: typeof AuthenticatedAdminArticlesRoute
+  AuthenticatedAdminCitiesRoute: typeof AuthenticatedAdminCitiesRoute
   AuthenticatedAdminEventsRoute: typeof AuthenticatedAdminEventsRoute
   AuthenticatedAdminModerationRoute: typeof AuthenticatedAdminModerationRoute
   AuthenticatedAdminReelsRoute: typeof AuthenticatedAdminReelsRoute
+  AuthenticatedAdminTownsRoute: typeof AuthenticatedAdminTownsRoute
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
+  AuthenticatedAdminVillagesRoute: typeof AuthenticatedAdminVillagesRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAdsRoute: AuthenticatedAdminAdsRoute,
   AuthenticatedAdminArticlesRoute: AuthenticatedAdminArticlesRoute,
+  AuthenticatedAdminCitiesRoute: AuthenticatedAdminCitiesRoute,
   AuthenticatedAdminEventsRoute: AuthenticatedAdminEventsRoute,
   AuthenticatedAdminModerationRoute: AuthenticatedAdminModerationRoute,
   AuthenticatedAdminReelsRoute: AuthenticatedAdminReelsRoute,
+  AuthenticatedAdminTownsRoute: AuthenticatedAdminTownsRoute,
   AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
+  AuthenticatedAdminVillagesRoute: AuthenticatedAdminVillagesRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
@@ -621,3 +686,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

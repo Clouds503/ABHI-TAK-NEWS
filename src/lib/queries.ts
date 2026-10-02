@@ -14,6 +14,16 @@ export const townsQuery = queryOptions({
   },
 });
 
+export const citiesQuery = queryOptions({
+  queryKey: ["cities"],
+  staleTime: 30 * 60_000,
+  queryFn: async () => {
+    const { data, error } = await supabase.from("cities").select("*").eq("is_active", true).order("sort_order");
+    if (error) throw error;
+    return data;
+  },
+});
+
 export const categoriesQuery = queryOptions({
   queryKey: ["categories"],
   staleTime: 30 * 60_000,
@@ -24,7 +34,20 @@ export const categoriesQuery = queryOptions({
   },
 });
 
-export const articlesQuery = (opts: { town?: string | undefined; category?: string | undefined; limit?: number } = {}) =>
+export const villagesQuery = (townId?: string) =>
+  queryOptions({
+    queryKey: ["villages", townId],
+    staleTime: 30 * 60_000,
+    queryFn: async () => {
+      let q = supabase.from("villages").select("*").eq("is_active", true).order("name_en");
+      if (townId) q = q.eq("town_id", townId);
+      const { data, error } = await q;
+      if (error) throw error;
+      return data;
+    },
+  });
+
+export const articlesQuery = (opts: { town?: string | undefined; city?: string | undefined; village?: string | undefined; category?: string | undefined; limit?: number } = {}) =>
   queryOptions({
     queryKey: ["articles", opts],
     queryFn: async () => {
@@ -36,12 +59,15 @@ export const articlesQuery = (opts: { town?: string | undefined; category?: stri
         .limit(opts.limit ?? 20);
       if (opts.town) q = q.eq("town.slug", opts.town);
       if (opts.category) q = q.eq("category.slug", opts.category);
+      if (opts.city) q = q.eq("city_id", opts.city);
+      if (opts.village) q = q.eq("village_id", opts.village);
       const { data, error } = await q;
       if (error) throw error;
       return data as unknown as ArticleCard[];
     },
     staleTime: 2 * 60_000,
   });
+
 
 export type ArticleCard = {
   id: string;

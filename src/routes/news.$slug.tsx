@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { Bookmark, Share2, ArrowLeft } from "lucide-react";
+import { Bookmark, Share2, ArrowLeft, Heart } from "lucide-react";
 import { toast } from "sonner";
 import { articleQuery, articlesQuery } from "@/lib/queries";
 import { useI18n } from "@/lib/i18n";
@@ -39,10 +39,41 @@ function ArticlePage() {
   const qc = useQueryClient();
   const { data: a } = useSuspenseQuery(articleQuery(slug));
   const { data: related } = useQuery({ ...articlesQuery({ category: a?.category?.slug, limit: 5 }), enabled: !!a?.category });
+
+  // Bookmark state
   const { data: saved } = useQuery({
     queryKey: ["bookmark", a?.id, user?.id],
     enabled: !!user && !!a,
     queryFn: async () => (await supabase.from("bookmarks").select("id").eq("article_id", a!.id).maybeSingle()).data,
+  });
+
+  // Like count — public, shown to all visitors
+  const { data: likeCount } = useQuery({
+    queryKey: ["likeCount", a?.id],
+    enabled: !!a,
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("article_likes")
+        .select("id", { count: "exact", head: true })
+        .eq("article_id", a!.id);
+      return count ?? 0;
+    },
+    staleTime: 30_000,
+  });
+
+  // Whether current user has already liked — auth-gated
+  const { data: liked } = useQuery({
+    queryKey: ["liked", a?.id, user?.id],
+    enabled: !!user && !!a,
+    queryFn: async () =>
+      (
+        await supabase
+          .from("article_likes")
+          .select("id")
+          .eq("article_id", a!.id)
+          .eq("user_id", user!.id)
+          .maybeSingle()
+      ).data,
   });
 
   if (!a) return <Empty text={t("noContent")} />;
@@ -52,23 +83,79 @@ function ArticlePage() {
     if (navigator.share) await navigator.share({ title: pick(a.title_hi, a.title_en), url }).catch(() => {});
     else { await navigator.clipboard.writeText(url); toast.success("Link copied"); }
   };
+
   const toggleSave = async () => {
     if (!user) { toast(t("signIn"), { description: "Sign in to save stories" }); return; }
     if (saved) await supabase.from("bookmarks").delete().eq("id", saved.id);
     else await supabase.from("bookmarks").insert({ article_id: a.id, user_id: user.id });
     qc.invalidateQueries({ queryKey: ["bookmark"] });
   };
+
+  const toggleLike = async () => {
+    if (!user) { toast(t("signIn"), { description: "Sign in to like stories" }); return; }
+    if (liked) {
+      await supabase.from("article_likes").delete().eq("id", liked.id);
+    } else {
+      await supabase.from("article_likes").insert({ article_id: a.id, user_id: user.id });
+    }
+    qc.invalidateQueries({ queryKey: ["liked"] });
+    qc.invalidateQueries({ queryKey: ["likeCount"] });
+  };
+
   const body = pick(a.body_hi, a.body_en);
 
   return (
     <article>
       <div className="flex items-center justify-between px-4 py-3">
         <Button asChild variant="outline" size="icon" className="h-11 w-11 rounded-full" aria-label="Back"><Link to="/"><ArrowLeft className="h-5 w-5" /></Link></Button>
+
+        {/* Action bar: Like + Bookmark + Share */}
         <div className="flex rounded-full border bg-card p-1 shadow-sm">
-          <Button onClick={toggleSave} variant="ghost" size="icon" className={cn("h-9 w-9 rounded-full", saved && "text-primary")} aria-label={t("save")}><Bookmark className="h-5 w-5" fill={saved ? "currentColor" : "none"} /></Button>
-          <Button onClick={share} variant="ghost" size="icon" className="h-9 w-9 rounded-full" aria-label={t("share")}><Share2 className="h-5 w-5" /></Button>
+          {/* Like button */}
+          <Button
+            onClick={toggleLike}
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "flex h-9 items-center gap-1 rounded-full px-2.5",
+              liked ? "text-rose-500 hover:text-rose-500" : "text-muted-foreground hover:text-foreground"
+            )}
+            aria-label="Like"
+          >
+            <Heart
+              className="h-[18px] w-[18px]"
+              fill={liked ? "currentColor" : "none"}
+              strokeWidth={liked ? 0 : 1.8}
+            />
+            {(likeCount ?? 0) > 0 && (
+              <span className="text-xs font-semibold leading-none tabular-nums">{likeCount}</span>
+            )}
+          </Button>
+
+          {/* Bookmark button */}
+          <Button
+            onClick={toggleSave}
+            variant="ghost"
+            size="icon"
+            className={cn("h-9 w-9 rounded-full", saved && "text-primary")}
+            aria-label={t("save")}
+          >
+            <Bookmark className="h-5 w-5" fill={saved ? "currentColor" : "none"} />
+          </Button>
+
+          {/* Share button */}
+          <Button
+            onClick={share}
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 rounded-full"
+            aria-label={t("share")}
+          >
+            <Share2 className="h-5 w-5" />
+          </Button>
         </div>
       </div>
+
       <div className="px-4">
         <Meta a={a} />
         <h1 className="mt-3 text-[28px] font-bold leading-[1.25]">{pick(a.title_hi, a.title_en)}</h1>

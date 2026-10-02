@@ -10,7 +10,7 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import logo from "@/assets/abhi-tak-logo-256.webp.asset.json";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
-import { townsQuery } from "@/lib/queries";
+import { townsQuery, citiesQuery, villagesQuery } from "@/lib/queries";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,10 @@ function Header({ onMenu }: { onMenu: () => void }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [term, setTerm] = useState("");
   const [debouncedTerm, setDebouncedTerm] = useState("");
+  const [selectedCity, setSelectedCity] = useState<string>("");
+  const [selectedVillage, setSelectedVillage] = useState<string>("");
+  const { data: cities } = useQuery(citiesQuery);
+  const { data: villages } = useQuery(villagesQuery());
 
   // 300 ms debounce — avoids a Supabase round-trip on every keystroke
   useEffect(() => {
@@ -46,23 +50,33 @@ function Header({ onMenu }: { onMenu: () => void }) {
   }, [term]);
 
   const { data: results, isFetching } = useQuery({
-    queryKey: ["search", debouncedTerm],
+    queryKey: ["search", debouncedTerm, selectedCity, selectedVillage],
     queryFn: async () => {
       if (debouncedTerm.length < 2) return [];
-      const { data } = await supabase
+      let q = supabase
         .from("articles")
-        .select("id, slug, title_hi, title_en, category:categories(name_hi, name_en)")
+        .select("id, slug, title_hi, title_en, town:towns(name_hi, name_en), category:categories(name_hi, name_en)")
         .eq("status", "published")
         .or(`title_hi.ilike.%${debouncedTerm}%,title_en.ilike.%${debouncedTerm}%`)
         .order("published_at", { ascending: false })
         .limit(8);
-      return (data ?? []) as { id: string; slug: string; title_hi: string; title_en: string | null; category: { name_hi: string; name_en: string } | null }[];
+      if (selectedCity) q = q.eq("city_id", selectedCity);
+      if (selectedVillage) q = q.eq("village_id", selectedVillage);
+      const { data } = await q;
+      return (data ?? []) as {
+        id: string;
+        slug: string;
+        title_hi: string;
+        title_en: string | null;
+        town: { name_hi: string; name_en: string } | null;
+        category: { name_hi: string; name_en: string } | null;
+      }[];
     },
     enabled: searchOpen && debouncedTerm.length >= 2,
     staleTime: 30_000,
   });
 
-  const close = () => { setSearchOpen(false); setTerm(""); setDebouncedTerm(""); };
+  const close = () => { setSearchOpen(false); setTerm(""); setDebouncedTerm(""); setSelectedCity(""); setSelectedVillage(""); };
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background pt-safe">
@@ -91,6 +105,7 @@ function Header({ onMenu }: { onMenu: () => void }) {
 
       {searchOpen && (
         <div className="border-t bg-background p-2 shadow-lg">
+          {/* Search input */}
           <div className="relative">
             {isFetching
               ? <Loader2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
@@ -104,6 +119,38 @@ function Header({ onMenu }: { onMenu: () => void }) {
               className="h-11 rounded-md bg-card pl-9 shadow-none focus-visible:ring-1"
             />
           </div>
+
+          {/* City filter dropdown */}
+          {cities && cities.length > 0 && (
+            <div className="mt-2 flex gap-2">
+              <select
+                value={selectedCity}
+                onChange={(e) => setSelectedCity(e.target.value)}
+                className="h-9 w-full rounded-md border border-input bg-card px-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+              >
+                <option value="">{lang === "en" ? "All Cities" : "सभी शहर"}</option>
+                {cities.map((city) => (
+                  <option key={city.id} value={city.id}>
+                    {pick(city.name_hi, city.name_en)}
+                  </option>
+                ))}
+              </select>
+              {villages && villages.length > 0 && (
+                <select
+                  value={selectedVillage}
+                  onChange={(e) => setSelectedVillage(e.target.value)}
+                  className="h-9 w-full rounded-md border border-input bg-card px-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                >
+                  <option value="">{lang === "en" ? "All Villages" : "सभी गांव"}</option>
+                  {villages.map((village) => (
+                    <option key={village.id} value={village.id}>
+                      {pick(village.name_hi, village.name_en)}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+          )}
 
           {/* Empty state */}
           {debouncedTerm.length >= 2 && !isFetching && results?.length === 0 && (
@@ -126,11 +173,12 @@ function Header({ onMenu }: { onMenu: () => void }) {
                   <span className="text-[15px] font-semibold leading-snug">
                     {pick(article.title_hi, article.title_en)}
                   </span>
-                  {article.category && (
-                    <span className="mt-0.5 text-xs text-muted-foreground">
-                      {pick(article.category.name_hi, article.category.name_en)}
-                    </span>
-                  )}
+                  <span className="mt-0.5 text-xs text-muted-foreground">
+                    {[
+                      article.category && pick(article.category.name_hi, article.category.name_en),
+                      article.town && pick(article.town.name_hi, article.town.name_en),
+                    ].filter(Boolean).join(" · ")}
+                  </span>
                 </Link>
               ))}
             </div>
@@ -140,6 +188,7 @@ function Header({ onMenu }: { onMenu: () => void }) {
     </header>
   );
 }
+
 
 function BottomNav() {
   const { t } = useI18n();
