@@ -1,10 +1,18 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
+import { Capacitor } from "@capacitor/core";
 import { useI18n, timeAgo } from "@/lib/i18n";
 import { img } from "@/lib/media";
 import { adsQuery, type ArticleCard } from "@/lib/queries";
 import { cn } from "@/lib/utils";
+
+function getCampaignEventEndpoint(): string {
+  if (typeof window !== "undefined" && Capacitor.isNativePlatform()) {
+    return "https://abhitak.in/api/public/campaign-event";
+  }
+  return "/api/public/campaign-event";
+}
 
 export function Meta({ a, light }: { a: ArticleCard; light?: boolean }) {
   const { pick, lang } = useI18n();
@@ -98,7 +106,7 @@ export function AdSlot({ placement }: { placement: string }) {
     const observer = new IntersectionObserver((entries) => {
       if (!entries.some((entry) => entry.isIntersecting && entry.intersectionRatio >= 0.5)) return;
       window.sessionStorage.setItem(sessionKey, "1");
-      void fetch("/api/public/campaign-event", {
+      void fetch(getCampaignEventEndpoint(), {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ campaignId: ad.id, event: "impression" }),
@@ -113,7 +121,7 @@ export function AdSlot({ placement }: { placement: string }) {
 
   if (!ad) return null;
   const recordClick = () => {
-    void fetch("/api/public/campaign-event", {
+    void fetch(getCampaignEventEndpoint(), {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ campaignId: ad.id, event: "click" }),

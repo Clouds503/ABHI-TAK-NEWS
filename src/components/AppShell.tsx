@@ -17,7 +17,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export function Logo({ className }: { className?: string }) {
-  return <img src={logo.url} alt="Abhi Tak" width={48} height={48} decoding="sync" fetchPriority="high" className={cn("rounded-[6px] object-contain", className)} />;
+  return (
+    <img
+      src={logo.url}
+      alt="Abhi Tak"
+      width={48}
+      height={48}
+      decoding="sync"
+      fetchPriority="high"
+      onError={(e) => {
+        e.currentTarget.src = "/pwa-192.png";
+      }}
+      className={cn("rounded-[6px] object-contain", className)}
+    />
+  );
 }
 
 function Header({ onMenu }: { onMenu: () => void }) {

@@ -31,9 +31,9 @@ async function initNative() {
   await StatusBar.setBackgroundColor({ color: '#D40000' }).catch(() => {});
 
   // Push Notifications
-  const permStatus = await PushNotifications.checkPermissions();
+  let permStatus = await PushNotifications.checkPermissions();
   if (permStatus.receive === 'prompt') {
-    await PushNotifications.requestPermissions();
+    permStatus = await PushNotifications.requestPermissions();
   }
   if (permStatus.receive === 'granted') {
     await PushNotifications.register();
