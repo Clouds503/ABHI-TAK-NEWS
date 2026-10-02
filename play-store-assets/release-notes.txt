@@ -1,0 +1,55 @@
+# Google Play Console Release Notes (v1.0.0 — Build 1)
+
+Paste the following blocks directly into the "Release notes" box in Google Play Console when uploading `app-release.aab`.
+
+---
+
+### Format with Language Tags (Play Console XML format)
+
+<en-US>
+Welcome to the official Abhi Tak News app for District Bijnor!
+• 24x7 Live TV & Video News coverage
+• Jan Ki Awaaz: Raise local civic issues with photos and track resolution
+• Hyper-local news for Bijnor, Nagina, Dhampur, Najibabad, Chandpur & more
+• Daily Digital E-Paper & 30-second News Reels
+• Live search with instant suggestions
+• Breaking news alerts & Push notifications
+• Bilingual (Hindi/English) & Dark Mode support
+</en-US>
+
+<hi-IN>
+जनपद बिजनौर के आधिकारिक 'अभी तक न्यूज़' ऐप में आपका स्वागत है!
+• 24x7 लाइव टीवी व ताज़ा वीडियो बुलेटिन
+• जन की आवाज़: फ़ोटो सहित स्थानीय समस्याएं दर्ज करें व समाधान ट्रैक करें
+• बिजनौर, नगीना, धामपुर, नजीबाबाद, चांदपुर सहित हर कस्बे की लोकल ख़बरें
+• दैनिक डिजिटल ई-पेपर व फटाफट 30-सेकंड न्यूज़ रील्स
+• लाइव सर्च व तुरंत सुझाव
+• ताज़ा ब्रेकिंग न्यूज़ अलर्ट्स
+• हिंदी व अंग्रेज़ी भाषा विकल्प और डार्क मोड
+</hi-IN>
+
+---
+
+### Plain Text Version (English — 389 characters)
+
+Welcome to the official Abhi Tak News app for District Bijnor!
+• 24x7 Live TV & Video News coverage
+• Jan Ki Awaaz: Raise local civic issues with photos and track resolution
+• Hyper-local news for Bijnor, Nagina, Dhampur, Najibabad, Chandpur & more
+• Daily Digital E-Paper & 30-second News Reels
+• Live search with instant suggestions
+• Breaking news alerts & Push notifications
+• Bilingual & Dark Mode
+
+---
+
+### Plain Text Version (Hindi — 387 characters)
+
+जनपद बिजनौर के आधिकारिक 'अभी तक न्यूज़' ऐप में आपका स्वागत है!
+• 24x7 लाइव टीवी व ताज़ा वीडियो बुलेटिन
+• जन की आवाज़: फ़ोटो सहित स्थानीय समस्याएं दर्ज करें व समाधान ट्रैक करें
+• बिजनौर, नगीना, धामपुर, नजीबाबाद, चांदपुर सहित हर कस्बे की लोकल ख़बरें
+• दैनिक डिजिटल ई-पेपर व फटाफट 30-सेकंड न्यूज़ रील्स
+• लाइव सर्च व तुरंत सुझाव
+• ताज़ा ब्रेकिंग न्यूज़ अलर्ट्स
+• हिंदी/अंग्रेज़ी व डार्क मोड
