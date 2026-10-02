@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Abhi Tak</string>
+    <string name="title_activity_main">Abhi Tak</string>
+    <string name="package_name">com.abhitak.news</string>
+    <string name="custom_url_scheme">com.abhitak.news</string>
+</resources>
