@@ -167,9 +167,10 @@ function ArticlePage() {
         </div>
       </div>
       {a.cover_url && <img src={img(a.cover_url)} alt="" width={800} height={500} decoding="async" className="mt-4 aspect-[16/10] w-full object-cover" />}
-      <div className="space-y-5 px-4 py-6 text-[18px] leading-[1.8]">
-        {body.split(/\n+/).map((p, i) => <p key={i}>{p}</p>)}
-      </div>
+      <div 
+        className="space-y-5 px-4 py-6 text-[18px] leading-[1.8] prose prose-p:my-2 prose-a:text-primary max-w-none dark:prose-invert"
+        dangerouslySetInnerHTML={{ __html: body }}
+      />
       {related && related.filter((r) => r.id !== a.id).length > 0 && (
         <div className="border-t pt-4">
           <h2 className="px-4 text-lg font-bold">{t("related")}</h2>

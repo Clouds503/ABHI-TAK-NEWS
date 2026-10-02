@@ -126,7 +126,27 @@ function Articles() {
     <div>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">News</h1>
-        <Button onClick={() => edit()}>+ New story</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={async () => {
+            const id = toast.loading("Syncing from WordPress...");
+            try {
+              const res = await fetch("/api/admin/sync-wp?secret=dev-secret");
+              const data = await res.json();
+              if (res.ok) {
+                toast.success(`Synced ${data.imported} new articles`, { id });
+                qc.invalidateQueries({ queryKey: ["admin-articles"] });
+                qc.invalidateQueries({ queryKey: ["articles"] });
+              } else {
+                toast.error(data.error || "Sync failed", { id });
+              }
+            } catch (err: any) {
+              toast.error(err.message, { id });
+            }
+          }}>
+            Sync WP
+          </Button>
+          <Button onClick={() => edit()}>+ New story</Button>
+        </div>
       </div>
       <div className="mt-5 divide-y rounded-md border bg-card">
         {data?.map((a) => (
