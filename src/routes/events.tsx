@@ -1,0 +1,131 @@
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { toast } from "sonner";
+import { ArrowLeft, CalendarDays, MapPin, CheckCircle2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useI18n } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+
+export const Route = createFileRoute("/events")({
+  head: () => ({
+    meta: [
+      { title: "Updates & Events — Abhi Tak" },
+      { name: "description", content: "Latest updates and upcoming events from Abhi Tak News, District Bijnor." },
+      { property: "og:title", content: "Updates & Events — Abhi Tak" },
+      { property: "og:description", content: "Join Abhi Tak events and get the latest updates from Bijnor." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: EventsPage,
+});
+
+type Ev = { id: string; kind: string; title: string; description: string | null; image_url: string | null; location: string | null; event_at: string | null; allow_join: boolean };
+
+function EventsPage() {
+  const { lang } = useI18n();
+  const en = lang === "en";
+  const router = useRouter();
+  const { user } = useAuth();
+  const [tab, setTab] = useState<"all" | "event" | "update">("all");
+  const { data: events = [], isLoading } = useQuery({
+    queryKey: ["events"],
+    queryFn: async () => ((await supabase.from("events").select("*").eq("is_active", true).order("created_at", { ascending: false })).data ?? []) as Ev[],
+  });
+  const { data: mine = [] } = useQuery({
+    queryKey: ["my-event-regs", user?.id],
+    enabled: !!user,
+    queryFn: async () => (await supabase.from("event_registrations").select("event_id,status").eq("user_id", user!.id)).data ?? [],
+  });
+  const list = events.filter((e) => tab === "all" || e.kind === tab);
+
+  return (
+    <div className="mx-auto max-w-2xl pb-8">
+      <div className="sticky top-0 z-20 flex items-center gap-2 border-b bg-background/95 px-3 py-3">
+        <button aria-label={en ? "Back" : "वापस"} onClick={() => (window.history.length > 1 ? router.history.back() : router.navigate({ to: "/" }))} className="grid h-10 w-10 place-items-center rounded-full hover:bg-muted">
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <h1 className="text-lg font-bold">{en ? "Updates & Events" : "अपडेट और कार्यक्रम"}</h1>
+      </div>
+      <div className="flex gap-2 px-4 pt-4">
+        {(["all", "event", "update"] as const).map((k) => (
+          <button key={k} onClick={() => setTab(k)} className={`rounded-full px-4 py-1.5 text-sm font-medium ${tab === k ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+            {k === "all" ? (en ? "All" : "सभी") : k === "event" ? (en ? "Events" : "कार्यक्रम") : (en ? "Updates" : "अपडेट")}
+          </button>
+        ))}
+      </div>
+      <div className="space-y-4 px-4 pt-4">
+        {isLoading && <p className="text-sm text-muted-foreground">{en ? "Loading…" : "लोड हो रहा है…"}</p>}
+        {!isLoading && !list.length && <p className="py-10 text-center text-muted-foreground">{en ? "Nothing here yet." : "अभी कुछ नहीं है।"}</p>}
+        {list.map((e) => <EventCard key={e.id} ev={e} en={en} reg={mine.find((m) => m.event_id === e.id)?.status} signedIn={!!user} />)}
+      </div>
+    </div>
+  );
+}
+
+function EventCard({ ev, en, reg, signedIn }: { ev: Ev; en: boolean; reg?: string | undefined; signedIn: boolean }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <article className="overflow-hidden rounded-xl border bg-card">
+      {ev.image_url && <img src={ev.image_url} alt="" loading="lazy" decoding="async" className="aspect-video w-full object-cover" />}
+      <div className="space-y-2 p-4">
+        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{ev.kind === "event" ? (en ? "Event" : "कार्यक्रम") : (en ? "Update" : "अपडेट")}</span>
+        <h2 className="text-lg font-bold leading-snug">{ev.title}</h2>
+        {(ev.event_at || ev.location) && (
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+            {ev.event_at && <span className="flex items-center gap-1"><CalendarDays className="h-4 w-4" />{new Date(ev.event_at).toLocaleString(en ? "en-IN" : "hi-IN", { dateStyle: "medium", timeStyle: "short" })}</span>}
+            {ev.location && <span className="flex items-center gap-1"><MapPin className="h-4 w-4" />{ev.location}</span>}
+          </div>
+        )}
+        {ev.description && <p className="whitespace-pre-line text-sm">{ev.description}</p>}
+        {ev.kind === "event" && ev.allow_join && (
+          reg ? (
+            <p className="flex items-center gap-1.5 pt-1 text-sm font-medium"><CheckCircle2 className="h-4 w-4" />
+              {reg === "approved" ? (en ? "You're confirmed" : "आपकी भागीदारी पक्की है") : reg === "rejected" ? (en ? "Application not accepted" : "आवेदन स्वीकार नहीं हुआ") : (en ? "Application sent — awaiting approval" : "आवेदन भेजा गया — स्वीकृति का इंतज़ार")}
+            </p>
+          ) : !signedIn ? (
+            <Button asChild className="mt-1"><Link to="/auth">{en ? "Sign in to join" : "जुड़ने के लिए साइन इन करें"}</Link></Button>
+          ) : open ? <JoinForm ev={ev} en={en} onDone={() => setOpen(false)} /> : (
+            <Button className="mt-1" onClick={() => setOpen(true)}>{en ? "Join event" : "कार्यक्रम से जुड़ें"}</Button>
+          )
+        )}
+      </div>
+    </article>
+  );
+}
+
+function JoinForm({ ev, en, onDone }: { ev: Ev; en: boolean; onDone: () => void }) {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState(false);
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    if (!name.trim() || !/^(\+91)?[6-9]\d{9}$/.test(phone.replace(/[\s-]/g, ""))) { toast.error(en ? "Enter your name and a valid mobile number" : "नाम और सही मोबाइल नंबर दर्ज करें"); return; }
+    setBusy(true);
+    const { error } = await supabase.from("event_registrations").insert({ event_id: ev.id, user_id: user.id, full_name: name.trim().slice(0, 100), phone: phone.trim(), message: msg.trim().slice(0, 500) || null });
+    setBusy(false);
+    if (error) { toast.error(error.message.includes("duplicate") ? (en ? "Already applied" : "पहले ही आवेदन किया है") : error.message); return; }
+    toast.success(en ? "Application sent" : "आवेदन भेजा गया");
+    qc.invalidateQueries({ queryKey: ["my-event-regs"] });
+    onDone();
+  };
+  return (
+    <form onSubmit={submit} className="space-y-2 pt-1">
+      <Input placeholder={en ? "Full name" : "पूरा नाम"} value={name} onChange={(e) => setName(e.target.value)} maxLength={100} />
+      <Input placeholder={en ? "Mobile number" : "मोबाइल नंबर"} inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} maxLength={16} />
+      <Textarea placeholder={en ? "Message (optional)" : "संदेश (वैकल्पिक)"} value={msg} onChange={(e) => setMsg(e.target.value)} maxLength={500} />
+      <div className="flex gap-2">
+        <Button type="submit" disabled={busy}>{en ? "Send application" : "आवेदन भेजें"}</Button>
+        <Button type="button" variant="ghost" onClick={onDone}>{en ? "Cancel" : "रद्द करें"}</Button>
+      </div>
+    </form>
+  );
+}
