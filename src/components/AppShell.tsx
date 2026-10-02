@@ -1,7 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState, type ReactNode } from "react";
-import { Bell, Clapperboard, Home, Menu, Megaphone, PlayCircle, Radio, MapPin, Newspaper, Bookmark, FileText, Info, Shield, LogIn, LogOut, Moon, Sun, Languages, Phone, MessageCircle, Search, X, CalendarDays } from "lucide-react";
+import { useState, useEffect, type ReactNode } from "react";
+import { Bell, Clapperboard, Home, Loader2, Menu, Megaphone, PlayCircle, Radio, MapPin, Newspaper, Bookmark, FileText, Info, Shield, LogIn, LogOut, Moon, Sun, Languages, Phone, MessageCircle, Search, X, CalendarDays } from "lucide-react";
 
 export const CONTACT_PHONE = "+91-8445829007";
 export const WHATSAPP_URL = "https://wa.me/918445829007";
@@ -10,7 +10,7 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import logo from "@/assets/abhi-tak-logo-256.webp.asset.json";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
-import { articlesQuery, townsQuery } from "@/lib/queries";
+import { townsQuery } from "@/lib/queries";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -37,10 +37,33 @@ function Header({ onMenu }: { onMenu: () => void }) {
   const { lang, pick } = useI18n();
   const [searchOpen, setSearchOpen] = useState(false);
   const [term, setTerm] = useState("");
-  const { data: articles } = useQuery({ ...articlesQuery(), enabled: searchOpen });
-  const results = term.trim().length > 1
-    ? articles?.filter((article) => `${article.title_hi} ${article.title_en ?? ""}`.toLocaleLowerCase().includes(term.trim().toLocaleLowerCase())).slice(0, 5)
-    : [];
+  const [debouncedTerm, setDebouncedTerm] = useState("");
+
+  // 300 ms debounce — avoids a Supabase round-trip on every keystroke
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedTerm(term.trim()), 300);
+    return () => clearTimeout(t);
+  }, [term]);
+
+  const { data: results, isFetching } = useQuery({
+    queryKey: ["search", debouncedTerm],
+    queryFn: async () => {
+      if (debouncedTerm.length < 2) return [];
+      const { data } = await supabase
+        .from("articles")
+        .select("id, slug, title_hi, title_en, category:categories(name_hi, name_en)")
+        .eq("status", "published")
+        .or(`title_hi.ilike.%${debouncedTerm}%,title_en.ilike.%${debouncedTerm}%`)
+        .order("published_at", { ascending: false })
+        .limit(8);
+      return (data ?? []) as { id: string; slug: string; title_hi: string; title_en: string | null; category: { name_hi: string; name_en: string } | null }[];
+    },
+    enabled: searchOpen && debouncedTerm.length >= 2,
+    staleTime: 30_000,
+  });
+
+  const close = () => { setSearchOpen(false); setTerm(""); setDebouncedTerm(""); };
+
   return (
     <header className="sticky top-0 z-40 border-b bg-background pt-safe">
       <div className="grid h-14 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3">
@@ -57,7 +80,7 @@ function Header({ onMenu }: { onMenu: () => void }) {
           </div>
         </Link>
         <div className="flex items-center">
-          <Button onClick={() => setSearchOpen((value) => !value)} aria-label={lang === "en" ? "Search" : "खोजें"} variant="ghost" size="icon" className="h-10 w-10 rounded-full">
+          <Button onClick={() => setSearchOpen((v) => !v)} aria-label={lang === "en" ? "Search" : "खोजें"} variant="ghost" size="icon" className="h-10 w-10 rounded-full">
             {searchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
           </Button>
           <Button aria-label="Notifications" variant="ghost" size="icon" className="h-10 w-10 rounded-full">
@@ -65,17 +88,49 @@ function Header({ onMenu }: { onMenu: () => void }) {
           </Button>
         </div>
       </div>
+
       {searchOpen && (
         <div className="border-t bg-background p-2 shadow-lg">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input autoFocus value={term} onChange={(event) => setTerm(event.target.value)} placeholder={lang === "en" ? "Search Bijnor news" : "बिजनौर की खबरें खोजें"} className="h-11 rounded-md bg-card pl-9 shadow-none focus-visible:ring-1" />
+            {isFetching
+              ? <Loader2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+              : <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            }
+            <Input
+              autoFocus
+              value={term}
+              onChange={(e) => setTerm(e.target.value)}
+              placeholder={lang === "en" ? "Search news" : "खबरें खोजें"}
+              className="h-11 rounded-md bg-card pl-9 shadow-none focus-visible:ring-1"
+            />
           </div>
+
+          {/* Empty state */}
+          {debouncedTerm.length >= 2 && !isFetching && results?.length === 0 && (
+            <p className="px-3 py-4 text-center text-sm text-muted-foreground">
+              {lang === "en" ? "No results found" : "कोई परिणाम नहीं मिला"}
+            </p>
+          )}
+
+          {/* Results */}
           {results && results.length > 0 && (
-            <div className="mt-1 divide-y">
+            <div className="mt-1 divide-y rounded-md border">
               {results.map((article) => (
-                <Link key={article.id} to="/news/$slug" params={{ slug: article.slug }} onClick={() => { setSearchOpen(false); setTerm(""); }} className="block px-3 py-3 text-[15px] font-semibold leading-snug active:bg-muted">
-                  {pick(article.title_hi, article.title_en)}
+                <Link
+                  key={article.id}
+                  to="/news/$slug"
+                  params={{ slug: article.slug }}
+                  onClick={close}
+                  className="flex flex-col px-3 py-2.5 active:bg-muted"
+                >
+                  <span className="text-[15px] font-semibold leading-snug">
+                    {pick(article.title_hi, article.title_en)}
+                  </span>
+                  {article.category && (
+                    <span className="mt-0.5 text-xs text-muted-foreground">
+                      {pick(article.category.name_hi, article.category.name_en)}
+                    </span>
+                  )}
                 </Link>
               ))}
             </div>
@@ -150,6 +205,7 @@ function SideMenu({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boo
         <div className="border-t py-2">
           <Link to="/epaper" onClick={close} className={row}><Newspaper className="h-4 w-4" />{t("epaper")}</Link>
           <Link to="/videos" onClick={close} className={row}><PlayCircle className="h-4 w-4" />{t("videoGalaxy")}</Link>
+          <Link to="/reels" onClick={close} className={row}><Clapperboard className="h-4 w-4" />{t("reels")}</Link>
           <Link to="/live" onClick={close} className={row}><Radio className="h-4 w-4" />{t("live")}</Link>
           <Link to="/jan-ki-awaaz" onClick={close} className={row}><Megaphone className="h-4 w-4" />{t("jka")}</Link>
           <Link to="/events" onClick={close} className={row}><CalendarDays className="h-4 w-4" />{lang === "en" ? "Updates & Events" : "अपडेट और कार्यक्रम"}</Link>

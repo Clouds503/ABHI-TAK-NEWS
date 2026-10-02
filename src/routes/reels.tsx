@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Instagram, Pause, Play, Volume2, VolumeX, VideoOff } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { getInstagramReelMedia } from "@/lib/instagram.functions";
@@ -117,16 +118,22 @@ function VideoReel({ reel, src, active, lang }: { reel: Reel; src: string; activ
 }
 
 function ResolvedReel({ reel, active, lang }: { reel: Reel; active: boolean; lang: string | null }) {
+  // On Android/Capacitor there is no SSR backend — useServerFn would POST to a
+  // server that doesn't exist, causing the reel to spin forever. Skip it on native
+  // and rely solely on the admin-uploaded video_url from Supabase.
+  const isNative = Capacitor.isNativePlatform();
   const resolveMedia = useServerFn(getInstagramReelMedia);
   const { data, isLoading } = useQuery({
     queryKey: ["instagram-reel-media", reel.shortcode],
     queryFn: () => resolveMedia({ data: { shortcode: reel.shortcode } }),
     staleTime: 5 * 60_000,
     retry: 1,
+    // Only run the server scraper on web and when there's no direct video_url stored
+    enabled: !isNative && !reel.video_url,
   });
-  const src = reel.video_url ?? data?.videoUrl;
+  const src = reel.video_url ?? (!isNative ? data?.videoUrl : null);
 
-  if (isLoading) return <div className="absolute inset-0 grid place-items-center bg-foreground text-background" aria-label={lang === "en" ? "Loading reel" : "रील लोड हो रही है"}>…</div>;
+  if (isLoading && !isNative && !reel.video_url) return <div className="absolute inset-0 grid place-items-center bg-foreground text-background" aria-label={lang === "en" ? "Loading reel" : "रील लोड हो रही है"}>…</div>;
   if (!src) return <Fallback lang={lang} />;
   return <VideoReel reel={reel} src={src} active={active} lang={lang} />;
 }
