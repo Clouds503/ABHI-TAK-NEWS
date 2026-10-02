@@ -101,7 +101,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const saved = localStorage.getItem(KEY) as Lang | null;
-    setLangState(saved);
+    // If no language saved yet, keep "hi" as default (don't set null).
+    // Setting null would trigger LanguageGate full-screen picker on every cold start,
+    // blocking all touch interaction until the user picks a language.
+    setLangState(saved ?? "hi");
     setReady(true);
   }, []);
 

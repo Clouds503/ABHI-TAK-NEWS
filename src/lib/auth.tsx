@@ -43,7 +43,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setTimeout(() => load(session?.user ?? null), 0);
     });
     supabase.auth.getSession().then(({ data }) => load(data.session?.user ?? null));
-    return () => sub.subscription.unsubscribe();
+
+    // Safety valve: if Supabase doesn't respond within 5 s (e.g. Android cold start
+    // before network is ready), force loading=false so the UI becomes interactive.
+    const timeout = setTimeout(() => setLoading(false), 5000);
+
+    return () => {
+      sub.subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, [fetchProfile]);
 
   const refreshProfile = useCallback(async () => { if (user) await fetchProfile(user.id); }, [user, fetchProfile]);
