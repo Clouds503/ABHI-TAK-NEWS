@@ -130,14 +130,14 @@ function Articles() {
           <Button variant="outline" onClick={async () => {
             const id = toast.loading("Syncing from WordPress...");
             try {
-              const res = await fetch("/api/admin/sync-wp?secret=dev-secret");
-              const data = await res.json();
-              if (res.ok) {
-                toast.success(`Synced ${data.imported} new articles`, { id });
+              const { syncWordPressArticles } = await import("@/lib/wp.functions");
+              const res = await syncWordPressArticles();
+              if (res.success) {
+                toast.success(`Synced ${res.imported} new articles`, { id });
                 qc.invalidateQueries({ queryKey: ["admin-articles"] });
                 qc.invalidateQueries({ queryKey: ["articles"] });
               } else {
-                toast.error(data.error || "Sync failed", { id });
+                toast.error(res.error || "Sync failed", { id });
               }
             } catch (err: any) {
               toast.error(err.message, { id });

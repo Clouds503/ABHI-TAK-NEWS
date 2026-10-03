@@ -39,7 +39,6 @@ import { Route as AuthenticatedAdminReelsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminTownsRouteImport } from './routes/_authenticated/admin.towns'
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
 import { Route as AuthenticatedAdminVillagesRouteImport } from './routes/_authenticated/admin.villages'
-import { Route as ApiAdminSyncWpRouteImport } from './routes/api/admin/sync-wp'
 import { Route as ApiPublicCampaignEventRouteImport } from './routes/api/public/campaign-event'
 
 const IndexRoute = IndexRouteImport.update({
@@ -197,11 +196,6 @@ const AuthenticatedAdminVillagesRoute =
     path: '/villages',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
-const ApiAdminSyncWpRoute = ApiAdminSyncWpRouteImport.update({
-  id: '/api/admin/sync-wp',
-  path: '/api/admin/sync-wp',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicCampaignEventRoute = ApiPublicCampaignEventRouteImport.update({
   id: '/api/public/campaign-event',
   path: '/api/public/campaign-event',
@@ -237,7 +231,6 @@ export interface FileRoutesByFullPath {
   '/admin/towns': typeof AuthenticatedAdminTownsRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/villages': typeof AuthenticatedAdminVillagesRoute
-  '/api/admin/sync-wp': typeof ApiAdminSyncWpRoute
   '/api/public/campaign-event': typeof ApiPublicCampaignEventRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
 }
@@ -269,7 +262,6 @@ export interface FileRoutesByTo {
   '/admin/towns': typeof AuthenticatedAdminTownsRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/villages': typeof AuthenticatedAdminVillagesRoute
-  '/api/admin/sync-wp': typeof ApiAdminSyncWpRoute
   '/api/public/campaign-event': typeof ApiPublicCampaignEventRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
 }
@@ -304,7 +296,6 @@ export interface FileRoutesById {
   '/_authenticated/admin/towns': typeof AuthenticatedAdminTownsRoute
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
   '/_authenticated/admin/villages': typeof AuthenticatedAdminVillagesRoute
-  '/api/admin/sync-wp': typeof ApiAdminSyncWpRoute
   '/api/public/campaign-event': typeof ApiPublicCampaignEventRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
@@ -339,7 +330,6 @@ export interface FileRouteTypes {
     | '/admin/towns'
     | '/admin/users'
     | '/admin/villages'
-    | '/api/admin/sync-wp'
     | '/api/public/campaign-event'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
@@ -371,7 +361,6 @@ export interface FileRouteTypes {
     | '/admin/towns'
     | '/admin/users'
     | '/admin/villages'
-    | '/api/admin/sync-wp'
     | '/api/public/campaign-event'
     | '/admin'
   id:
@@ -405,7 +394,6 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/towns'
     | '/_authenticated/admin/users'
     | '/_authenticated/admin/villages'
-    | '/api/admin/sync-wp'
     | '/api/public/campaign-event'
     | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
@@ -426,7 +414,6 @@ export interface RootRouteChildren {
   NewsSlugRoute: typeof NewsSlugRoute
   TownSlugRoute: typeof TownSlugRoute
   JanKiAwaazIndexRoute: typeof JanKiAwaazIndexRoute
-  ApiAdminSyncWpRoute: typeof ApiAdminSyncWpRoute
   ApiPublicCampaignEventRoute: typeof ApiPublicCampaignEventRoute
 }
 
@@ -642,13 +629,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminVillagesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
-    '/api/admin/sync-wp': {
-      id: '/api/admin/sync-wp'
-      path: '/api/admin/sync-wp'
-      fullPath: '/api/admin/sync-wp'
-      preLoaderRoute: typeof ApiAdminSyncWpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/campaign-event': {
       id: '/api/public/campaign-event'
       path: '/api/public/campaign-event'
@@ -723,7 +703,6 @@ const rootRouteChildren: RootRouteChildren = {
   NewsSlugRoute: NewsSlugRoute,
   TownSlugRoute: TownSlugRoute,
   JanKiAwaazIndexRoute: JanKiAwaazIndexRoute,
-  ApiAdminSyncWpRoute: ApiAdminSyncWpRoute,
   ApiPublicCampaignEventRoute: ApiPublicCampaignEventRoute,
 }
 export const routeTree = rootRouteImport
