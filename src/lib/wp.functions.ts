@@ -1,9 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 export const syncWordPressArticles = createServerFn({ method: "POST" })
   .handler(async () => {
     try {
+      // Dynamic import keeps supabaseAdmin out of the client bundle
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
       // 1. Fetch towns & categories to map WP names
       const { data: towns } = await supabaseAdmin.from("towns").select("id, name_hi, name_en");
       const { data: categories } = await supabaseAdmin.from("categories").select("id, name_hi, name_en");
