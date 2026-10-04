@@ -12,12 +12,26 @@ export function LanguageGate({ children }: { children: ReactNode }) {
         <Logo className="h-36 w-36 shadow-2xl" />
         <div className="mt-8 font-serif text-3xl font-bold tracking-wide">ABHI TAK</div>
         <div className="mt-2 text-lg text-ink-foreground/70">आपका समाचार नेटवर्क</div>
-        <div className="mt-1 text-xs uppercase tracking-[0.3em] text-ink-foreground/40">District Bijnor · U.P.</div>
+        <div className="mt-1 text-xs uppercase tracking-[0.3em] text-ink-foreground/40">
+          District Bijnor · U.P.
+        </div>
       </div>
       <div className="w-full max-w-sm space-y-3">
-        <div className="pb-1 text-center text-sm text-ink-foreground/60">भाषा चुनें · Choose language</div>
-        <button onClick={() => setLang("hi")} className="h-14 w-full rounded-md bg-primary text-xl font-semibold text-primary-foreground active:scale-[0.99]">हिन्दी</button>
-        <button onClick={() => setLang("en")} className="h-14 w-full rounded-md border border-ink-foreground/25 text-lg font-semibold active:scale-[0.99]">English</button>
+        <div className="pb-1 text-center text-sm text-ink-foreground/60">
+          भाषा चुनें · Choose language
+        </div>
+        <button
+          onClick={() => setLang("hi")}
+          className="h-14 w-full rounded-md bg-primary text-xl font-semibold text-primary-foreground active:scale-[0.99]"
+        >
+          हिन्दी
+        </button>
+        <button
+          onClick={() => setLang("en")}
+          className="h-14 w-full rounded-md border border-ink-foreground/25 text-lg font-semibold active:scale-[0.99]"
+        >
+          English
+        </button>
       </div>
     </div>
   );

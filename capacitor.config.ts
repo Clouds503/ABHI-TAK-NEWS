@@ -1,26 +1,26 @@
-import { CapacitorConfig } from '@capacitor/cli';
+import { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: 'com.abhitak.news',
-  appName: 'Abhi Tak',
-  webDir: 'dist/client',
+  appId: "com.abhitak.news",
+  appName: "Abhi Tak",
+  webDir: "dist/client",
   server: {
-    androidScheme: 'https',
+    androidScheme: "https",
   },
   plugins: {
     PushNotifications: {
-      presentationOptions: ['badge', 'sound', 'alert'],
+      presentationOptions: ["badge", "sound", "alert"],
     },
     SplashScreen: {
       launchAutoHide: true,
       launchShowDuration: 0,
-      backgroundColor: '#ffffff',
-      androidSplashResourceName: 'splash',
+      backgroundColor: "#ffffff",
+      androidSplashResourceName: "splash",
       showSpinner: false,
     },
     StatusBar: {
-      style: 'DEFAULT',
-      backgroundColor: '#D40000',
+      style: "DEFAULT",
+      backgroundColor: "#D40000",
     },
   },
 };

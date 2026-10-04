@@ -31,11 +31,18 @@ const empty = { id: "", name_hi: "", name_en: "", slug: "", sort_order: 0, is_ac
 const schema = z.object({
   name_hi: z.string().trim().min(1, "Hindi name required"),
   name_en: z.string().trim().min(1, "English name required"),
-  slug: z.string().trim().regex(/^[a-z0-9-]+$/, "Slug: lowercase letters, numbers, dashes only").min(1),
+  slug: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9-]+$/, "Slug: lowercase letters, numbers, dashes only")
+    .min(1),
 });
 
 function slugify(s: string) {
-  return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 function Cities() {
@@ -54,8 +61,15 @@ function Cities() {
   const edit = (c?: City) => {
     setF(
       c
-        ? { id: c.id, name_hi: c.name_hi, name_en: c.name_en, slug: c.slug, sort_order: c.sort_order, is_active: c.is_active }
-        : empty
+        ? {
+            id: c.id,
+            name_hi: c.name_hi,
+            name_en: c.name_en,
+            slug: c.slug,
+            sort_order: c.sort_order,
+            is_active: c.is_active,
+          }
+        : empty,
     );
     setOpen(true);
   };
@@ -66,14 +80,29 @@ function Cities() {
   const save = async () => {
     const slug = f.slug || slugify(f.name_en);
     const parsed = schema.safeParse({ ...f, slug });
-    if (!parsed.success) { toast.error(parsed.error.issues[0]?.message); return; }
-    const row = { name_hi: f.name_hi, name_en: f.name_en, slug, sort_order: f.sort_order, is_active: f.is_active };
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message);
+      return;
+    }
+    const row = {
+      name_hi: f.name_hi,
+      name_en: f.name_en,
+      slug,
+      sort_order: f.sort_order,
+      is_active: f.is_active,
+    };
     const res = f.id
       ? await supabase.from("cities").update(row).eq("id", f.id).select("id").single()
       : await supabase.from("cities").insert(row).select("id").single();
-    if (res.error) { toast.error(res.error.message); return; }
+    if (res.error) {
+      toast.error(res.error.message);
+      return;
+    }
     await supabase.from("admin_activity_logs").insert({
-      actor_id: user!.id, action: f.id ? "update" : "create", entity: "city", entity_id: res.data.id,
+      actor_id: user!.id,
+      action: f.id ? "update" : "create",
+      entity: "city",
+      entity_id: res.data.id,
     });
     toast.success("Saved");
     setOpen(false);
@@ -84,7 +113,10 @@ function Cities() {
   const toggleActive = async (city: City) => {
     await supabase.from("cities").update({ is_active: !city.is_active }).eq("id", city.id);
     await supabase.from("admin_activity_logs").insert({
-      actor_id: user!.id, action: city.is_active ? "deactivate" : "activate", entity: "city", entity_id: city.id,
+      actor_id: user!.id,
+      action: city.is_active ? "deactivate" : "activate",
+      entity: "city",
+      entity_id: city.id,
     });
     toast.success(city.is_active ? "City deactivated" : "City activated");
     qc.invalidateQueries({ queryKey: ["admin-cities"] });
@@ -94,9 +126,15 @@ function Cities() {
   const hardDelete = async () => {
     if (!deleteTarget) return;
     const { error } = await supabase.from("cities").delete().eq("id", deleteTarget.id);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     await supabase.from("admin_activity_logs").insert({
-      actor_id: user!.id, action: "delete", entity: "city", entity_id: deleteTarget.id,
+      actor_id: user!.id,
+      action: "delete",
+      entity: "city",
+      entity_id: deleteTarget.id,
     });
     toast.success("City deleted");
     setDeleteTarget(null);
@@ -104,7 +142,8 @@ function Cities() {
     qc.invalidateQueries({ queryKey: ["cities"] });
   };
 
-  const inp = "mt-1 h-10 w-full rounded-md border border-input bg-card px-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary";
+  const inp =
+    "mt-1 h-10 w-full rounded-md border border-input bg-card px-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary";
 
   return (
     <div>
@@ -133,17 +172,31 @@ function Cities() {
                 <td className="px-3 py-2.5 font-mono text-xs text-muted-foreground">{city.slug}</td>
                 <td className="px-3 py-2.5 text-center text-muted-foreground">{city.sort_order}</td>
                 <td className="px-3 py-2.5 text-center">
-                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${city.is_active ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-muted text-muted-foreground"}`}>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${city.is_active ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-muted text-muted-foreground"}`}
+                  >
                     {city.is_active ? "Active" : "Off"}
                   </span>
                 </td>
                 <td className="px-3 py-2.5">
                   <div className="flex items-center justify-end gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => edit(city)}>Edit</Button>
-                    <Button variant="ghost" size="sm" onClick={() => toggleActive(city)} className="text-muted-foreground">
+                    <Button variant="ghost" size="sm" onClick={() => edit(city)}>
+                      Edit
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleActive(city)}
+                      className="text-muted-foreground"
+                    >
                       {city.is_active ? "Deactivate" : "Activate"}
                     </Button>
-                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setDeleteTarget(city)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => setDeleteTarget(city)}
+                    >
                       Delete
                     </Button>
                   </div>
@@ -153,31 +206,58 @@ function Cities() {
           </tbody>
         </table>
         {(!data || data.length === 0) && (
-          <p className="px-4 py-8 text-center text-sm text-muted-foreground">No cities yet. Add one above.</p>
+          <p className="px-4 py-8 text-center text-sm text-muted-foreground">
+            No cities yet. Add one above.
+          </p>
         )}
       </div>
 
       {/* Edit / Create Sheet */}
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent className="w-full overflow-y-auto sm:max-w-md">
-          <SheetHeader><SheetTitle>{f.id ? "Edit City" : "New City"}</SheetTitle></SheetHeader>
+          <SheetHeader>
+            <SheetTitle>{f.id ? "Edit City" : "New City"}</SheetTitle>
+          </SheetHeader>
           <div className="space-y-4 p-4">
             <div>
               <Label>Name (Hindi) *</Label>
-              <input className={inp} value={f.name_hi} onChange={set("name_hi")} placeholder="e.g. बिजनौर नगर" />
+              <input
+                className={inp}
+                value={f.name_hi}
+                onChange={set("name_hi")}
+                placeholder="e.g. बिजनौर नगर"
+              />
             </div>
             <div>
               <Label>Name (English) *</Label>
-              <input className={inp} value={f.name_en} onChange={set("name_en")} placeholder="e.g. Bijnor City" />
+              <input
+                className={inp}
+                value={f.name_en}
+                onChange={set("name_en")}
+                placeholder="e.g. Bijnor City"
+              />
             </div>
             <div>
               <Label>Slug</Label>
-              <input className={inp} value={f.slug} onChange={set("slug")} placeholder="auto-generated from English name" />
-              <p className="mt-1 text-xs text-muted-foreground">Lowercase letters, numbers, and dashes only.</p>
+              <input
+                className={inp}
+                value={f.slug}
+                onChange={set("slug")}
+                placeholder="auto-generated from English name"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Lowercase letters, numbers, and dashes only.
+              </p>
             </div>
             <div>
               <Label>Sort Order</Label>
-              <input type="number" className={inp} value={f.sort_order} onChange={set("sort_order")} min={0} />
+              <input
+                type="number"
+                className={inp}
+                value={f.sort_order}
+                onChange={set("sort_order")}
+                min={0}
+              />
             </div>
             <div className="flex items-center gap-3">
               <input
@@ -187,9 +267,13 @@ function Cities() {
                 onChange={(e) => setF((p) => ({ ...p, is_active: e.target.checked }))}
                 className="h-4 w-4"
               />
-              <Label htmlFor="city_is_active" className="cursor-pointer">Active (visible to public)</Label>
+              <Label htmlFor="city_is_active" className="cursor-pointer">
+                Active (visible to public)
+              </Label>
             </div>
-            <Button onClick={save} className="w-full">Save City</Button>
+            <Button onClick={save} className="w-full">
+              Save City
+            </Button>
           </div>
         </SheetContent>
       </Sheet>
@@ -200,12 +284,16 @@ function Cities() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete "{deleteTarget?.name_en}"?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the city. All articles linked to this city will have their city set to null. This action cannot be undone.
+              This will permanently delete the city. All articles linked to this city will have
+              their city set to null. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={hardDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={hardDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               Delete City
             </AlertDialogAction>
           </AlertDialogFooter>

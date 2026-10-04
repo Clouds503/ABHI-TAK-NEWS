@@ -1,0 +1,81 @@
+import { Capacitor } from "@capacitor/core";
+import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
+
+export function getPlatform(): string {
+  if (typeof window === "undefined") return "server";
+  if (Capacitor.isNativePlatform()) {
+    return Capacitor.getPlatform() || "android";
+  }
+  return "web";
+}
+
+export async function trackPageView(path: string) {
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser().catch(() => ({ data: { user: null } }));
+    await supabase.from("app_analytics_events").insert({
+      event_type: "page_view",
+      entity_type: "path",
+      entity_id: path,
+      platform: getPlatform(),
+      user_id: user?.id ?? null,
+    });
+  } catch (err) {
+    console.debug("trackPageView error:", err);
+  }
+}
+
+export async function trackArticleView(articleId: string) {
+  if (!articleId) return;
+  try {
+    const sessionKey = `abhitak.viewed.${articleId}`;
+    if (typeof window !== "undefined" && window.sessionStorage.getItem(sessionKey)) {
+      return;
+    }
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(sessionKey, "1");
+    }
+
+    // Call RPC to increment views race-condition-free
+    await supabase.rpc("increment_article_views", { _article_id: articleId });
+
+    // Log telemetry event
+    const {
+      data: { user },
+    } = await supabase.auth.getUser().catch(() => ({ data: { user: null } }));
+    await supabase.from("app_analytics_events").insert({
+      event_type: "article_view",
+      entity_type: "article",
+      entity_id: articleId,
+      platform: getPlatform(),
+      user_id: user?.id ?? null,
+    });
+  } catch (err) {
+    console.debug("trackArticleView error:", err);
+  }
+}
+
+export async function trackEngagement(
+  eventType: "like" | "share" | "double_tap" | "bookmark",
+  entityType: "article" | "reel",
+  entityId: string,
+  metadata?: Record<string, unknown>,
+) {
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser().catch(() => ({ data: { user: null } }));
+    await supabase.from("app_analytics_events").insert({
+      event_type: eventType,
+      entity_type: entityType,
+      entity_id: entityId,
+      platform: getPlatform(),
+      user_id: user?.id ?? null,
+      metadata: (metadata as Json) ?? null,
+    });
+  } catch (err) {
+    console.debug("trackEngagement error:", err);
+  }
+}

@@ -2,7 +2,12 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-type Profile = { full_name: string | null; phone: string | null; email: string | null; town_id: string | null };
+type Profile = {
+  full_name: string | null;
+  phone: string | null;
+  email: string | null;
+  town_id: string | null;
+};
 type AuthCtx = {
   user: User | null;
   roles: string[];
@@ -13,7 +18,13 @@ type AuthCtx = {
   refreshProfile: () => Promise<void>;
 };
 const Ctx = createContext<AuthCtx>({
-  user: null, roles: [], isStaff: false, loading: true, profile: null, needsOnboarding: false, refreshProfile: async () => {},
+  user: null,
+  roles: [],
+  isStaff: false,
+  loading: true,
+  profile: null,
+  needsOnboarding: false,
+  refreshProfile: async () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -23,7 +34,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = useCallback(async (uid: string) => {
-    const { data } = await supabase.from("profiles").select("full_name, phone, email, town_id").eq("id", uid).maybeSingle();
+    const { data } = await supabase
+      .from("profiles")
+      .select("full_name, phone, email, town_id")
+      .eq("id", uid)
+      .maybeSingle();
     setProfile(data ?? { full_name: null, phone: null, email: null, town_id: null });
   }, []);
 
@@ -36,7 +51,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           fetchProfile(u.id),
         ]);
         setRoles((data ?? []).map((r) => r.role));
-      } else { setRoles([]); setProfile(null); }
+      } else {
+        setRoles([]);
+        setProfile(null);
+      }
       setLoading(false);
     };
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
@@ -54,11 +72,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [fetchProfile]);
 
-  const refreshProfile = useCallback(async () => { if (user) await fetchProfile(user.id); }, [user, fetchProfile]);
+  const refreshProfile = useCallback(async () => {
+    if (user) await fetchProfile(user.id);
+  }, [user, fetchProfile]);
   const isStaff = roles.some((r) => ["super_admin", "admin", "editor", "moderator"].includes(r));
-  const needsOnboarding = !!user && !!profile && (!profile.full_name || !profile.phone || !profile.town_id);
+  const needsOnboarding =
+    !!user && !!profile && (!profile.full_name || !profile.phone || !profile.town_id);
   return (
-    <Ctx.Provider value={{ user, roles, isStaff, loading, profile, needsOnboarding, refreshProfile }}>{children}</Ctx.Provider>
+    <Ctx.Provider
+      value={{ user, roles, isStaff, loading, profile, needsOnboarding, refreshProfile }}
+    >
+      {children}
+    </Ctx.Provider>
   );
 }
 

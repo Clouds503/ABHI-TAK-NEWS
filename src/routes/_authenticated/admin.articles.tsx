@@ -207,12 +207,17 @@ function Articles() {
                     if (matchedCat && !categoryId) categoryId = matchedCat.id;
                   }
 
+                  const { downloadAndStoreMedia } = await import("@/lib/media-sync");
+                  const persistentCoverUrl = post.cover_url
+                    ? await downloadAndStoreMedia(post.cover_url, post.slug, supabase)
+                    : null;
+
                   const articleData = {
                     slug: post.slug,
                     title_hi: post.title_hi,
                     summary_hi: post.summary_hi,
                     body_hi: post.body_hi,
-                    cover_url: post.cover_url,
+                    cover_url: persistentCoverUrl,
                     published_at: post.published_at,
                     status: "published" as const,
                     town_id: townId,
@@ -230,7 +235,7 @@ function Articles() {
                   } else {
                     await supabase.from("articles").insert({
                       ...articleData,
-                      author_id: user?.id,
+                      author_id: user?.id ?? null,
                     });
                   }
                   imported++;
@@ -239,8 +244,8 @@ function Articles() {
                 toast.success(`Synced ${imported} articles from WordPress`, { id });
                 qc.invalidateQueries({ queryKey: ["admin-articles"] });
                 qc.invalidateQueries({ queryKey: ["articles"] });
-              } catch (err: any) {
-                toast.error(err.message, { id });
+              } catch (err: unknown) {
+                toast.error(err instanceof Error ? err.message : "Sync error", { id });
               }
             }}
           >

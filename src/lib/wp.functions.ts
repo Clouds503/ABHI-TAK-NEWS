@@ -61,9 +61,12 @@ export const fetchWordPressPosts = createServerFn({ method: "GET" }).handler(
       }
 
       return { success: true, posts };
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("fetchWordPressPosts error:", err);
-      return { success: false, error: err.message || "Failed to fetch from WordPress" };
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : "Failed to fetch from WordPress",
+      };
     }
   },
 );
@@ -74,7 +77,7 @@ export const fetchWordPressPosts = createServerFn({ method: "GET" }).handler(
  */
 export const syncWordPressArticles = createServerFn({ method: "POST" }).handler(async () => {
   try {
-    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    if (!process.env["SUPABASE_SERVICE_ROLE_KEY"]) {
       return {
         success: false,
         error:
@@ -110,12 +113,17 @@ export const syncWordPressArticles = createServerFn({ method: "POST" }).handler(
         if (matchedCat && !categoryId) categoryId = matchedCat.id;
       }
 
+      const { downloadAndStoreMedia } = await import("@/lib/media-sync");
+      const persistentCoverUrl = post.cover_url
+        ? await downloadAndStoreMedia(post.cover_url, post.slug, supabaseAdmin)
+        : null;
+
       const articleData = {
         slug: post.slug,
         title_hi: post.title_hi,
         summary_hi: post.summary_hi,
         body_hi: post.body_hi,
-        cover_url: post.cover_url,
+        cover_url: persistentCoverUrl,
         published_at: post.published_at,
         status: "published" as const,
         town_id: townId,
@@ -140,15 +148,15 @@ export const syncWordPressArticles = createServerFn({ method: "POST" }).handler(
 
         await supabaseAdmin.from("articles").insert({
           ...articleData,
-          author_id: adminUser?.user_id || undefined,
+          author_id: adminUser?.user_id || null,
         });
       }
       imported++;
     }
 
     return { success: true, imported };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Sync error:", err);
-    return { success: false, error: err.message };
+    return { success: false, error: err instanceof Error ? err.message : "Sync error" };
   }
 });

@@ -26,10 +26,12 @@ import { Route as AuthenticatedReportRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedSavedRouteImport } from './routes/_authenticated/saved'
 import { Route as JanKiAwaazIndexRouteImport } from './routes/jan-ki-awaaz/index'
 import { Route as JanKiAwaazIdRouteImport } from './routes/jan-ki-awaaz/$id'
+import { Route as NewsIndexRouteImport } from './routes/news.index'
 import { Route as NewsSlugRouteImport } from './routes/news.$slug'
 import { Route as TownSlugRouteImport } from './routes/town.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminAdsRouteImport } from './routes/_authenticated/admin.ads'
+import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin.analytics'
 import { Route as AuthenticatedAdminArticlesRouteImport } from './routes/_authenticated/admin.articles'
 import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_authenticated/admin.categories'
 import { Route as AuthenticatedAdminCitiesRouteImport } from './routes/_authenticated/admin.cities'
@@ -40,6 +42,7 @@ import { Route as AuthenticatedAdminTownsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
 import { Route as AuthenticatedAdminVillagesRouteImport } from './routes/_authenticated/admin.villages'
 import { Route as ApiPublicCampaignEventRouteImport } from './routes/api/public/campaign-event'
+import { Route as ApiPublicSyncYoutubeRouteImport } from './routes/api/public/sync-youtube'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -125,6 +128,11 @@ const JanKiAwaazIdRoute = JanKiAwaazIdRouteImport.update({
   path: '/jan-ki-awaaz/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NewsIndexRoute = NewsIndexRouteImport.update({
+  id: '/news/',
+  path: '/news/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NewsSlugRoute = NewsSlugRouteImport.update({
   id: '/news/$slug',
   path: '/news/$slug',
@@ -145,6 +153,12 @@ const AuthenticatedAdminAdsRoute = AuthenticatedAdminAdsRouteImport.update({
   path: '/ads',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminAnalyticsRoute =
+  AuthenticatedAdminAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminArticlesRoute =
   AuthenticatedAdminArticlesRouteImport.update({
     id: '/articles',
@@ -201,6 +215,11 @@ const ApiPublicCampaignEventRoute = ApiPublicCampaignEventRouteImport.update({
   path: '/api/public/campaign-event',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSyncYoutubeRoute = ApiPublicSyncYoutubeRouteImport.update({
+  id: '/api/public/sync-youtube',
+  path: '/api/public/sync-youtube',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -221,7 +240,9 @@ export interface FileRoutesByFullPath {
   '/news/$slug': typeof NewsSlugRoute
   '/town/$slug': typeof TownSlugRoute
   '/jan-ki-awaaz/': typeof JanKiAwaazIndexRoute
+  '/news/': typeof NewsIndexRoute
   '/admin/ads': typeof AuthenticatedAdminAdsRoute
+  '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/articles': typeof AuthenticatedAdminArticlesRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/cities': typeof AuthenticatedAdminCitiesRoute
@@ -232,6 +253,7 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/villages': typeof AuthenticatedAdminVillagesRoute
   '/api/public/campaign-event': typeof ApiPublicCampaignEventRoute
+  '/api/public/sync-youtube': typeof ApiPublicSyncYoutubeRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -252,7 +274,9 @@ export interface FileRoutesByTo {
   '/news/$slug': typeof NewsSlugRoute
   '/town/$slug': typeof TownSlugRoute
   '/jan-ki-awaaz': typeof JanKiAwaazIndexRoute
+  '/news': typeof NewsIndexRoute
   '/admin/ads': typeof AuthenticatedAdminAdsRoute
+  '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/admin/articles': typeof AuthenticatedAdminArticlesRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/cities': typeof AuthenticatedAdminCitiesRoute
@@ -263,6 +287,7 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/villages': typeof AuthenticatedAdminVillagesRoute
   '/api/public/campaign-event': typeof ApiPublicCampaignEventRoute
+  '/api/public/sync-youtube': typeof ApiPublicSyncYoutubeRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesById {
@@ -286,7 +311,9 @@ export interface FileRoutesById {
   '/news/$slug': typeof NewsSlugRoute
   '/town/$slug': typeof TownSlugRoute
   '/jan-ki-awaaz/': typeof JanKiAwaazIndexRoute
+  '/news/': typeof NewsIndexRoute
   '/_authenticated/admin/ads': typeof AuthenticatedAdminAdsRoute
+  '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/_authenticated/admin/articles': typeof AuthenticatedAdminArticlesRoute
   '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/_authenticated/admin/cities': typeof AuthenticatedAdminCitiesRoute
@@ -297,6 +324,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
   '/_authenticated/admin/villages': typeof AuthenticatedAdminVillagesRoute
   '/api/public/campaign-event': typeof ApiPublicCampaignEventRoute
+  '/api/public/sync-youtube': typeof ApiPublicSyncYoutubeRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -320,7 +348,9 @@ export interface FileRouteTypes {
     | '/news/$slug'
     | '/town/$slug'
     | '/jan-ki-awaaz/'
+    | '/news/'
     | '/admin/ads'
+    | '/admin/analytics'
     | '/admin/articles'
     | '/admin/categories'
     | '/admin/cities'
@@ -331,6 +361,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/villages'
     | '/api/public/campaign-event'
+    | '/api/public/sync-youtube'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -351,7 +382,9 @@ export interface FileRouteTypes {
     | '/news/$slug'
     | '/town/$slug'
     | '/jan-ki-awaaz'
+    | '/news'
     | '/admin/ads'
+    | '/admin/analytics'
     | '/admin/articles'
     | '/admin/categories'
     | '/admin/cities'
@@ -362,6 +395,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/villages'
     | '/api/public/campaign-event'
+    | '/api/public/sync-youtube'
     | '/admin'
   id:
     | '__root__'
@@ -384,7 +418,9 @@ export interface FileRouteTypes {
     | '/news/$slug'
     | '/town/$slug'
     | '/jan-ki-awaaz/'
+    | '/news/'
     | '/_authenticated/admin/ads'
+    | '/_authenticated/admin/analytics'
     | '/_authenticated/admin/articles'
     | '/_authenticated/admin/categories'
     | '/_authenticated/admin/cities'
@@ -395,6 +431,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/users'
     | '/_authenticated/admin/villages'
     | '/api/public/campaign-event'
+    | '/api/public/sync-youtube'
     | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -414,7 +451,9 @@ export interface RootRouteChildren {
   NewsSlugRoute: typeof NewsSlugRoute
   TownSlugRoute: typeof TownSlugRoute
   JanKiAwaazIndexRoute: typeof JanKiAwaazIndexRoute
+  NewsIndexRoute: typeof NewsIndexRoute
   ApiPublicCampaignEventRoute: typeof ApiPublicCampaignEventRoute
+  ApiPublicSyncYoutubeRoute: typeof ApiPublicSyncYoutubeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -538,6 +577,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JanKiAwaazIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/news/': {
+      id: '/news/'
+      path: '/news'
+      fullPath: '/news/'
+      preLoaderRoute: typeof NewsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/news/$slug': {
       id: '/news/$slug'
       path: '/news/$slug'
@@ -564,6 +610,13 @@ declare module '@tanstack/react-router' {
       path: '/ads'
       fullPath: '/admin/ads'
       preLoaderRoute: typeof AuthenticatedAdminAdsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/analytics': {
+      id: '/_authenticated/admin/analytics'
+      path: '/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AuthenticatedAdminAnalyticsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/articles': {
@@ -636,11 +689,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCampaignEventRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sync-youtube': {
+      id: '/api/public/sync-youtube'
+      path: '/api/public/sync-youtube'
+      fullPath: '/api/public/sync-youtube'
+      preLoaderRoute: typeof ApiPublicSyncYoutubeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAdsRoute: typeof AuthenticatedAdminAdsRoute
+  AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
   AuthenticatedAdminArticlesRoute: typeof AuthenticatedAdminArticlesRoute
   AuthenticatedAdminCategoriesRoute: typeof AuthenticatedAdminCategoriesRoute
   AuthenticatedAdminCitiesRoute: typeof AuthenticatedAdminCitiesRoute
@@ -655,6 +716,7 @@ interface AuthenticatedAdminRouteChildren {
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAdsRoute: AuthenticatedAdminAdsRoute,
+  AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
   AuthenticatedAdminArticlesRoute: AuthenticatedAdminArticlesRoute,
   AuthenticatedAdminCategoriesRoute: AuthenticatedAdminCategoriesRoute,
   AuthenticatedAdminCitiesRoute: AuthenticatedAdminCitiesRoute,
@@ -703,18 +765,10 @@ const rootRouteChildren: RootRouteChildren = {
   NewsSlugRoute: NewsSlugRoute,
   TownSlugRoute: TownSlugRoute,
   JanKiAwaazIndexRoute: JanKiAwaazIndexRoute,
+  NewsIndexRoute: NewsIndexRoute,
   ApiPublicCampaignEventRoute: ApiPublicCampaignEventRoute,
+  ApiPublicSyncYoutubeRoute: ApiPublicSyncYoutubeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

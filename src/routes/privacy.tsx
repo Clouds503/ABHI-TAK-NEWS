@@ -7,9 +7,16 @@ export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
       { title: "Privacy Policy — Abhi Tak News" },
-      { name: "description", content: "Privacy Policy for Abhi Tak News digital network and mobile application (District Bijnor)." },
+      {
+        name: "description",
+        content:
+          "Privacy Policy for Abhi Tak News digital network and mobile application (District Bijnor).",
+      },
       { property: "og:title", content: "Privacy Policy — Abhi Tak News" },
-      { property: "og:description", content: "Privacy Policy and data practices for Abhi Tak News." },
+      {
+        property: "og:description",
+        content: "Privacy Policy and data practices for Abhi Tak News.",
+      },
     ],
   }),
   component: PrivacyPolicy,
@@ -23,7 +30,10 @@ function PrivacyPolicy() {
     <div className="mx-auto max-w-2xl px-4 py-6 text-foreground">
       {/* Top Bar */}
       <div className="mb-6 flex items-center gap-3 border-b pb-4">
-        <Link to="/" className="inline-flex h-9 w-9 items-center justify-center rounded-full border bg-card text-muted-foreground hover:text-foreground">
+        <Link
+          to="/"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full border bg-card text-muted-foreground hover:text-foreground"
+        >
           <ArrowLeft className="h-4 w-4" />
         </Link>
         <Logo className="h-9 w-9 shrink-0" />
@@ -44,11 +54,17 @@ function PrivacyPolicy() {
           <div className="text-sm leading-relaxed text-muted-foreground">
             {isHi ? (
               <>
-                <strong className="text-foreground">अभी तक न्यूज़ (Abhi Tak News)</strong> आपकी गोपनीयता का पूरा सम्मान करता है। यह नीति बताती है कि जब आप हमारी वेबसाइट या Android ऐप (<code className="text-xs font-mono">com.abhitak.news</code>) का उपयोग करते हैं तो हम आपकी जानकारी का संग्रह, उपयोग और सुरक्षा कैसे करते हैं।
+                <strong className="text-foreground">अभी तक न्यूज़ (Abhi Tak News)</strong> आपकी
+                गोपनीयता का पूरा सम्मान करता है। यह नीति बताती है कि जब आप हमारी वेबसाइट या Android
+                ऐप (<code className="text-xs font-mono">com.abhitak.news</code>) का उपयोग करते हैं
+                तो हम आपकी जानकारी का संग्रह, उपयोग और सुरक्षा कैसे करते हैं।
               </>
             ) : (
               <>
-                <strong className="text-foreground">Abhi Tak News</strong> respects your privacy. This policy explains how we collect, use, and protect your information when you use our website or Android application (<code className="text-xs font-mono">com.abhitak.news</code>).
+                <strong className="text-foreground">Abhi Tak News</strong> respects your privacy.
+                This policy explains how we collect, use, and protect your information when you use
+                our website or Android application (
+                <code className="text-xs font-mono">com.abhitak.news</code>).
               </>
             )}
           </div>
@@ -149,7 +165,9 @@ function PrivacyPolicy() {
         <section className="space-y-2">
           <h2 className="flex items-center gap-2 text-base font-bold text-foreground">
             <Bell className="h-4 w-4 text-primary" />
-            {isHi ? "5. डेटा सुरक्षा और खाता हटाना (Data Deletion)" : "5. Data Retention & Account Deletion"}
+            {isHi
+              ? "5. डेटा सुरक्षा और खाता हटाना (Data Deletion)"
+              : "5. Data Retention & Account Deletion"}
           </h2>
           <p className="text-muted-foreground pl-6">
             {isHi
@@ -167,10 +185,18 @@ function PrivacyPolicy() {
             <p className="font-semibold text-foreground">अभी तक डिजिटल समाचार नेटवर्क</p>
             <p>जनपद बिजनौर, उत्तर प्रदेश, भारत · District Bijnor, Uttar Pradesh, India</p>
             <div className="flex flex-wrap gap-4 pt-1">
-              <a href={`tel:${CONTACT_PHONE.replace(/-/g, "")}`} className="inline-flex items-center gap-1.5 text-primary hover:underline font-medium">
+              <a
+                href={`tel:${CONTACT_PHONE.replace(/-/g, "")}`}
+                className="inline-flex items-center gap-1.5 text-primary hover:underline font-medium"
+              >
                 <Phone className="h-4 w-4" /> {CONTACT_PHONE}
               </a>
-              <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-emerald-600 hover:underline font-medium">
+              <a
+                href={WHATSAPP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-emerald-600 hover:underline font-medium"
+              >
                 <Mail className="h-4 w-4" /> WhatsApp
               </a>
             </div>
@@ -180,7 +206,10 @@ function PrivacyPolicy() {
 
       {/* Back button */}
       <div className="mt-8 border-t pt-6 text-center">
-        <Link to="/" className="inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow">
+        <Link
+          to="/"
+          className="inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow"
+        >
           {isHi ? "मुख्य पृष्ठ पर जाएं (Home)" : "Back to Home"}
         </Link>
       </div>

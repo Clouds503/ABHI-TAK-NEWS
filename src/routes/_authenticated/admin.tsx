@@ -1,5 +1,20 @@
 import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
-import { LayoutDashboard, Megaphone, Newspaper, ArrowLeft, BadgeIndianRupee, ShieldAlert, Users, Clapperboard, CalendarDays, MapPin, Building2, Sprout, FolderTree } from "lucide-react";
+import {
+  LayoutDashboard,
+  Megaphone,
+  Newspaper,
+  ArrowLeft,
+  BadgeIndianRupee,
+  ShieldAlert,
+  Users,
+  Clapperboard,
+  CalendarDays,
+  MapPin,
+  Building2,
+  Sprout,
+  FolderTree,
+  BarChart3,
+} from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Logo } from "@/components/AppShell";
 
@@ -10,6 +25,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 const nav = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/admin/moderation", label: "Jan Ki Awaaz", icon: Megaphone },
   { to: "/admin/articles", label: "News", icon: Newspaper },
   { to: "/admin/categories", label: "Categories", icon: FolderTree },
@@ -22,7 +38,6 @@ const nav = [
   { to: "/admin/users", label: "Users", icon: Users },
 ] as const;
 
-
 function AdminLayout() {
   const { isStaff, loading } = useAuth();
   if (loading) return null;
@@ -32,8 +47,12 @@ function AdminLayout() {
         <div>
           <ShieldAlert className="mx-auto h-10 w-10 text-primary" />
           <h1 className="mt-3 text-xl font-bold">Staff access only</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Your account doesn't have a newsroom role yet.</p>
-          <Link to="/" className="mt-4 inline-block text-primary">← Back to app</Link>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Your account doesn't have a newsroom role yet.
+          </p>
+          <Link to="/" className="mt-4 inline-block text-primary">
+            ← Back to app
+          </Link>
         </div>
       </div>
     );
@@ -46,14 +65,30 @@ function AdminLayout() {
         </div>
         <nav className="no-scrollbar flex gap-1 overflow-x-auto px-2 pb-2 md:flex-col">
           {nav.map((n) => (
-            <Link key={n.to} to={n.to} activeOptions={{ exact: "exact" in n }} className="flex h-10 shrink-0 items-center gap-3 rounded px-3 text-sm hover:bg-sidebar-accent" activeProps={{ className: "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary" }}>
+            <Link
+              key={n.to}
+              to={n.to}
+              activeOptions={{ exact: "exact" in n }}
+              className="flex h-10 shrink-0 items-center gap-3 rounded px-3 text-sm hover:bg-sidebar-accent"
+              activeProps={{
+                className:
+                  "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary",
+              }}
+            >
               <n.icon className="h-4 w-4" /> {n.label}
             </Link>
           ))}
-          <Link to="/" className="flex h-10 shrink-0 items-center gap-3 rounded px-3 text-sm text-sidebar-foreground/60 hover:bg-sidebar-accent"><ArrowLeft className="h-4 w-4" /> Public app</Link>
+          <Link
+            to="/"
+            className="flex h-10 shrink-0 items-center gap-3 rounded px-3 text-sm text-sidebar-foreground/60 hover:bg-sidebar-accent"
+          >
+            <ArrowLeft className="h-4 w-4" /> Public app
+          </Link>
         </nav>
       </aside>
-      <main className="min-w-0 p-4 md:p-8"><Outlet /></main>
+      <main className="min-w-0 p-4 md:p-8">
+        <Outlet />
+      </main>
     </div>
   );
 }

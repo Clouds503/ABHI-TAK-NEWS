@@ -34,7 +34,10 @@ const dict = {
   language: { hi: "भाषा", en: "Language" },
   appearance: { hi: "थीम", en: "Appearance" },
   anonymous: { hi: "अज्ञात नागरिक", en: "Anonymous Citizen" },
-  createProfile: { hi: "अपनी आवाज़ उठाने के लिए प्रोफाइल बनाएं", en: "Create a profile to raise your voice" },
+  createProfile: {
+    hi: "अपनी आवाज़ उठाने के लिए प्रोफाइल बनाएं",
+    en: "Create a profile to raise your voice",
+  },
   nowLive: { hi: "अभी लाइव", en: "Live now" },
   offAir: { hi: "प्रसारण बंद", en: "Off air" },
   share: { hi: "शेयर", en: "Share" },
@@ -143,6 +146,10 @@ export function timeAgo(iso: string | null | undefined, lang: Lang | null) {
   const hi = lang !== "en";
   if (diff < 1) return hi ? "अभी" : "just now";
   if (diff < 60) return hi ? `${Math.floor(diff)} मिनट पहले` : `${Math.floor(diff)}m ago`;
-  if (diff < 1440) return hi ? `${Math.floor(diff / 60)} घंटे पहले` : `${Math.floor(diff / 60)}h ago`;
-  return new Date(iso).toLocaleDateString(hi ? "hi-IN" : "en-IN", { day: "numeric", month: "short" });
+  if (diff < 1440)
+    return hi ? `${Math.floor(diff / 60)} घंटे पहले` : `${Math.floor(diff / 60)}h ago`;
+  return new Date(iso).toLocaleDateString(hi ? "hi-IN" : "en-IN", {
+    day: "numeric",
+    month: "short",
+  });
 }

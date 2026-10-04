@@ -143,8 +143,13 @@
 }
 
 @layer base {
-  * { border-color: var(--color-border); }
-  html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; }
+  * {
+    border-color: var(--color-border);
+  }
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+  }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
@@ -152,20 +157,50 @@
     -webkit-font-smoothing: antialiased;
     overscroll-behavior-y: none;
   }
-  a, button, [role="button"], input, select, textarea, label, summary {
+  a,
+  button,
+  [role="button"],
+  input,
+  select,
+  textarea,
+  label,
+  summary {
     touch-action: manipulation;
   }
-  button, [role="button"], a { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
-  button:active, [role="button"]:active { transition-duration: 60ms; }
-  h1, h2, h3, .headline { font-family: var(--font-serif); letter-spacing: -0.01em; }
+  button,
+  [role="button"],
+  a {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  button:active,
+  [role="button"]:active {
+    transition-duration: 60ms;
+  }
+  h1,
+  h2,
+  h3,
+  .headline {
+    font-family: var(--font-serif);
+    letter-spacing: -0.01em;
+  }
 }
 
-@utility pb-safe { padding-bottom: max(env(safe-area-inset-bottom), 0.5rem); }
-@utility pt-safe { padding-top: env(safe-area-inset-top); }
-@utility bottom-safe { bottom: max(env(safe-area-inset-bottom), 0.75rem); }
+@utility pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
+}
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+@utility bottom-safe {
+  bottom: max(env(safe-area-inset-bottom), 0.75rem);
+}
 @utility no-scrollbar {
   scrollbar-width: none;
-  &::-webkit-scrollbar { display: none; }
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 @utility metal-rule {
   background: linear-gradient(90deg, var(--silver), oklch(1 0 0), var(--silver));
@@ -174,19 +209,47 @@
 @utility liquid-nav-button {
   background-color: var(--glass);
   border: 1px solid var(--glass-border);
-  box-shadow: inset 0 1px 0 oklch(1 0 0 / 42%), 0 4px 14px var(--glass-shadow);
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 42%),
+    0 4px 14px var(--glass-shadow);
   backdrop-filter: blur(10px) saturate(125%);
 }
 
 @supports not (backdrop-filter: blur(1px)) {
-  .liquid-nav-button { background-color: var(--color-background); }
+  .liquid-nav-button {
+    background-color: var(--color-background);
+  }
 }
 
-@keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-@utility animate-ticker { animation: ticker 40s linear infinite; }
-@keyframes live-pulse { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
-@utility animate-live { animation: live-pulse 1.4s ease-in-out infinite; }
+@keyframes ticker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@utility animate-ticker {
+  animation: ticker 40s linear infinite;
+}
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+@utility animate-live {
+  animation: live-pulse 1.4s ease-in-out infinite;
+}
 @media (prefers-reduced-motion: reduce) {
-  .animate-ticker, .animate-live { animation: none; }
-  html { scroll-behavior: auto; }
+  .animate-ticker,
+  .animate-live {
+    animation: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
 }

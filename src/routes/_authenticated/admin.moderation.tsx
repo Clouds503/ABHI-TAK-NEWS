@@ -9,11 +9,30 @@ import { img } from "@/lib/media";
 import { StatusPill } from "@/components/news";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import type { Database } from "@/integrations/supabase/types";
 
 type Status = Database["public"]["Enums"]["jka_status"];
-const FILTERS: (Status | "all")[] = ["pending", "approved", "forwarded", "in_progress", "resolved", "rejected", "archived", "all"];
+const FILTERS: (Status | "all")[] = [
+  "pending",
+  "approved",
+  "forwarded",
+  "in_progress",
+  "resolved",
+  "rejected",
+  "archived",
+  "all",
+];
 
 export const Route = createFileRoute("/_authenticated/admin/moderation")({
   component: Moderation,
@@ -30,7 +49,10 @@ function Moderation() {
   const { data } = useQuery({
     queryKey: ["mod", filter],
     queryFn: async () => {
-      let q = supabase.from("jan_ki_awaaz_posts").select("*, town:towns(name_en)").order("created_at", { ascending: false });
+      let q = supabase
+        .from("jan_ki_awaaz_posts")
+        .select("*, town:towns(name_en)")
+        .order("created_at", { ascending: false });
       if (filter !== "all") q = q.eq("status", filter);
       const { data, error } = await q;
       if (error) throw error;
@@ -41,15 +63,27 @@ function Moderation() {
   const { data: profile } = useQuery({
     queryKey: ["mod-profile", post?.user_id],
     enabled: !!post?.user_id,
-    queryFn: async () => (await supabase.from("profiles").select("full_name, phone, email").eq("id", post!.user_id!).maybeSingle()).data,
+    queryFn: async () =>
+      (
+        await supabase
+          .from("profiles")
+          .select("full_name, phone, email")
+          .eq("id", post!.user_id!)
+          .maybeSingle()
+      ).data,
   });
 
   const log = (action: string, id: string) =>
-    supabase.from("admin_activity_logs").insert({ actor_id: user!.id, action, entity: "jan_ki_awaaz", entity_id: id });
+    supabase
+      .from("admin_activity_logs")
+      .insert({ actor_id: user!.id, action, entity: "jan_ki_awaaz", entity_id: id });
 
   const setStatus = async (id: string, status: Status) => {
     const { error } = await supabase.from("jan_ki_awaaz_posts").update({ status }).eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     await log(`status:${status}`, id);
     toast.success(`Marked ${status}`);
     qc.invalidateQueries({ queryKey: ["mod"] });
@@ -66,7 +100,10 @@ function Moderation() {
   };
   const remove = async (id: string) => {
     const { error } = await supabase.from("jan_ki_awaaz_posts").delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     await log("delete", id);
     setSelected(null);
     qc.invalidateQueries({ queryKey: ["mod"] });
@@ -77,57 +114,149 @@ function Moderation() {
       <h1 className="text-2xl font-bold">Jan Ki Awaaz moderation</h1>
       <div className="no-scrollbar mt-4 flex gap-2 overflow-x-auto">
         {FILTERS.map((f) => (
-          <button key={f} onClick={() => setFilter(f)} className={`h-9 shrink-0 rounded border px-3 text-sm capitalize ${filter === f ? "border-primary bg-primary text-primary-foreground" : "bg-card"}`}>{f.replace("_", " ")}</button>
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={`h-9 shrink-0 rounded border px-3 text-sm capitalize ${filter === f ? "border-primary bg-primary text-primary-foreground" : "bg-card"}`}
+          >
+            {f.replace("_", " ")}
+          </button>
         ))}
       </div>
       <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
         <div className="divide-y rounded-md border bg-card">
-          {!data?.length && <div className="p-6 text-sm text-muted-foreground">Queue is empty.</div>}
+          {!data?.length && (
+            <div className="p-6 text-sm text-muted-foreground">Queue is empty.</div>
+          )}
           {data?.map((p) => (
-            <button key={p.id} onClick={() => { setSelected(p.id); setNotes(p.admin_notes ?? ""); }} className={`block w-full p-3 text-left hover:bg-muted ${selected === p.id ? "bg-accent" : ""}`}>
-              <div className="flex items-center justify-between gap-2"><span className="text-xs font-semibold uppercase text-primary">{jkaCat(p.category)}</span><StatusPill status={p.status} /></div>
+            <button
+              key={p.id}
+              onClick={() => {
+                setSelected(p.id);
+                setNotes(p.admin_notes ?? "");
+              }}
+              className={`block w-full p-3 text-left hover:bg-muted ${selected === p.id ? "bg-accent" : ""}`}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-semibold uppercase text-primary">
+                  {jkaCat(p.category)}
+                </span>
+                <StatusPill status={p.status} />
+              </div>
               <div className="mt-1 font-semibold">{p.title}</div>
-              <div className="text-xs text-muted-foreground">{p.town?.name_en} · {new Date(p.created_at).toLocaleString("en-IN")}</div>
+              <div className="text-xs text-muted-foreground">
+                {p.town?.name_en} · {new Date(p.created_at).toLocaleString("en-IN")}
+              </div>
             </button>
           ))}
         </div>
         {post ? (
           <div className="rounded-md border bg-card p-5">
-            <div className="flex items-center justify-between"><StatusPill status={post.status} /><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={post.is_featured} onChange={(e) => toggleFeature(post.id, e.target.checked)} /> Featured</label></div>
+            <div className="flex items-center justify-between">
+              <StatusPill status={post.status} />
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={post.is_featured}
+                  onChange={(e) => toggleFeature(post.id, e.target.checked)}
+                />{" "}
+                Featured
+              </label>
+            </div>
             <h2 className="mt-3 text-xl font-bold">{post.title}</h2>
             <p className="mt-2 whitespace-pre-line text-[15px]">{post.description}</p>
-            {post.photo_url && <img src={img(post.photo_url)} alt="" className="mt-3 max-h-72 w-full rounded object-cover" />}
-            {post.video_url && <video src={post.video_url} controls className="mt-3 w-full rounded" />}
+            {post.photo_url && (
+              <img
+                src={img(post.photo_url)}
+                alt=""
+                className="mt-3 max-h-72 w-full rounded object-cover"
+              />
+            )}
+            {post.video_url && (
+              <video src={post.video_url} controls className="mt-3 w-full rounded" />
+            )}
             <div className="mt-4 rounded border bg-muted/50 p-3 text-sm">
-              <div className="text-xs font-bold uppercase text-muted-foreground">Reporter identity (staff only)</div>
-              <div className="mt-1">{post.reporter_name ?? "—"} {post.is_anonymous && <span className="text-primary">(published anonymously)</span>}</div>
-              {post.user_id && profile && <div className="text-muted-foreground">{profile.phone ?? "no phone"} · {profile.email}</div>}
+              <div className="text-xs font-bold uppercase text-muted-foreground">
+                Reporter identity (staff only)
+              </div>
+              <div className="mt-1">
+                {post.reporter_name ?? "—"}{" "}
+                {post.is_anonymous && <span className="text-primary">(published anonymously)</span>}
+              </div>
+              {post.user_id && profile && (
+                <div className="text-muted-foreground">
+                  {profile.phone ?? "no phone"} · {profile.email}
+                </div>
+              )}
               {post.area && <div className="text-muted-foreground">Area: {post.area}</div>}
-              {post.latitude && <div className="text-muted-foreground">GPS: {post.latitude.toFixed(4)}, {post.longitude?.toFixed(4)}</div>}
+              {post.latitude && (
+                <div className="text-muted-foreground">
+                  GPS: {post.latitude.toFixed(4)}, {post.longitude?.toFixed(4)}
+                </div>
+              )}
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
-              <Button size="sm" onClick={() => setStatus(post.id, "approved")}>Approve</Button>
-              <Button size="sm" variant="secondary" onClick={() => setStatus(post.id, "forwarded")}>Forward</Button>
-              <Button size="sm" variant="secondary" onClick={() => setStatus(post.id, "in_progress")}>In progress</Button>
-              <Button size="sm" variant="secondary" onClick={() => setStatus(post.id, "resolved")}>Resolved</Button>
-              <Button size="sm" variant="outline" onClick={() => setStatus(post.id, "rejected")}>Reject</Button>
-              <Button size="sm" variant="outline" onClick={() => setStatus(post.id, "archived")}>Archive</Button>
+              <Button size="sm" onClick={() => setStatus(post.id, "approved")}>
+                Approve
+              </Button>
+              <Button size="sm" variant="secondary" onClick={() => setStatus(post.id, "forwarded")}>
+                Forward
+              </Button>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => setStatus(post.id, "in_progress")}
+              >
+                In progress
+              </Button>
+              <Button size="sm" variant="secondary" onClick={() => setStatus(post.id, "resolved")}>
+                Resolved
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setStatus(post.id, "rejected")}>
+                Reject
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setStatus(post.id, "archived")}>
+                Archive
+              </Button>
               <AlertDialog>
-                <AlertDialogTrigger asChild><Button size="sm" variant="destructive">Delete</Button></AlertDialogTrigger>
+                <AlertDialogTrigger asChild>
+                  <Button size="sm" variant="destructive">
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
                 <AlertDialogContent>
-                  <AlertDialogHeader><AlertDialogTitle>Delete this issue permanently?</AlertDialogTitle><AlertDialogDescription>This cannot be undone. Consider archiving instead.</AlertDialogDescription></AlertDialogHeader>
-                  <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => remove(post.id)}>Delete</AlertDialogAction></AlertDialogFooter>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete this issue permanently?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This cannot be undone. Consider archiving instead.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => remove(post.id)}>Delete</AlertDialogAction>
+                  </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
             </div>
             <div className="mt-5">
-              <div className="text-xs font-bold uppercase text-muted-foreground">Private internal notes</div>
+              <div className="text-xs font-bold uppercase text-muted-foreground">
+                Private internal notes
+              </div>
               <Textarea className="mt-1" value={notes} onChange={(e) => setNotes(e.target.value)} />
-              <Button size="sm" variant="outline" className="mt-2" onClick={() => saveNotes(post.id)}>Save notes</Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="mt-2"
+                onClick={() => saveNotes(post.id)}
+              >
+                Save notes
+              </Button>
             </div>
           </div>
         ) : (
-          <div className="hidden rounded-md border border-dashed p-10 text-center text-sm text-muted-foreground lg:block">Select an issue to review</div>
+          <div className="hidden rounded-md border border-dashed p-10 text-center text-sm text-muted-foreground lg:block">
+            Select an issue to review
+          </div>
         )}
       </div>
     </div>

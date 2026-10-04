@@ -7,9 +7,15 @@ export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
       { title: "About Abhi Tak — District Bijnor's news network" },
-      { name: "description", content: "Abhi Tak is a digital news network dedicated to District Bijnor, Uttar Pradesh." },
+      {
+        name: "description",
+        content: "Abhi Tak is a digital news network dedicated to District Bijnor, Uttar Pradesh.",
+      },
       { property: "og:title", content: "About Abhi Tak" },
-      { property: "og:description", content: "A digital news network dedicated to District Bijnor, Uttar Pradesh." },
+      {
+        property: "og:description",
+        content: "A digital news network dedicated to District Bijnor, Uttar Pradesh.",
+      },
     ],
   }),
   component: About,
@@ -20,7 +26,9 @@ function About() {
   return (
     <div className="px-4 py-8">
       <Logo className="h-20 w-20" />
-      <h1 className="mt-5 text-3xl font-bold">{lang === "en" ? "About Abhi Tak" : "अभी तक के बारे में"}</h1>
+      <h1 className="mt-5 text-3xl font-bold">
+        {lang === "en" ? "About Abhi Tak" : "अभी तक के बारे में"}
+      </h1>
       <p className="mt-4 text-[17px] leading-relaxed">
         {lang === "en"
           ? "Abhi Tak is a district-focused digital news network covering every town and village of District Bijnor — from Nagina and Dhampur to Najibabad, Chandpur and beyond. Through Jan Ki Awaaz, residents can raise local issues and follow them until they are resolved."

@@ -1,5 +1,5 @@
 // Browser polyfill for node:async_hooks used by @tanstack/start-storage-context
-export class AsyncLocalStorage<T = any> {
+export class AsyncLocalStorage<T = unknown> {
   private store: T | undefined = undefined;
 
   getStore(): T | undefined {

@@ -80,9 +80,12 @@ export interface CreateAdminUserParams {
  * so the currently logged-in admin's active session is never overwritten.
  */
 export async function createAdminUser(params: CreateAdminUserParams): Promise<{ userId: string }> {
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+  const supabaseUrl =
+    (import.meta.env["VITE_SUPABASE_URL"] as string | undefined) ||
+    (process.env["SUPABASE_URL"] as string | undefined);
   const supabaseKey =
-    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
+    (import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] as string | undefined) ||
+    (process.env["SUPABASE_PUBLISHABLE_KEY"] as string | undefined);
 
   if (!supabaseUrl || !supabaseKey) {
     throw new Error("Missing Supabase configuration (URL or publishable key).");
@@ -129,7 +132,7 @@ export async function createAdminUser(params: CreateAdminUserParams): Promise<{ 
   }
 
   // Check if user already existed
-  if (signUpData.user.identities && signUpData.user.identities.length === 0) {
+  if (signUpData.user?.identities && signUpData.user.identities.length === 0) {
     throw new Error("An account with this email address already exists.");
   }
 
@@ -255,7 +258,7 @@ export async function updateUserProfile(
   }
 
   // Fallback to direct profiles table update
-  const payload: Record<string, unknown> = {};
+  const payload: Database["public"]["Tables"]["profiles"]["Update"] = {};
   if (updates.full_name !== undefined) payload.full_name = updates.full_name;
   if (updates.phone !== undefined) payload.phone = updates.phone;
   if (updates.town_id !== undefined) payload.town_id = updates.town_id;

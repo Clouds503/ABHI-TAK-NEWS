@@ -32,10 +32,9 @@ export const CONTACT_PHONE = "+91-8445829007";
 export const WHATSAPP_URL = "https://wa.me/918445829007";
 export const YOUTUBE_CHANNEL = "https://www.youtube.com/@AbhitakNewsChannel";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import logo from "@/assets/abhi-tak-logo-256.webp.asset.json";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
-import { townsQuery, citiesQuery, villagesQuery } from "@/lib/queries";
+import { townsQuery, citiesQuery, villagesQuery, categoriesQuery } from "@/lib/queries";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -44,15 +43,12 @@ import { Input } from "@/components/ui/input";
 export function Logo({ className }: { className?: string }) {
   return (
     <img
-      src={logo.url}
+      src="/pwa-192.png"
       alt="Abhi Tak"
       width={48}
       height={48}
       decoding="sync"
       fetchPriority="high"
-      onError={(e) => {
-        e.currentTarget.src = "/pwa-192.png";
-      }}
       className={cn("rounded-[6px] object-contain", className)}
     />
   );
@@ -336,6 +332,7 @@ function SideMenu({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boo
   const { user, isStaff } = useAuth();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const { data: towns } = useQuery(townsQuery);
+  const { data: categories } = useQuery(categoriesQuery);
   const close = () => onOpenChange(false);
   const toggleDark = () => {
     const d = document.documentElement.classList.toggle("dark");
@@ -397,6 +394,29 @@ function SideMenu({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boo
         </div>
 
         <div className="border-t py-2">
+          <div className="px-5 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-widest text-primary">
+            {lang === "en" ? "Categories" : "श्रेणियाँ"}
+          </div>
+          <div className="grid grid-cols-2 px-3">
+            {categories?.map((cat) => (
+              <Link
+                key={cat.id}
+                to="/news"
+                search={{ category: cat.slug }}
+                onClick={close}
+                className="rounded px-2 py-2 text-[15px] hover:bg-muted"
+              >
+                {pick(cat.name_hi, cat.name_en)}
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        <div className="border-t py-2">
+          <Link to="/news" onClick={close} className={row}>
+            <Newspaper className="h-4 w-4" />
+            {lang === "en" ? "All News" : "सभी ख़बरें"}
+          </Link>
           <Link to="/epaper" onClick={close} className={row}>
             <Newspaper className="h-4 w-4" />
             {t("epaper")}

@@ -57,23 +57,48 @@ function VillagesPage() {
   });
 
   const edit = (v?: Village) => {
-    setF(v ? { id: v.id, name_hi: v.name_hi, name_en: v.name_en, town_id: v.town_id, is_active: v.is_active } : empty);
+    setF(
+      v
+        ? {
+            id: v.id,
+            name_hi: v.name_hi,
+            name_en: v.name_en,
+            town_id: v.town_id,
+            is_active: v.is_active,
+          }
+        : empty,
+    );
     setOpen(true);
   };
 
-  const set = (k: keyof typeof empty) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-    setF((p) => ({ ...p, [k]: e.target.value }));
+  const set =
+    (k: keyof typeof empty) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+      setF((p) => ({ ...p, [k]: e.target.value }));
 
   const save = async () => {
     const parsed = schema.safeParse(f);
-    if (!parsed.success) { toast.error(parsed.error.issues[0]?.message); return; }
-    const row = { name_hi: f.name_hi, name_en: f.name_en, town_id: f.town_id, is_active: f.is_active };
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message);
+      return;
+    }
+    const row = {
+      name_hi: f.name_hi,
+      name_en: f.name_en,
+      town_id: f.town_id,
+      is_active: f.is_active,
+    };
     const res = f.id
       ? await supabase.from("villages").update(row).eq("id", f.id).select("id").single()
       : await supabase.from("villages").insert(row).select("id").single();
-    if (res.error) { toast.error(res.error.message); return; }
+    if (res.error) {
+      toast.error(res.error.message);
+      return;
+    }
     await supabase.from("admin_activity_logs").insert({
-      actor_id: user!.id, action: f.id ? "update" : "create", entity: "village", entity_id: res.data.id,
+      actor_id: user!.id,
+      action: f.id ? "update" : "create",
+      entity: "village",
+      entity_id: res.data.id,
     });
     toast.success("Saved");
     setOpen(false);
@@ -84,7 +109,10 @@ function VillagesPage() {
   const toggleActive = async (v: Village) => {
     await supabase.from("villages").update({ is_active: !v.is_active }).eq("id", v.id);
     await supabase.from("admin_activity_logs").insert({
-      actor_id: user!.id, action: v.is_active ? "deactivate" : "activate", entity: "village", entity_id: v.id,
+      actor_id: user!.id,
+      action: v.is_active ? "deactivate" : "activate",
+      entity: "village",
+      entity_id: v.id,
     });
     toast.success(v.is_active ? "Village deactivated" : "Village activated");
     qc.invalidateQueries({ queryKey: ["admin-villages"] });
@@ -94,9 +122,15 @@ function VillagesPage() {
   const hardDelete = async () => {
     if (!deleteTarget) return;
     const { error } = await supabase.from("villages").delete().eq("id", deleteTarget.id);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     await supabase.from("admin_activity_logs").insert({
-      actor_id: user!.id, action: "delete", entity: "village", entity_id: deleteTarget.id,
+      actor_id: user!.id,
+      action: "delete",
+      entity: "village",
+      entity_id: deleteTarget.id,
     });
     toast.success("Village deleted");
     setDeleteTarget(null);
@@ -104,8 +138,10 @@ function VillagesPage() {
     qc.invalidateQueries({ queryKey: ["villages"] });
   };
 
-  const inp = "mt-1 h-10 w-full rounded-md border border-input bg-card px-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary";
-  const sel = "mt-1 h-10 w-full rounded-md border border-input bg-card px-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary";
+  const inp =
+    "mt-1 h-10 w-full rounded-md border border-input bg-card px-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary";
+  const sel =
+    "mt-1 h-10 w-full rounded-md border border-input bg-card px-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary";
 
   return (
     <div>
@@ -123,7 +159,11 @@ function VillagesPage() {
           className="h-9 rounded-md border border-input bg-card px-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
         >
           <option value="">All Towns</option>
-          {towns?.map((t) => <option key={t.id} value={t.id}>{t.name_en}</option>)}
+          {towns?.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.name_en}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -139,54 +179,88 @@ function VillagesPage() {
             </tr>
           </thead>
           <tbody className="divide-y">
-            {(data as (Village & { town: { name_en: string; name_hi: string } | null })[])?.map((v) => (
-              <tr key={v.id} className="hover:bg-muted/30">
-                <td className="px-3 py-2.5 font-medium">{v.name_hi}</td>
-                <td className="px-3 py-2.5">{v.name_en}</td>
-                <td className="px-3 py-2.5 text-muted-foreground">{v.town?.name_en ?? "—"}</td>
-                <td className="px-3 py-2.5 text-center">
-                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${v.is_active ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-muted text-muted-foreground"}`}>
-                    {v.is_active ? "Active" : "Off"}
-                  </span>
-                </td>
-                <td className="px-3 py-2.5">
-                  <div className="flex items-center justify-end gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => edit(v)}>Edit</Button>
-                    <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => toggleActive(v)}>
-                      {v.is_active ? "Deactivate" : "Activate"}
-                    </Button>
-                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setDeleteTarget(v)}>
-                      Delete
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {(data as (Village & { town: { name_en: string; name_hi: string } | null })[])?.map(
+              (v) => (
+                <tr key={v.id} className="hover:bg-muted/30">
+                  <td className="px-3 py-2.5 font-medium">{v.name_hi}</td>
+                  <td className="px-3 py-2.5">{v.name_en}</td>
+                  <td className="px-3 py-2.5 text-muted-foreground">{v.town?.name_en ?? "—"}</td>
+                  <td className="px-3 py-2.5 text-center">
+                    <span
+                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${v.is_active ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : "bg-muted text-muted-foreground"}`}
+                    >
+                      {v.is_active ? "Active" : "Off"}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2.5">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button variant="ghost" size="sm" onClick={() => edit(v)}>
+                        Edit
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-muted-foreground"
+                        onClick={() => toggleActive(v)}
+                      >
+                        {v.is_active ? "Deactivate" : "Activate"}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => setDeleteTarget(v)}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ),
+            )}
           </tbody>
         </table>
         {(!data || data.length === 0) && (
-          <p className="px-4 py-8 text-center text-sm text-muted-foreground">No villages yet. Add one above.</p>
+          <p className="px-4 py-8 text-center text-sm text-muted-foreground">
+            No villages yet. Add one above.
+          </p>
         )}
       </div>
 
       {/* Edit / Create Sheet */}
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent className="w-full overflow-y-auto sm:max-w-md">
-          <SheetHeader><SheetTitle>{f.id ? "Edit Village" : "New Village"}</SheetTitle></SheetHeader>
+          <SheetHeader>
+            <SheetTitle>{f.id ? "Edit Village" : "New Village"}</SheetTitle>
+          </SheetHeader>
           <div className="space-y-4 p-4">
             <div>
               <Label>Name (Hindi) *</Label>
-              <input className={inp} value={f.name_hi} onChange={set("name_hi")} placeholder="e.g. रहमतपुर" />
+              <input
+                className={inp}
+                value={f.name_hi}
+                onChange={set("name_hi")}
+                placeholder="e.g. रहमतपुर"
+              />
             </div>
             <div>
               <Label>Name (English) *</Label>
-              <input className={inp} value={f.name_en} onChange={set("name_en")} placeholder="e.g. Rahmatpur" />
+              <input
+                className={inp}
+                value={f.name_en}
+                onChange={set("name_en")}
+                placeholder="e.g. Rahmatpur"
+              />
             </div>
             <div>
               <Label>Town *</Label>
               <select className={sel} value={f.town_id} onChange={set("town_id")}>
                 <option value="">— Select Town —</option>
-                {towns?.map((t) => <option key={t.id} value={t.id}>{t.name_en}</option>)}
+                {towns?.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name_en}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="flex items-center gap-3">
@@ -197,9 +271,13 @@ function VillagesPage() {
                 onChange={(e) => setF((p) => ({ ...p, is_active: e.target.checked }))}
                 className="h-4 w-4"
               />
-              <Label htmlFor="village_active" className="cursor-pointer">Active (visible to public)</Label>
+              <Label htmlFor="village_active" className="cursor-pointer">
+                Active (visible to public)
+              </Label>
             </div>
-            <Button onClick={save} className="w-full">Save Village</Button>
+            <Button onClick={save} className="w-full">
+              Save Village
+            </Button>
           </div>
         </SheetContent>
       </Sheet>
@@ -210,12 +288,16 @@ function VillagesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete "{deleteTarget?.name_en}"?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the village. All articles linked to this village will have their village set to null. This action cannot be undone.
+              This will permanently delete the village. All articles linked to this village will
+              have their village set to null. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={hardDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={hardDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               Delete Village
             </AlertDialogAction>
           </AlertDialogFooter>

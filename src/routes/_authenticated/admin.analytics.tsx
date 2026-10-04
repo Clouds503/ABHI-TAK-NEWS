@@ -1,0 +1,455 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import {
+  Eye,
+  Heart,
+  TrendingUp,
+  Smartphone,
+  Globe,
+  BadgeIndianRupee,
+  Calendar,
+  Filter,
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+
+export const Route = createFileRoute("/_authenticated/admin/analytics")({
+  head: () => ({
+    meta: [{ title: "Analytics — Abhi Tak CMS" }, { name: "robots", content: "noindex" }],
+  }),
+  component: AnalyticsDashboard,
+});
+
+type TimeRange = "today" | "7d" | "30d" | "all";
+type NamedRelation = { name_en?: string | null; name_hi?: string | null } | null;
+
+function AnalyticsDashboard() {
+  const [range, setRange] = useState<TimeRange>("all");
+
+  // Articles data with views, category, and town
+  const { data: articles, isLoading: articlesLoading } = useQuery({
+    queryKey: ["analytics-articles"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("articles")
+        .select(
+          "id, title_hi, title_en, views, published_at, category:categories(name_en, name_hi), town:towns(name_en, name_hi)",
+        )
+        .eq("status", "published")
+        .order("views", { ascending: false });
+      return data ?? [];
+    },
+  });
+
+  // Likes count
+  const { data: articleLikesCount } = useQuery({
+    queryKey: ["analytics-article-likes"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("article_likes")
+        .select("id", { count: "exact", head: true });
+      return count ?? 0;
+    },
+  });
+
+  const { data: reelLikesCount } = useQuery({
+    queryKey: ["analytics-reel-likes"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("reel_likes")
+        .select("id", { count: "exact", head: true });
+      return count ?? 0;
+    },
+  });
+
+  // Ads performance
+  const { data: ads } = useQuery({
+    queryKey: ["analytics-ads"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("advertisements")
+        .select("id, title, advertiser, impressions, clicks, placement, is_active")
+        .order("impressions", { ascending: false });
+      return data ?? [];
+    },
+  });
+
+  // Analytics events for platform breakdown
+  const { data: platformStats } = useQuery({
+    queryKey: ["analytics-platforms", range],
+    queryFn: async () => {
+      let q = supabase.from("app_analytics_events").select("platform, event_type, created_at");
+
+      if (range === "today") {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        q = q.gte("created_at", today.toISOString());
+      } else if (range === "7d") {
+        const d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        q = q.gte("created_at", d.toISOString());
+      } else if (range === "30d") {
+        const d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        q = q.gte("created_at", d.toISOString());
+      }
+
+      const { data } = await q;
+      const counts: { android: number; web: number } = { android: 0, web: 0 };
+      data?.forEach((ev) => {
+        if (ev.platform === "android") {
+          counts.android += 1;
+        } else {
+          counts.web += 1;
+        }
+      });
+      return counts;
+    },
+  });
+
+  // Aggregate metrics
+  const totalViews = articles?.reduce((sum, a) => sum + (a.views || 0), 0) ?? 0;
+  const totalLikes = (articleLikesCount ?? 0) + (reelLikesCount ?? 0);
+
+  const totalImpressions = ads?.reduce((sum, a) => sum + (a.impressions || 0), 0) ?? 0;
+  const totalClicks = ads?.reduce((sum, a) => sum + (a.clicks || 0), 0) ?? 0;
+  const ctr = totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) : "0.00";
+
+  const androidEvents = platformStats?.android ?? 0;
+  const webEvents = platformStats?.web ?? 0;
+  const totalPlatformEvents = androidEvents + webEvents;
+  const androidShare =
+    totalPlatformEvents > 0 ? Math.round((androidEvents / totalPlatformEvents) * 100) : 50;
+  const webShare = 100 - androidShare;
+
+  // Category breakdown
+  const categoryMap = new Map<string, { name: string; count: number; views: number }>();
+  articles?.forEach((a) => {
+    const catName = (a.category as NamedRelation)?.name_en || "General";
+    const cur = categoryMap.get(catName) || { name: catName, count: 0, views: 0 };
+    cur.count += 1;
+    cur.views += a.views || 0;
+    categoryMap.set(catName, cur);
+  });
+  const categoriesList = Array.from(categoryMap.values()).sort((a, b) => b.views - a.views);
+
+  // Regional breakdown
+  const townMap = new Map<string, { name: string; count: number; views: number }>();
+  articles?.forEach((a) => {
+    const townName = (a.town as NamedRelation)?.name_en || "District Wide";
+    const cur = townMap.get(townName) || { name: townName, count: 0, views: 0 };
+    cur.count += 1;
+    cur.views += a.views || 0;
+    townMap.set(townName, cur);
+  });
+  const townsList = Array.from(townMap.values()).sort((a, b) => b.views - a.views);
+
+  // Top 10 stories
+  const topArticles = articles?.slice(0, 10) ?? [];
+
+  return (
+    <div className="space-y-6 pb-12">
+      {/* Header & Range Filters */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Newsroom Analytics</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Audience telemetry, top stories leaderboard, platform share, and ad performance.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-1.5 rounded-lg border bg-card p-1 shadow-sm">
+          <Filter className="ml-2 h-4 w-4 text-muted-foreground" />
+          <Button
+            size="sm"
+            variant={range === "today" ? "default" : "ghost"}
+            onClick={() => setRange("today")}
+            className="h-8 text-xs font-semibold"
+          >
+            Today
+          </Button>
+          <Button
+            size="sm"
+            variant={range === "7d" ? "default" : "ghost"}
+            onClick={() => setRange("7d")}
+            className="h-8 text-xs font-semibold"
+          >
+            Last 7 Days
+          </Button>
+          <Button
+            size="sm"
+            variant={range === "30d" ? "default" : "ghost"}
+            onClick={() => setRange("30d")}
+            className="h-8 text-xs font-semibold"
+          >
+            Last 30 Days
+          </Button>
+          <Button
+            size="sm"
+            variant={range === "all" ? "default" : "ghost"}
+            onClick={() => setRange("all")}
+            className="h-8 text-xs font-semibold"
+          >
+            All Time
+          </Button>
+        </div>
+      </div>
+
+      {/* KPI Row */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {/* Total Reads */}
+        <div className="rounded-xl border bg-card p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Article Reads
+            </span>
+            <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10 text-primary">
+              <Eye className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="mt-2 text-3xl font-extrabold tracking-tight">
+            {totalViews.toLocaleString()}
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">Race-condition free RPC counted</p>
+        </div>
+
+        {/* Total Likes */}
+        <div className="rounded-xl border bg-card p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Total Likes
+            </span>
+            <div className="grid h-8 w-8 place-items-center rounded-lg bg-rose-500/10 text-rose-500">
+              <Heart className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="mt-2 text-3xl font-extrabold tracking-tight">
+            {totalLikes.toLocaleString()}
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">Articles & Reels engagement</p>
+        </div>
+
+        {/* Ad Monetization & CTR */}
+        <div className="rounded-xl border bg-card p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Ad CTR %
+            </span>
+            <div className="grid h-8 w-8 place-items-center rounded-lg bg-amber-500/10 text-amber-500">
+              <BadgeIndianRupee className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="mt-2 text-3xl font-extrabold tracking-tight">{ctr}%</div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {totalClicks} clicks / {totalImpressions} views
+          </p>
+        </div>
+
+        {/* Platform Share */}
+        <div className="rounded-xl border bg-card p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Platform Share
+            </span>
+            <div className="grid h-8 w-8 place-items-center rounded-lg bg-emerald-500/10 text-emerald-500">
+              <Smartphone className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="text-3xl font-extrabold">{androidShare}%</span>
+            <span className="text-xs text-muted-foreground font-semibold">Android</span>
+            <span className="text-xs text-muted-foreground">|</span>
+            <span className="text-xl font-bold text-muted-foreground">{webShare}%</span>
+            <span className="text-xs text-muted-foreground font-semibold">Web</span>
+          </div>
+          <div className="mt-2.5">
+            <Progress value={androidShare} className="h-1.5" />
+          </div>
+        </div>
+      </div>
+
+      {/* Top Stories Leaderboard */}
+      <div className="rounded-xl border bg-card p-5 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-primary" />
+            <h2 className="text-lg font-bold">Top Stories Leaderboard</h2>
+          </div>
+          <span className="text-xs text-muted-foreground">Ranked by read count</span>
+        </div>
+
+        {articlesLoading ? (
+          <div className="py-8 text-center text-sm text-muted-foreground">Loading stories…</div>
+        ) : !topArticles.length ? (
+          <div className="py-8 text-center text-sm text-muted-foreground">No articles found.</div>
+        ) : (
+          <div className="mt-4 divide-y">
+            {topArticles.map((a, i) => (
+              <div
+                key={a.id}
+                className="grid grid-cols-[32px_minmax(0,1fr)_auto] items-center gap-4 py-3 hover:bg-muted/40 transition-colors"
+              >
+                <div
+                  className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
+                    i === 0
+                      ? "bg-amber-500 text-white"
+                      : i === 1
+                        ? "bg-slate-400 text-white"
+                        : i === 2
+                          ? "bg-amber-700 text-white"
+                          : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {i + 1}
+                </div>
+                <div className="min-w-0">
+                  <div className="truncate font-semibold text-[15px]">{a.title_hi}</div>
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    {(a.category as NamedRelation)?.name_en && (
+                      <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[11px] font-semibold text-primary">
+                        {(a.category as NamedRelation)?.name_en}
+                      </span>
+                    )}
+                    {(a.town as NamedRelation)?.name_en && (
+                      <span>· {(a.town as NamedRelation)?.name_en}</span>
+                    )}
+                    {a.published_at && (
+                      <span>· {new Date(a.published_at).toLocaleDateString("en-IN")}</span>
+                    )}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="flex items-center gap-1 text-sm font-bold text-foreground">
+                    <Eye className="h-4 w-4 text-primary" />
+                    {(a.views || 0).toLocaleString()}
+                  </div>
+                  <span className="text-[11px] text-muted-foreground">reads</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Grid: Category Breakdown & Regional Breakdown */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Category Breakdown */}
+        <div className="rounded-xl border bg-card p-5 shadow-sm">
+          <h2 className="text-lg font-bold">Category Breakdown</h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Distribution of readership across beats
+          </p>
+
+          <div className="mt-5 space-y-4">
+            {categoriesList.slice(0, 6).map((c) => {
+              const pct = totalViews > 0 ? Math.round((c.views / totalViews) * 100) : 0;
+              return (
+                <div key={c.name} className="space-y-1.5">
+                  <div className="flex justify-between text-sm">
+                    <span className="font-semibold">{c.name}</span>
+                    <span className="text-muted-foreground">
+                      {c.views.toLocaleString()} reads ({pct}%)
+                    </span>
+                  </div>
+                  <Progress value={pct} className="h-2" />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Regional Breakdown */}
+        <div className="rounded-xl border bg-card p-5 shadow-sm">
+          <h2 className="text-lg font-bold">Regional Audience Share</h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Audience engagement across District Bijnor towns
+          </p>
+
+          <div className="mt-5 space-y-4">
+            {townsList.slice(0, 6).map((tw) => {
+              const pct = totalViews > 0 ? Math.round((tw.views / totalViews) * 100) : 0;
+              return (
+                <div key={tw.name} className="space-y-1.5">
+                  <div className="flex justify-between text-sm">
+                    <span className="font-semibold">{tw.name}</span>
+                    <span className="text-muted-foreground">
+                      {tw.views.toLocaleString()} reads ({pct}%)
+                    </span>
+                  </div>
+                  <Progress value={pct} className="h-2" />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Ad Performance Table */}
+      <div className="rounded-xl border bg-card p-5 shadow-sm">
+        <h2 className="text-lg font-bold">Ad Monetization & Sponsors</h2>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          Impressions, clicks, and conversion per sponsor campaign
+        </p>
+
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b text-xs uppercase tracking-wider text-muted-foreground">
+                <th className="pb-3 font-semibold">Campaign / Sponsor</th>
+                <th className="pb-3 font-semibold">Placement</th>
+                <th className="pb-3 text-right font-semibold">Impressions</th>
+                <th className="pb-3 text-right font-semibold">Clicks</th>
+                <th className="pb-3 text-right font-semibold">CTR %</th>
+                <th className="pb-3 text-center font-semibold">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {ads?.map((ad) => {
+                const itemCtr =
+                  ad.impressions > 0 ? ((ad.clicks / ad.impressions) * 100).toFixed(2) : "0.00";
+                return (
+                  <tr key={ad.id} className="hover:bg-muted/40 transition-colors">
+                    <td className="py-3 font-medium">
+                      <div>{ad.title}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {ad.advertiser || "Direct sponsor"}
+                      </div>
+                    </td>
+                    <td className="py-3 text-xs text-muted-foreground capitalize">
+                      {ad.placement.replace(/_/g, " ")}
+                    </td>
+                    <td className="py-3 text-right font-mono font-medium">
+                      {ad.impressions.toLocaleString()}
+                    </td>
+                    <td className="py-3 text-right font-mono font-medium">
+                      {ad.clicks.toLocaleString()}
+                    </td>
+                    <td className="py-3 text-right font-mono font-semibold text-primary">
+                      {itemCtr}%
+                    </td>
+                    <td className="py-3 text-center">
+                      <span
+                        className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                          ad.is_active
+                            ? "bg-emerald-500/10 text-emerald-600"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {ad.is_active ? "Active" : "Paused"}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {!ads?.length && (
+            <div className="py-6 text-center text-sm text-muted-foreground">
+              No active ad campaigns found.
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
