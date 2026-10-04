@@ -18,15 +18,21 @@ import { AuthProvider, useAuth } from "@/lib/auth";
 import { AppShell, Logo } from "@/components/AppShell";
 import { LanguageGate } from "@/components/LanguageGate";
 import { Toaster } from "@/components/ui/sonner";
+import { AndroidBackButtonHandler } from "@/components/AndroidBackButtonHandler";
 
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-primary">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">पेज नहीं मिला · Page not found</h2>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">
+          पेज नहीं मिला · Page not found
+        </h2>
         <div className="mt-6">
-          <Link to="/" className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
+          <Link
+            to="/"
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+          >
             Home
           </Link>
         </div>
@@ -44,10 +50,15 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">This page didn't load</h1>
+        <h1 className="text-xl font-semibold tracking-tight text-foreground">
+          This page didn't load
+        </h1>
         <p className="mt-2 text-sm text-muted-foreground">Something went wrong. Try refreshing.</p>
         <button
-          onClick={() => { router.invalidate(); reset(); }}
+          onClick={() => {
+            router.invalidate();
+            reset();
+          }}
           className="mt-6 inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
         >
           Try again
@@ -67,7 +78,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-title", content: "Abhi Tak" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { title: "Abhi Tak — District Bijnor News" },
-      { name: "description", content: "Abhi Tak: local news, live TV, video and Jan Ki Awaaz for District Bijnor, Uttar Pradesh." },
+      {
+        name: "description",
+        content:
+          "Abhi Tak: local news, live TV, video and Jan Ki Awaaz for District Bijnor, Uttar Pradesh.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -80,10 +95,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "preconnect", href: "https://i.ytimg.com", crossOrigin: "anonymous" },
       { rel: "dns-prefetch", href: "https://i.ytimg.com" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Mukta:wght@400;500;600;700&family=Noto+Serif+Devanagari:wght@600;700;800&display=swap" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Mukta:wght@400;500;600;700&family=Noto+Serif+Devanagari:wght@600;700;800&display=swap",
+      },
     ],
     scripts: [
-      { children: `try{if(localStorage.getItem('abhitak.theme')==='dark')document.documentElement.classList.add('dark')}catch(e){}` },
+      {
+        children: `try{if(localStorage.getItem('abhitak.theme')==='dark')document.documentElement.classList.add('dark')}catch(e){}`,
+      },
     ],
   }),
   shellComponent: RootShell,
@@ -110,19 +130,16 @@ function AuthGate({ children }: { children: ReactNode }) {
   const { user, loading, needsOnboarding } = useAuth();
   const router = useRouter();
   const path = useRouterState({ select: (s) => s.location.pathname });
-  const onAuthPage = path.startsWith("/auth");
   const onOnboarding = path.startsWith("/onboarding");
 
   useEffect(() => {
     if (loading) return;
-    if (!user && !onAuthPage) {
-      router.navigate({ to: "/auth", search: { redirect: path }, replace: true });
-    } else if (user && needsOnboarding && !onOnboarding) {
+    if (user && needsOnboarding && !onOnboarding) {
       router.navigate({ to: "/onboarding", replace: true });
     }
-  }, [loading, user, needsOnboarding, onAuthPage, onOnboarding, path, router]);
+  }, [loading, user, needsOnboarding, onOnboarding, router]);
 
-  const blocked = !onAuthPage && (loading || !user || (needsOnboarding && !onOnboarding));
+  const blocked = !loading && user && needsOnboarding && !onOnboarding;
   if (blocked) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -136,22 +153,24 @@ function AuthGate({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const path = useRouterState({ select: (s) => s.location.pathname });
-  const bare = path.startsWith("/admin") || path.startsWith("/auth") || path.startsWith("/onboarding");
+  const bare =
+    path.startsWith("/admin") || path.startsWith("/auth") || path.startsWith("/onboarding");
   return (
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
         <AuthProvider>
           <AuthGate>
-          {bare ? (
-            <Outlet />
-          ) : (
-            <LanguageGate>
-              <AppShell>
-                <Outlet />
-              </AppShell>
-            </LanguageGate>
-          )}
+            {bare ? (
+              <Outlet />
+            ) : (
+              <LanguageGate>
+                <AppShell>
+                  <Outlet />
+                </AppShell>
+              </LanguageGate>
+            )}
           </AuthGate>
+          <AndroidBackButtonHandler />
           <Toaster position="top-center" />
         </AuthProvider>
       </LanguageProvider>
