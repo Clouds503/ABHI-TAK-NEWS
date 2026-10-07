@@ -253,7 +253,7 @@ function Videos() {
               )}
             </div>
             <h2 className="px-4 pt-3 text-xl font-bold leading-snug">{current.title}</h2>
-            <div className="px-4 pt-1 text-[12px] text-ink-foreground/55">
+            <div suppressHydrationWarning className="px-4 pt-1 text-[12px] text-ink-foreground/55">
               {timeAgo(current.published, lang)}
             </div>
           </div>
@@ -294,7 +294,7 @@ function Videos() {
               </div>
               <div className="min-w-0">
                 <div className="line-clamp-2 text-[15px] font-semibold leading-snug">{v.title}</div>
-                <div className="mt-1 text-[12px] text-ink-foreground/55">
+                <div suppressHydrationWarning className="mt-1 text-[12px] text-ink-foreground/55">
                   {timeAgo(v.published, lang)}
                 </div>
               </div>
@@ -440,7 +440,7 @@ function Videos() {
                   {current.title}
                 </h2>
                 <div className="mt-2 flex items-center justify-between text-xs text-ink-foreground/60">
-                  <span>{timeAgo(current.published, lang)}</span>
+                  <span suppressHydrationWarning>{timeAgo(current.published, lang)}</span>
                   <span>
                     {lang === "hi" ? "अभी तक न्यूज़ नेटवर्क बिजनौर" : "Abhi Tak News Channel"}
                   </span>
@@ -484,7 +484,10 @@ function Videos() {
                   </div>
                   <div className="min-w-0">
                     <h4 className="text-xs font-semibold leading-snug line-clamp-2">{v.title}</h4>
-                    <span className="mt-1 block text-[10px] text-ink-foreground/60">
+                    <span
+                      suppressHydrationWarning
+                      className="mt-1 block text-[10px] text-ink-foreground/60"
+                    >
                       {timeAgo(v.published, lang)}
                     </span>
                   </div>
@@ -540,7 +543,10 @@ function Videos() {
                   <h3 className="line-clamp-2 text-xs font-bold leading-snug text-white group-hover:text-primary transition-colors">
                     {v.title}
                   </h3>
-                  <span className="mt-2 text-[10px] text-ink-foreground/60">
+                  <span
+                    suppressHydrationWarning
+                    className="mt-2 text-[10px] text-ink-foreground/60"
+                  >
                     {timeAgo(v.published, lang)}
                   </span>
                 </div>

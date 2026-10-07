@@ -90,7 +90,7 @@ function DesktopArticleCard({ a }: { a: ArticleCard }) {
             </span>
           )}
           {a.town && <span>· {pick(a.town.name_hi, a.town.name_en)}</span>}
-          <span>· {timeAgo(a.published_at, lang)}</span>
+          <span suppressHydrationWarning>· {timeAgo(a.published_at, lang)}</span>
         </div>
         <h3 className="mt-2 font-serif text-base font-bold leading-snug line-clamp-2 text-foreground group-hover:text-primary transition-colors">
           {pick(a.title_hi, a.title_en)}
@@ -458,7 +458,7 @@ function Home() {
                                 {pick(a.town.name_hi, a.town.name_en)}
                               </span>
                             )}
-                            <span>· {timeAgo(a.published_at, lang)}</span>
+                            <span suppressHydrationWarning>· {timeAgo(a.published_at, lang)}</span>
                           </div>
                           <h3 className="text-sm font-bold leading-snug text-foreground group-hover:text-primary transition-colors line-clamp-2">
                             {pick(a.title_hi, a.title_en)}
@@ -507,7 +507,7 @@ function Home() {
                             </span>
                           )}
                           {hero.town && <span>· {pick(hero.town.name_hi, hero.town.name_en)}</span>}
-                          <span>· {timeAgo(hero.published_at, lang)}</span>
+                          <span suppressHydrationWarning>· {timeAgo(hero.published_at, lang)}</span>
                         </div>
                         <h1 className="mt-2 font-serif text-3xl font-extrabold leading-tight text-foreground group-hover:text-primary transition-colors">
                           {pick(hero.title_hi, hero.title_en)}
@@ -552,7 +552,9 @@ function Home() {
                                   {pick(a.town.name_hi, a.town.name_en)}
                                 </span>
                               )}
-                              <span>· {timeAgo(a.published_at, lang)}</span>
+                              <span suppressHydrationWarning>
+                                · {timeAgo(a.published_at, lang)}
+                              </span>
                             </div>
                             <h3 className="mt-1 text-sm font-bold leading-snug line-clamp-2 text-foreground group-hover:text-primary transition-colors">
                               {pick(a.title_hi, a.title_en)}

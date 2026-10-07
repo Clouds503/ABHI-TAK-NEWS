@@ -55,7 +55,7 @@ function ArchiveDesktopCard({ a }: { a: ArticleCard }) {
             </span>
           )}
           {a.town && <span>· {pick(a.town.name_hi, a.town.name_en)}</span>}
-          <span>· {timeAgo(a.published_at, lang)}</span>
+          <span suppressHydrationWarning>· {timeAgo(a.published_at, lang)}</span>
         </div>
         <h3 className="mt-2 font-serif text-base font-bold leading-snug line-clamp-2 text-foreground group-hover:text-primary transition-colors">
           {pick(a.title_hi, a.title_en)}

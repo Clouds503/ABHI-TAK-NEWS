@@ -57,7 +57,7 @@ function MyIssueDesktopCard({
           {[...p.jan_ki_awaaz_status_history]
             .sort((a, b) => a.created_at.localeCompare(b.created_at))
             .map((h, i) => (
-              <li key={i}>
+              <li key={i} suppressHydrationWarning>
                 <span className="font-semibold text-foreground">{status(h.status)}</span> ·{" "}
                 {timeAgo(h.created_at, lang)}
               </li>
@@ -123,7 +123,7 @@ function MyIssues() {
               {[...p.jan_ki_awaaz_status_history]
                 .sort((a, b) => a.created_at.localeCompare(b.created_at))
                 .map((h, i) => (
-                  <li key={i}>
+                  <li key={i} suppressHydrationWarning>
                     <span className="font-medium text-foreground">{status(h.status)}</span> ·{" "}
                     {timeAgo(h.created_at, lang)}
                   </li>

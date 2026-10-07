@@ -173,7 +173,7 @@ function JkaHome() {
                   <StatusPill status={p.status!} />
                 </div>
                 <h3 className="mt-1.5 text-[17px] font-bold leading-snug">{p.title}</h3>
-                <div className="mt-2 text-[12px] text-muted-foreground">
+                <div suppressHydrationWarning className="mt-2 text-[12px] text-muted-foreground">
                   {[p.area, townName(p.town_id)].filter(Boolean).join(", ")} ·{" "}
                   {p.reporter_name ?? t("anonymous")} · {timeAgo(p.created_at, lang)}
                 </div>
@@ -299,7 +299,7 @@ function JkaHome() {
                   {featured[0].description}
                 </p>
                 <div className="mt-5 flex items-center justify-between border-t pt-4">
-                  <span className="text-xs text-muted-foreground">
+                  <span suppressHydrationWarning className="text-xs text-muted-foreground">
                     {featured[0].reporter_name ?? t("anonymous")} ·{" "}
                     {timeAgo(featured[0].created_at, lang)}
                   </span>
@@ -372,7 +372,9 @@ function JkaHome() {
                     <MapPin className="h-3 w-3 text-primary shrink-0" />
                     {[p.area, townName(p.town_id)].filter(Boolean).join(", ") || "बिजनौर"}
                   </span>
-                  <span className="shrink-0">{timeAgo(p.created_at, lang)}</span>
+                  <span suppressHydrationWarning className="shrink-0">
+                    {timeAgo(p.created_at, lang)}
+                  </span>
                 </div>
               </div>
             </div>

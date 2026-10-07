@@ -54,7 +54,7 @@ function EPaper() {
             <div className="mt-3 text-sm font-semibold line-clamp-1 group-hover:text-primary transition-colors">
               {e.title}
             </div>
-            <div className="text-xs text-muted-foreground mt-1">
+            <div suppressHydrationWarning className="text-xs text-muted-foreground mt-1">
               {new Date(e.edition_date).toLocaleDateString("en-IN", { dateStyle: "medium" })}
             </div>
           </a>

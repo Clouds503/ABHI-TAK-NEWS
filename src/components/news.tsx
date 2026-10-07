@@ -34,7 +34,7 @@ export function Meta({ a, light }: { a: ArticleCard; light?: boolean }) {
         </span>
       )}
       {a.town && <span>· {pick(a.town.name_hi, a.town.name_en)}</span>}
-      <span>· {timeAgo(a.published_at, lang)}</span>
+      <span suppressHydrationWarning>· {timeAgo(a.published_at, lang)}</span>
     </div>
   );
 }

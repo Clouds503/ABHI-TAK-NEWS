@@ -620,10 +620,37 @@ function WeatherWidget() {
   });
 
   return (
-    <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+    <span
+      className="inline-flex items-center gap-1.5 text-muted-foreground"
+      suppressHydrationWarning
+    >
       <span>{lang === "en" ? "Bijnor" : "बिजनौर"}</span>
-      <span className="font-semibold text-foreground">{temp ?? "28°C"}</span>
+      <span className="font-semibold text-foreground" suppressHydrationWarning>
+        {temp ?? "28°C"}
+      </span>
       <span aria-hidden="true">☀️</span>
+    </span>
+  );
+}
+
+function DesktopDate() {
+  const { lang } = useI18n();
+  const [dateStr, setDateStr] = useState<string>("");
+
+  useEffect(() => {
+    setDateStr(
+      new Date().toLocaleDateString(lang === "en" ? "en-IN" : "hi-IN", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }),
+    );
+  }, [lang]);
+
+  return (
+    <span suppressHydrationWarning className="font-medium text-foreground/80 min-h-[1rem]">
+      {dateStr}
     </span>
   );
 }
@@ -672,13 +699,6 @@ function DesktopHeader() {
     const d = document.documentElement.classList.toggle("dark");
     localStorage.setItem("abhitak.theme", d ? "dark" : "light");
   };
-
-  const todayDate = new Date().toLocaleDateString(lang === "en" ? "en-IN" : "hi-IN", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
 
   const navLinks = [
     { to: "/", label: t("home"), icon: Home, match: (p: string) => p === "/" },
@@ -735,7 +755,7 @@ function DesktopHeader() {
           <div className="max-w-7xl mx-auto px-6 h-9 flex items-center justify-between">
             {/* Left: Date, Weather, District tagline */}
             <div className="flex items-center gap-4">
-              <span className="font-medium text-foreground/80">{todayDate}</span>
+              <DesktopDate />
               <span className="h-3 w-px bg-border" />
               <WeatherWidget />
               <span className="h-3 w-px bg-border" />
@@ -1235,7 +1255,9 @@ function DesktopFooter() {
 
         {/* Bottom Bar: Copyright & Attribution */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-ink-foreground/60 gap-4">
-          <div>© {new Date().getFullYear()} Abhi Tak News Network · All Rights Reserved.</div>
+          <div suppressHydrationWarning>
+            © {new Date().getFullYear()} Abhi Tak News Network · All Rights Reserved.
+          </div>
           <div className="font-serif">सत्यमेव जयते · जनपद बिजनौर (उ.प्र.)</div>
         </div>
       </div>

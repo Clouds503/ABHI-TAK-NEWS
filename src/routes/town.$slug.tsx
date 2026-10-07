@@ -57,7 +57,7 @@ function DesktopTownArticleCard({ a }: { a: ArticleCard }) {
               {pick(a.category.name_hi, a.category.name_en)}
             </span>
           )}
-          <span>· {timeAgo(a.published_at, lang)}</span>
+          <span suppressHydrationWarning>· {timeAgo(a.published_at, lang)}</span>
         </div>
         <h3 className="mt-2 font-serif text-base font-bold leading-snug line-clamp-2 text-foreground group-hover:text-primary transition-colors">
           {pick(a.title_hi, a.title_en)}
@@ -191,7 +191,7 @@ function TownPage() {
                           {pick(data[0].category.name_hi, data[0].category.name_en)}
                         </span>
                       )}
-                      <span>· {timeAgo(data[0].published_at, lang)}</span>
+                      <span suppressHydrationWarning>· {timeAgo(data[0].published_at, lang)}</span>
                     </div>
                     <Link to="/news/$slug" params={{ slug: data[0].slug }}>
                       <h2 className="font-serif text-2xl xl:text-3xl font-extrabold leading-snug text-foreground hover:text-primary transition-colors">

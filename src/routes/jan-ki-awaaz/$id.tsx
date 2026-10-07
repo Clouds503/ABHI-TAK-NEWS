@@ -197,7 +197,7 @@ function IssuePage() {
               </div>
               <div>
                 दिनांक:{" "}
-                <span className="font-medium text-foreground">
+                <span suppressHydrationWarning className="font-medium text-foreground">
                   {new Date(p.created_at).toLocaleDateString("hi-IN", { dateStyle: "long" })}
                 </span>
               </div>

@@ -577,7 +577,10 @@ function ArticlePage() {
                         <h4 className="text-xs font-bold leading-snug line-clamp-2 text-foreground group-hover:text-primary transition-colors">
                           {pick(r.title_hi, r.title_en)}
                         </h4>
-                        <div className="mt-1 text-[11px] text-muted-foreground">
+                        <div
+                          suppressHydrationWarning
+                          className="mt-1 text-[11px] text-muted-foreground"
+                        >
                           {timeAgo(r.published_at, lang)}
                         </div>
                       </div>
@@ -649,7 +652,7 @@ function ArticlePage() {
                           {pick(r.town.name_hi, r.town.name_en)}
                         </span>
                       )}
-                      <span>· {timeAgo(r.published_at, lang)}</span>
+                      <span suppressHydrationWarning>· {timeAgo(r.published_at, lang)}</span>
                     </div>
                     <h3 className="font-serif text-sm font-bold leading-snug line-clamp-2 text-foreground group-hover:text-primary transition-colors">
                       {pick(r.title_hi, r.title_en)}
