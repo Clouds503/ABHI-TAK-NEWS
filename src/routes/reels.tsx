@@ -12,6 +12,8 @@ import {
   Volume2,
   VolumeX,
   ExternalLink,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { toast } from "sonner";
@@ -83,7 +85,24 @@ function InstagramIframeReel({ reel, lang }: { reel: Reel; lang: string | null }
   );
 }
 
-function ReelSlide({ reel, active, lang }: { reel: Reel; active: boolean; lang: string | null }) {
+function ReelSlide({
+  reel,
+  active,
+  lang,
+  desktopControls,
+}: {
+  reel: Reel;
+  active: boolean;
+  lang: string | null;
+  desktopControls?: {
+    onPrev: () => void;
+    onNext: () => void;
+    canPrev: boolean;
+    canNext: boolean;
+    currentIndex: number;
+    totalCount: number;
+  };
+}) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const isNative = Capacitor.isNativePlatform();
@@ -254,6 +273,171 @@ function ReelSlide({ reel, active, lang }: { reel: Reel; active: boolean; lang: 
     },
   );
 
+  if (desktopControls) {
+    return (
+      <div className="flex items-center gap-6">
+        {/* Centered 9:16 Card Frame */}
+        <div className="relative h-[84vh] max-h-[850px] w-[420px] overflow-hidden rounded-2xl border border-white/15 bg-black shadow-2xl">
+          <HeartPop
+            show={heartPop.show}
+            x={heartPop.x}
+            y={heartPop.y}
+            onAnimationEnd={() => setHeartPop({ show: false })}
+          />
+
+          {/* Playback Layer */}
+          {rawSrc && !videoFailed ? (
+            <div {...gesture} className="relative h-full w-full cursor-pointer select-none">
+              <video
+                ref={videoRef}
+                src={rawSrc}
+                className="h-full w-full object-contain"
+                playsInline
+                loop
+                muted={muted}
+                preload={active ? "auto" : "metadata"}
+                onError={() => setVideoFailed(true)}
+              />
+              {(paused || flash) && (
+                <div className="pointer-events-none absolute inset-0 grid place-items-center">
+                  <span className="grid h-20 w-20 place-items-center rounded-full bg-foreground/50 text-background backdrop-blur-sm">
+                    {paused ? (
+                      <Play className="h-9 w-9 fill-current" />
+                    ) : (
+                      <Pause className="h-9 w-9 fill-current" />
+                    )}
+                  </span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <InstagramIframeReel reel={reel} lang={lang} />
+          )}
+
+          {/* Mute button on top right */}
+          {rawSrc && !videoFailed && (
+            <button
+              type="button"
+              onClick={() => setMuted((m) => !m)}
+              aria-label={muted ? "Unmute" : "Mute"}
+              className="absolute right-4 top-4 z-20 grid h-10 w-10 place-items-center rounded-full bg-black/60 text-white backdrop-blur-md hover:bg-black/80 shadow-lg active:scale-90 transition-transform cursor-pointer"
+            >
+              {muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+            </button>
+          )}
+
+          {/* Sound prompt banner */}
+          {needsSound && !videoFailed && rawSrc && (
+            <Button
+              type="button"
+              onClick={() => {
+                const v = videoRef.current;
+                setMuted(false);
+                setNeedsSound(false);
+                if (v) {
+                  v.muted = false;
+                  void v.play().catch(() => {});
+                }
+              }}
+              className="absolute bottom-16 left-4 z-20 h-10 gap-2 rounded-full bg-primary px-4 text-xs font-semibold text-white shadow-lg"
+            >
+              <Volume2 className="h-4 w-4" />
+              {lang === "en" ? "Turn on sound" : "आवाज़ चालू करें"}
+            </Button>
+          )}
+
+          {/* Reel Caption */}
+          {reel.caption && (
+            <p className="pointer-events-none absolute bottom-4 left-4 right-4 z-20 line-clamp-3 rounded-lg bg-black/60 p-3 text-sm font-medium text-white backdrop-blur-xs drop-shadow-md">
+              {reel.caption}
+            </p>
+          )}
+        </div>
+
+        {/* Adjacent Desktop Action & Navigation Rail */}
+        <div className="flex flex-col items-center gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={desktopControls.onPrev}
+            disabled={!desktopControls.canPrev}
+            className="h-12 w-12 rounded-full border-white/20 bg-black/60 text-white hover:bg-white/20 disabled:opacity-30 disabled:pointer-events-none shadow-lg cursor-pointer"
+            aria-label="Previous reel"
+          >
+            <ChevronUp className="h-6 w-6" />
+          </Button>
+
+          {/* Like Button */}
+          <button
+            type="button"
+            onClick={toggleLike}
+            aria-label="Like reel"
+            className="flex flex-col items-center gap-1 active:scale-90 transition-transform cursor-pointer"
+          >
+            <div
+              className={cn(
+                "grid h-12 w-12 place-items-center rounded-full border border-white/10 backdrop-blur-md shadow-lg transition-colors",
+                isLiked ? "bg-rose-500 text-white" : "bg-black/60 text-white hover:bg-white/20",
+              )}
+            >
+              <Heart className="h-6 w-6" fill={isLiked ? "currentColor" : "none"} strokeWidth={2} />
+            </div>
+            {effectiveLikes > 0 && (
+              <span className="text-[11px] font-bold text-white/80 tabular-nums">
+                {effectiveLikes}
+              </span>
+            )}
+          </button>
+
+          {/* Share Button */}
+          <button
+            type="button"
+            onClick={shareReel}
+            aria-label="Share reel"
+            className="flex flex-col items-center gap-1 active:scale-90 transition-transform cursor-pointer"
+          >
+            <div className="grid h-12 w-12 place-items-center rounded-full border border-white/10 bg-black/60 text-white backdrop-blur-md hover:bg-white/20 shadow-lg">
+              <Share2 className="h-5 w-5" />
+            </div>
+            <span className="text-[11px] font-semibold text-white/80">
+              {lang === "en" ? "Share" : "शेयर"}
+            </span>
+          </button>
+
+          {/* Open in Instagram */}
+          <button
+            type="button"
+            onClick={openInstagram}
+            aria-label="Open on Instagram"
+            className="flex flex-col items-center gap-1 active:scale-90 transition-transform cursor-pointer"
+          >
+            <div className="grid h-12 w-12 place-items-center rounded-full border border-white/10 bg-black/60 text-rose-400 backdrop-blur-md hover:bg-white/20 shadow-lg">
+              <Instagram className="h-5 w-5" />
+            </div>
+            <span className="text-[11px] font-semibold text-white/80">Insta</span>
+          </button>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={desktopControls.onNext}
+            disabled={!desktopControls.canNext}
+            className="h-12 w-12 rounded-full border-white/20 bg-black/60 text-white hover:bg-white/20 disabled:opacity-30 disabled:pointer-events-none shadow-lg cursor-pointer"
+            aria-label="Next reel"
+          >
+            <ChevronDown className="h-6 w-6" />
+          </Button>
+
+          <span className="text-xs font-bold text-white/60 py-1 tabular-nums">
+            {desktopControls.currentIndex} / {desktopControls.totalCount}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative flex h-full w-full items-center justify-center bg-black">
       <HeartPop
@@ -418,6 +602,22 @@ function ReelsPage() {
     return () => obs.disconnect();
   }, [reels]);
 
+  // Keyboard navigation for desktop (ArrowUp / ArrowDown)
+  useEffect(() => {
+    if (!reels?.length) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowDown" || e.key === "PageDown") {
+        e.preventDefault();
+        setActive((prev) => Math.min(reels.length - 1, prev + 1));
+      } else if (e.key === "ArrowUp" || e.key === "PageUp") {
+        e.preventDefault();
+        setActive((prev) => Math.max(0, prev - 1));
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [reels?.length]);
+
   const goBack = () => {
     if (window.history.length > 1) {
       window.history.back();
@@ -442,35 +642,80 @@ function ReelsPage() {
     );
 
   return (
-    <div
-      className={`${h} snap-y snap-mandatory overflow-y-auto overscroll-contain bg-black no-scrollbar`}
-    >
-      <Button
-        type="button"
-        variant="secondary"
-        size="icon"
-        onClick={goBack}
-        aria-label={lang === "en" ? "Back" : "वापस जाएं"}
-        className="fixed left-4 top-[max(1rem,env(safe-area-inset-top))] z-50 h-11 w-11 rounded-full border border-white/20 bg-black/60 text-white backdrop-blur-md shadow-lg hover:bg-black/80"
+    <div className="relative bg-black">
+      {/* ======================================================== */}
+      {/* MOBILE REELS (lg:hidden) - STRICT 100% INVARIANCE        */}
+      {/* ======================================================== */}
+      <div
+        className={`${h} snap-y snap-mandatory overflow-y-auto overscroll-contain bg-black no-scrollbar lg:hidden`}
       >
-        <ArrowLeft className="h-5 w-5" />
-      </Button>
-      {reels.map((r, i) => (
-        <div
-          key={r.id}
-          data-i={i}
-          ref={(el) => {
-            refs.current[i] = el;
-          }}
-          className="relative flex h-full snap-start snap-always items-center justify-center bg-black"
+        <Button
+          type="button"
+          variant="secondary"
+          size="icon"
+          onClick={goBack}
+          aria-label={lang === "en" ? "Back" : "वापस जाएं"}
+          className="fixed left-4 top-[max(1rem,env(safe-area-inset-top))] z-50 h-11 w-11 rounded-full border border-white/20 bg-black/60 text-white backdrop-blur-md shadow-lg hover:bg-black/80"
         >
-          {Math.abs(i - active) <= 1 ? (
-            <ReelSlide reel={r} active={i === active} lang={lang} />
-          ) : (
-            <div className="h-full w-full" />
-          )}
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        {reels.map((r, i) => (
+          <div
+            key={r.id}
+            data-i={i}
+            ref={(el) => {
+              refs.current[i] = el;
+            }}
+            className="relative flex h-full snap-start snap-always items-center justify-center bg-black"
+          >
+            {Math.abs(i - active) <= 1 ? (
+              <ReelSlide reel={r} active={i === active} lang={lang} />
+            ) : (
+              <div className="h-full w-full" />
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* ======================================================== */}
+      {/* DESKTOP REELS THEATER (hidden lg:flex) - 9:16 FRAME      */}
+      {/* ======================================================== */}
+      <div className="hidden lg:flex items-center justify-center min-h-[100dvh] w-full bg-neutral-950 text-white relative py-6">
+        {/* Top Header / Back Button */}
+        <div className="absolute top-6 left-8 z-50 flex items-center gap-3">
+          <Button
+            type="button"
+            variant="secondary"
+            size="icon"
+            onClick={goBack}
+            aria-label={lang === "en" ? "Back" : "वापस जाएं"}
+            className="h-11 w-11 rounded-full border border-white/20 bg-black/60 text-white backdrop-blur-md shadow-lg hover:bg-black/80"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <span className="font-serif text-lg font-bold text-white tracking-wide">
+            {lang === "en" ? "Abhi Tak Reels" : "अभी तक रील्स"}
+          </span>
         </div>
-      ))}
+
+        {/* Centered 9:16 Card + Adjacent Action & Navigation Rail */}
+        {reels[active] && (
+          <ReelSlide
+            key={reels[active].id}
+            reel={reels[active]}
+            active={true}
+            lang={lang}
+            desktopControls={{
+              onPrev: () => setActive((i) => Math.max(0, i - 1)),
+              onNext: () => setActive((i) => Math.min(reels.length - 1, i + 1)),
+              canPrev: active > 0,
+              canNext: active < reels.length - 1,
+              currentIndex: active + 1,
+              totalCount: reels.length,
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 }

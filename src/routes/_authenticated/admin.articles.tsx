@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { UploadNote } from "@/components/UploadNote";
 import type { Database } from "@/integrations/supabase/types";
 
 type Article = Database["public"]["Tables"]["articles"]["Row"];
@@ -396,7 +397,13 @@ function Articles() {
                 className="mt-1"
                 onChange={(e) => e.target.files?.[0] && uploadCover(e.target.files[0])}
               />
-              {uploading && <div className="text-xs text-muted-foreground">Uploading…</div>}
+              <UploadNote
+                type="JPG, PNG, WebP"
+                maxSize="10 MB"
+                ratio="16:9 (Landscape standard)"
+                hint="Recommended resolution: 1200×675px or 1920×1080px for crisp news cards and hero banners."
+              />
+              {uploading && <div className="mt-1 text-xs text-muted-foreground">Uploading…</div>}
               {f.cover_url && !f.cover_url.startsWith("asset:") && (
                 <img src={f.cover_url} alt="" className="mt-2 max-h-40 rounded" />
               )}

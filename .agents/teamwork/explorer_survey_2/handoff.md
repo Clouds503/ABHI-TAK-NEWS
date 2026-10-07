@@ -36,23 +36,23 @@
    - Lines 3–23 define:
      ```typescript
      const config: CapacitorConfig = {
-       appId: 'com.abhitak.news',
-       appName: 'Abhi Tak',
-       webDir: 'dist/client',
+       appId: "com.abhitak.news",
+       appName: "Abhi Tak",
+       webDir: "dist/client",
        server: {
-         androidScheme: 'https',
+         androidScheme: "https",
        },
        plugins: {
          SplashScreen: {
            launchAutoHide: true,
            launchShowDuration: 1200,
-           backgroundColor: '#ffffff',
-           androidSplashResourceName: 'splash',
+           backgroundColor: "#ffffff",
+           androidSplashResourceName: "splash",
            showSpinner: false,
          },
          StatusBar: {
-           style: 'DEFAULT',
-           backgroundColor: '#D40000',
+           style: "DEFAULT",
+           backgroundColor: "#D40000",
          },
        },
      };
@@ -81,8 +81,9 @@
    - `src/router.tsx` lines 17–23: uses `createRouter` with `routeTree` and default browser history (`createBrowserHistory()`).
    - `src/integrations/supabase/client.ts` lines 34–35:
      ```typescript
-     const SUPABASE_URL = import.meta.env['VITE_SUPABASE_URL'] || process.env['SUPABASE_URL'];
-     const SUPABASE_PUBLISHABLE_KEY = import.meta.env['VITE_SUPABASE_PUBLISHABLE_KEY'] || process.env['SUPABASE_PUBLISHABLE_KEY'];
+     const SUPABASE_URL = import.meta.env["VITE_SUPABASE_URL"] || process.env["SUPABASE_URL"];
+     const SUPABASE_PUBLISHABLE_KEY =
+       import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] || process.env["SUPABASE_PUBLISHABLE_KEY"];
      ```
    - Verified in bundle `dist/client/assets/index-C_My003f.js`: Vite statically inlines `VITE_SUPABASE_URL: "https://xhxjroxdgdftsngfkggi.supabase.co"` and `VITE_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_EiyprYhAi2XiwC-cbWBb3w_KJQPd37p"`.
    - `src/integrations/supabase/previewAuthStorage.ts` line 18: `if (!projectId || !framed) return localStorage;` evaluates to `localStorage` in Capacitor WebView (`localhost`).
@@ -91,10 +92,10 @@
    - Lines 34–40:
      ```typescript
      const permStatus = await PushNotifications.checkPermissions();
-     if (permStatus.receive === 'prompt') {
+     if (permStatus.receive === "prompt") {
        await PushNotifications.requestPermissions();
      }
-     if (permStatus.receive === 'granted') {
+     if (permStatus.receive === "granted") {
        await PushNotifications.register();
      }
      ```
@@ -145,6 +146,7 @@
 The Web Client build (`vite.config.capacitor.ts`) and Capacitor asset pipeline (`npx cap copy android`) are structurally sound, operational, and in full synchronization.
 
 To achieve complete production readiness for R2:
+
 1. Fix the `PushNotifications.requestPermissions()` bug in `src/main.capacitor.tsx`.
 2. Add foreground notification presentation options to `capacitor.config.ts`.
 3. Add missing Firebase default notification icon/color `<meta-data>` to `android/app/src/main/AndroidManifest.xml`.
@@ -160,17 +162,17 @@ To achieve complete production readiness for R2:
    ```powershell
    npm run build:mobile
    ```
-   *Expected*: Exit code 0, generates `dist/client/index.html` and bundled assets.
+   _Expected_: Exit code 0, generates `dist/client/index.html` and bundled assets.
 2. **Capacitor Copy Verification**:
    ```powershell
    npx cap copy android
    ```
-   *Expected*: Exit code 0, mirrors `dist/client/` to `android/app/src/main/assets/public/`.
+   _Expected_: Exit code 0, mirrors `dist/client/` to `android/app/src/main/assets/public/`.
 3. **Environment Inlining Check**:
    ```powershell
    node -e "const f = require('fs').readFileSync('dist/client/assets/index-C_My003f.js', 'utf8'); console.log(f.includes('xhxjroxdgdftsngfkggi'));"
    ```
-   *Expected*: Outputs `true`.
+   _Expected_: Outputs `true`.
 4. **Invalidation Conditions**:
    - Any modification to `vite.config.capacitor.ts` or `src/router.tsx` that breaks client-side SPA routing.
    - Deletion of `.env` before running `build:mobile` that leaves Supabase credentials empty.

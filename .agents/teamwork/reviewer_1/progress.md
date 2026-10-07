@@ -3,9 +3,11 @@
 Last visited: 2026-10-02T09:31:00Z
 
 ## Status
+
 Review complete. Writing handoff.md.
 
 ## Steps
+
 - [x] Workspace initialized (DISPATCH.md, BRIEFING.md, progress.md)
 - [x] Read ORIGINAL_REQUEST.md, PROJECT.md, and worker handoffs
 - [x] Inspect Supabase migration vs types.ts (17 tables, types, enums, RPCs, views, RLS, triggers, seed)

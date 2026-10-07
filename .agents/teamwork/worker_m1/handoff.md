@@ -79,23 +79,29 @@ Milestone 1 is complete. `supabase/migrations/20241001000000_initial_schema.sql`
 
 1. **Table & Column Integrity Check**:
    Run the verification parser:
+
    ```powershell
    node -e "const fs = require('fs'); const types = fs.readFileSync('src/integrations/supabase/types.ts', 'utf8'); const sql = fs.readFileSync('supabase/migrations/20241001000000_initial_schema.sql', 'utf8'); const tables = ['admin_activity_logs','advertisements','articles','bookmarks','categories','epapers','event_registrations','events','jan_ki_awaaz_posts','jan_ki_awaaz_status_history','live_streams','profiles','reels','towns','user_roles','videos','villages']; const missing = tables.filter(t => !sql.includes('CREATE TABLE IF NOT EXISTS public.' + t)); if (missing.length) throw new Error('Missing: ' + missing.join(',')); console.log('All 17 tables confirmed present.');"
    ```
+
    **Expected Output**: `All 17 tables confirmed present.`
 
 2. **Policy Idempotency Check**:
    Confirm that every `CREATE POLICY` has a corresponding `DROP POLICY IF EXISTS`:
+
    ```powershell
    Get-Content supabase/migrations/20241001000000_initial_schema.sql | Select-String 'CREATE POLICY'
    Get-Content supabase/migrations/20241001000000_initial_schema.sql | Select-String 'DROP POLICY IF EXISTS'
    ```
+
    All 39 policy statements have matching drops.
 
 3. **TypeScript Type Compliance Check**:
+
    ```powershell
    npx tsc --noEmit
    ```
+
    **Expected Output**: Exit code 0, 0 errors.
 
 4. **Git Scope Verification**:

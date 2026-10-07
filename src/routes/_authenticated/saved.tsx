@@ -1,7 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useI18n } from "@/lib/i18n";
+import { useI18n, timeAgo } from "@/lib/i18n";
+import { img } from "@/lib/media";
 import { ArticleRow, Empty } from "@/components/news";
 import type { ArticleCard } from "@/lib/queries";
 
@@ -12,8 +13,55 @@ export const Route = createFileRoute("/_authenticated/saved")({
   component: Saved,
 });
 
+function SavedDesktopCard({ a }: { a: ArticleCard }) {
+  const { pick, lang } = useI18n();
+  return (
+    <Link
+      to="/news/$slug"
+      params={{ slug: a.slug }}
+      className="group flex flex-col rounded-xl border bg-card overflow-hidden shadow-xs hover:shadow-md hover:border-primary/50 transition-all"
+    >
+      <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
+        <img
+          src={img(a.cover_url) ?? "/pwa-512.png"}
+          alt=""
+          width={480}
+          height={270}
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+        />
+        {a.is_breaking && (
+          <span className="absolute top-2 left-2 rounded bg-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-foreground">
+            Breaking
+          </span>
+        )}
+      </div>
+      <div className="flex flex-1 flex-col p-4">
+        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+          {a.category && (
+            <span className="font-bold text-primary uppercase tracking-wider">
+              {pick(a.category.name_hi, a.category.name_en)}
+            </span>
+          )}
+          {a.town && <span>· {pick(a.town.name_hi, a.town.name_en)}</span>}
+          <span>· {timeAgo(a.published_at, lang)}</span>
+        </div>
+        <h3 className="mt-2 font-serif text-base font-bold leading-snug line-clamp-2 text-foreground group-hover:text-primary transition-colors">
+          {pick(a.title_hi, a.title_en)}
+        </h3>
+        {pick(a.summary_hi, a.summary_en) && (
+          <p className="mt-2 text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+            {pick(a.summary_hi, a.summary_en)}
+          </p>
+        )}
+      </div>
+    </Link>
+  );
+}
+
 function Saved() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const { data, isLoading } = useQuery({
     queryKey: ["saved"],
     queryFn: async () => {
@@ -28,12 +76,29 @@ function Saved() {
     },
   });
   return (
-    <div>
-      <h1 className="px-4 pb-3 pt-6 text-2xl font-bold">{t("saved")}</h1>
+    <div className="max-w-7xl mx-auto px-4 lg:px-6 py-6">
+      <div className="border-b pb-4 mb-6">
+        <h1 className="text-2xl lg:text-3xl font-bold font-serif">{t("saved")}</h1>
+        <p className="text-xs text-muted-foreground mt-1">
+          {lang === "en"
+            ? "Your bookmarked stories for quick reading"
+            : "आपकी सहेजी गई पसंदीदा ख़बरें"}
+        </p>
+      </div>
+
       {!isLoading && !data?.length && <Empty text={t("noContent")} />}
-      <div className="border-t">
+
+      {/* Mobile Feed */}
+      <div className="border-t divide-y lg:hidden">
         {data?.map((a) => (
           <ArticleRow key={a.id} a={a} />
+        ))}
+      </div>
+
+      {/* Desktop 3-col Grid */}
+      <div className="hidden lg:grid lg:grid-cols-3 lg:gap-6">
+        {data?.map((a) => (
+          <SavedDesktopCard key={a.id} a={a} />
         ))}
       </div>
     </div>

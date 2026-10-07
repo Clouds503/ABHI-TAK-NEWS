@@ -1,763 +1,891 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="hi">
-<head>
-  
-  <meta charset="utf-8">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Mukta:wght@500;600;700;800&family=Noto+Serif+Devanagari:wght@700;800&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Mukta:wght@500;600;700;800&family=Noto+Serif+Devanagari:wght@700;800&family=Outfit:wght@600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
 
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      width: 1080px;
-      height: 2400px;
-      background: #0f0204;
-      font-family: 'Mukta', sans-serif;
-      color: #ffffff;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      position: relative;
-    }
-    .marketing-top {
-      width: 100%;
-      height: 520px;
-      background: radial-gradient(circle at 50% 20%, #B80000 0%, #4A0002 50%, #0F0204 100%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 60px 40px 20px;
-      position: relative;
-    }
-    .top-accent-bar {
-      position: absolute;
-      top: 0; left: 0; right: 0; height: 10px;
-      background: linear-gradient(90deg, #D40000 0%, #FFC837 50%, #D40000 100%);
-    }
-    .tag-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(255, 255, 255, 0.12);
-      border: 1px solid rgba(255, 200, 50, 0.5);
-      border-radius: 999px;
-      padding: 8px 24px;
-      font-size: 26px;
-      font-weight: 700;
-      color: #FFC837;
-      margin-bottom: 20px;
-    }
-    .title-hi {
-      font-family: 'Noto Serif Devanagari', serif;
-      font-size: 64px;
-      font-weight: 800;
-      line-height: 1.15;
-      color: #ffffff;
-      text-shadow: 0 4px 15px rgba(0,0,0,0.8);
-      max-width: 950px;
-    }
-    .title-en {
-      font-family: 'Outfit', sans-serif;
-      font-size: 30px;
-      font-weight: 800;
-      color: rgba(255, 255, 255, 0.85);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin-top: 14px;
-    }
-    .device-shell {
-      width: 940px;
-      height: 1880px;
-      background: #1a1a1a;
-      border-radius: 64px 64px 0 0;
-      padding: 16px 16px 0 16px;
-      box-shadow: 0 -20px 60px rgba(0,0,0,0.9), 0 0 0 4px rgba(255, 255, 255, 0.12);
-      position: relative;
-    }
-    .device-screen {
-      width: 100%;
-      height: 100%;
-      background: #0d0103;
-      border-radius: 52px 52px 0 0;
-      overflow: hidden;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-    }
-    .status-bar {
-      height: 54px;
-      padding: 0 36px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 20px;
-      font-weight: 700;
-      color: #ffffff;
-      background: #0d0103;
-      z-index: 10;
-    }
-    .app-header {
-      height: 100px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      background: #140204;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 30px;
-      flex-shrink: 0;
-    }
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-    .header-icon {
-      display: flex;
-      align-items: center;
-      color: #ffffff;
-    }
-    .app-logo {
-      width: 60px;
-      height: 60px;
-      border-radius: 12px;
-    }
-    .brand-title {
-      font-family: 'Noto Serif Devanagari', serif;
-      font-size: 32px;
-      font-weight: 800;
-      color: #ffffff;
-      line-height: 1.1;
-    }
-    .brand-sub {
-      font-size: 20px;
-      color: #FFC837;
-      font-weight: 600;
-    }
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-    .live-pill-red {
-      background: #D40000;
-      color: #ffffff;
-      font-size: 18px;
-      font-weight: 800;
-      padding: 6px 16px;
-      border-radius: 999px;
-    }
-    .breaking-strip {
-      background: #200407;
-      border-bottom: 1px solid #D40000;
-      padding: 12px 24px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      font-size: 22px;
-    }
-    .breaking-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: #D40000;
-      color: white;
-      font-weight: 800;
-      padding: 4px 12px;
-      border-radius: 6px;
-      font-size: 18px;
-    }
-    .breaking-text {
-      color: #ffffff;
-      font-weight: 600;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .card-featured {
-      background: #180306;
-      border-bottom: 2px solid rgba(255,255,255,0.08);
-      margin-bottom: 20px;
-    }
-    .img-container {
-      position: relative;
-      width: 100%;
-      height: 480px;
-    }
-    .card-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .cat-pill {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      background: #D40000;
-      color: white;
-      font-size: 20px;
-      font-weight: 700;
-      padding: 6px 18px;
-      border-radius: 8px;
-    }
-    .card-body {
-      padding: 24px 30px;
-    }
-    .card-title {
-      font-family: 'Noto Serif Devanagari', serif;
-      font-size: 36px;
-      font-weight: 800;
-      line-height: 1.25;
-      color: #ffffff;
-    }
-    .card-meta {
-      margin-top: 14px;
-      font-size: 22px;
-      color: #FFC837;
-      font-weight: 600;
-      display: flex;
-      gap: 12px;
-    }
-    .card-compact {
-      display: flex;
-      gap: 20px;
-      padding: 16px 30px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      background: #120204;
-    }
-    .compact-img {
-      width: 220px;
-      height: 150px;
-      border-radius: 12px;
-      object-fit: cover;
-      flex-shrink: 0;
-    }
-    .compact-body {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-    .cat-tag {
-      font-size: 18px;
-      color: #D40000;
-      font-weight: 700;
-      text-transform: uppercase;
-    }
-    .compact-title {
-      font-family: 'Noto Serif Devanagari', serif;
-      font-size: 26px;
-      font-weight: 700;
-      color: #ffffff;
-      line-height: 1.25;
-      margin-top: 4px;
-    }
-    .compact-meta {
-      font-size: 19px;
-      color: rgba(255,255,255,0.6);
-      margin-top: 6px;
-    }
-    .jka-intro-banner {
-      background: linear-gradient(135deg, #3d0006 0%, #150002 100%);
-      border: 1px solid #D40000;
-      border-radius: 16px;
-      margin: 20px 24px;
-      padding: 24px;
-    }
-    .jka-badge {
-      display: inline-block;
-      background: #D40000;
-      color: white;
-      font-size: 18px;
-      font-weight: 800;
-      padding: 4px 14px;
-      border-radius: 6px;
-      margin-bottom: 10px;
-    }
-    .jka-banner-title {
-      font-size: 30px;
-      font-weight: 800;
-      color: #ffffff;
-    }
-    .jka-banner-sub {
-      font-size: 21px;
-      color: #FFC837;
-      margin-top: 6px;
-    }
-    .chips-row {
-      display: flex;
-      gap: 12px;
-      padding: 0 24px 16px;
-    }
-    .chip {
-      padding: 10px 20px;
-      border-radius: 999px;
-      background: #250508;
-      border: 1px solid rgba(255,255,255,0.2);
-      font-size: 21px;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-    .chip.active {
-      background: #D40000;
-      border-color: #D40000;
-      color: white;
-    }
-    .card-jka {
-      background: #180306;
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 16px;
-      margin: 0 24px 20px;
-      padding: 22px;
-    }
-    .jka-user-row {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-    .user-avatar {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      background: #D40000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 17px;
-      font-weight: 800;
-    }
-    .user-avatar.anon {
-      background: #444;
-    }
-    .user-name {
-      font-size: 22px;
-      font-weight: 700;
-    }
-    .issue-time {
-      font-size: 18px;
-      color: rgba(255,255,255,0.6);
-    }
-    .status-badge {
-      margin-left: auto;
-      font-size: 18px;
-      font-weight: 800;
-      padding: 6px 14px;
-      border-radius: 999px;
-    }
-    .status-badge.progress {
-      background: rgba(255, 180, 0, 0.2);
-      color: #FFB400;
-      border: 1px solid #FFB400;
-    }
-    .status-badge.submitted {
-      background: rgba(0, 180, 255, 0.2);
-      color: #00B4FF;
-      border: 1px solid #00B4FF;
-    }
-    .jka-title {
-      font-size: 26px;
-      font-weight: 700;
-      line-height: 1.3;
-      margin-top: 14px;
-    }
-    .jka-photo {
-      width: 100%;
-      height: 300px;
-      border-radius: 12px;
-      object-fit: cover;
-      margin-top: 14px;
-    }
-    .jka-footer-row {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 14px;
-      font-size: 20px;
-      color: #FFC837;
-      font-weight: 600;
-    }
-    .fab-btn {
-      position: absolute;
-      bottom: 120px;
-      right: 40px;
-      background: #D40000;
-      color: white;
-      font-size: 24px;
-      font-weight: 800;
-      padding: 18px 36px;
-      border-radius: 999px;
-      box-shadow: 0 10px 30px rgba(212,0,0,0.6);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .video-player-box {
-      position: relative;
-      width: 100%;
-      height: 480px;
-      background: black;
-    }
-    .player-bg {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      opacity: 0.85;
-    }
-    .player-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 60%);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 24px;
-    }
-    .live-tag-corner {
-      background: #D40000;
-      color: white;
-      font-size: 20px;
-      font-weight: 800;
-      padding: 6px 18px;
-      border-radius: 6px;
-      align-self: flex-start;
-    }
-    .play-circle {
-      width: 90px;
-      height: 90px;
-      background: rgba(212,0,0,0.9);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 40px;
-      color: white;
-      align-self: center;
-      box-shadow: 0 0 30px rgba(212,0,0,0.8);
-    }
-    .player-caption {
-      font-size: 28px;
-      font-weight: 800;
-      color: white;
-      line-height: 1.25;
-    }
-    .section-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 24px 30px 14px;
-    }
-    .section-title {
-      font-size: 28px;
-      font-weight: 800;
-      color: white;
-    }
-    .view-all {
-      font-size: 22px;
-      color: #FFC837;
-      font-weight: 700;
-    }
-    .video-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
-      padding: 0 24px;
-    }
-    .vid-card {
-      background: #180306;
-      border-radius: 14px;
-      overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-    .vid-thumb-wrap {
-      position: relative;
-      height: 180px;
-    }
-    .vid-thumb {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .vid-duration {
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
-      background: rgba(0,0,0,0.8);
-      font-size: 16px;
-      font-weight: 700;
-      padding: 3px 8px;
-      border-radius: 4px;
-    }
-    .vid-title {
-      font-size: 21px;
-      font-weight: 700;
-      padding: 12px 14px 6px;
-      line-height: 1.25;
-    }
-    .vid-meta {
-      font-size: 18px;
-      color: #FFC837;
-      padding: 0 14px 14px;
-    }
-    .towns-horizontal {
-      display: flex;
-      gap: 14px;
-      padding: 18px 24px;
-      overflow-x: hidden;
-    }
-    .town-chip {
-      padding: 10px 24px;
-      border-radius: 999px;
-      background: #250508;
-      border: 1px solid rgba(255,255,255,0.2);
-      font-size: 22px;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-    .town-chip.active {
-      background: #D40000;
-      border-color: #D40000;
-      color: white;
-    }
-    .town-banner {
-      background: linear-gradient(90deg, #3d0006 0%, #150002 100%);
-      border-left: 6px solid #D40000;
-      padding: 18px 24px;
-      margin: 0 24px 20px;
-    }
-    .town-banner-title {
-      font-size: 28px;
-      font-weight: 800;
-      color: #ffffff;
-    }
-    .town-banner-sub {
-      font-size: 20px;
-      color: #FFC837;
-      margin-top: 4px;
-    }
-    .date-picker-badge {
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.2);
-      padding: 8px 18px;
-      border-radius: 8px;
-      font-size: 20px;
-      font-weight: 700;
-      color: #FFC837;
-    }
-    .epaper-hero-card {
-      background: #180306;
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 20px;
-      margin: 20px 24px;
-      padding: 24px;
-    }
-    .epaper-preview-box {
-      background: #fbf9f4;
-      color: #111111;
-      border-radius: 12px;
-      padding: 24px;
-      position: relative;
-      height: 380px;
-      display: flex;
-      flex-direction: column;
-    }
-    .epaper-header-mast {
-      font-family: 'Noto Serif Devanagari', serif;
-      font-size: 38px;
-      font-weight: 900;
-      text-align: center;
-      color: #b80000;
-      border-bottom: 2px solid #111;
-      padding-bottom: 8px;
-    }
-    .epaper-sub-mast {
-      text-align: center;
-      font-size: 16px;
-      font-weight: 700;
-      color: #555;
-      padding: 4px 0;
-      border-bottom: 1px solid #ccc;
-    }
-    .epaper-lead-news {
-      font-family: 'Noto Serif Devanagari', serif;
-      font-size: 26px;
-      font-weight: 800;
-      line-height: 1.25;
-      margin-top: 14px;
-    }
-    .epaper-columns-mock {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      font-size: 17px;
-      line-height: 1.3;
-      color: #333;
-      margin-top: 12px;
-    }
-    .epaper-overlay-btn {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #D40000;
-      color: white;
-      font-size: 22px;
-      font-weight: 800;
-      padding: 12px 32px;
-      border-radius: 999px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-      white-space: nowrap;
-    }
-    .epaper-meta-bar {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 18px;
-      font-size: 22px;
-      color: #FFC837;
-      font-weight: 700;
-    }
-    .reels-teaser-row {
-      display: flex;
-      gap: 16px;
-      padding: 0 24px;
-    }
-    .reel-teaser-card {
-      flex: 1;
-      height: 240px;
-      border-radius: 16px;
-      position: relative;
-      overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.15);
-    }
-    .reel-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .reel-gradient {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 60%);
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      padding: 14px;
-    }
-    .reel-caption {
-      font-size: 18px;
-      font-weight: 700;
-      line-height: 1.2;
-    }
-    .bottom-nav {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 100px;
-      background: #140204;
-      border-top: 1px solid rgba(255,255,255,0.15);
-      display: flex;
-      align-items: center;
-      justify-content: space-around;
-      padding-bottom: 10px;
-    }
-    .nav-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      color: rgba(255,255,255,0.5);
-    }
-    .nav-item span {
-      font-size: 18px;
-      font-weight: 700;
-      margin-top: 4px;
-    }
-    .nav-item.active {
-      color: #D40000;
-    }
-    .nav-item.active span {
-      color: #ffffff;
-    }
-  </style>
-</head>
-<body>
-  <div class="marketing-top">
-    <div class="top-accent-bar"></div>
-    <div class="tag-pill">जनपद बिजनौर का अग्रणी न्यूज़ नेटवर्क</div>
-    <div class="title-hi">ताज़ा ख़बरें व ब्रेकिंग न्यूज़ अलर्ट</div>
-    <div class="title-en">District Bijnor 24x7 Breaking News</div>
-  </div>
-
-  <div class="device-shell">
-    <div class="device-screen">
-      <div class="status-bar">
-        <span>09:41</span>
-        <span>5G • WiFi 100%</span>
-      </div>
-      
-          <div class="app-header">
-            <div class="header-left">
-              <div class="header-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></div>
-              <img src="../../public/pwa-512.png" class="app-logo">
-              <div>
-                <div class="brand-title">अभी तक</div>
-                <div class="brand-sub">जनपद बिजनौर</div>
-              </div>
-            </div>
-            <div class="header-right">
-              <div class="header-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></div>
-              <div class="header-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg></div>
-            </div>
-          </div>
-
-          <div class="breaking-strip">
-            <span class="breaking-badge"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> ब्रेकिंग</span>
-            <span class="breaking-text">नगीना-धामपुर मार्ग पर चौड़ीकरण कार्य शुरू, जाम से मिलेगी मुक्ति...</span>
-          </div>
-
-          <div class="card-featured">
-            <div class="img-container">
-              <img src="../../src/assets/news-sugarcane.webp" class="card-img">
-              <span class="cat-pill">कृषि व किसान</span>
-            </div>
-            <div class="card-body">
-              <div class="card-title">बिजनौर में गन्ना पेराई सत्र की तैयारियां तेज, किसानों को समय पर भुगतान का आश्वासन</div>
-              <div class="card-meta">
-                <span>धामपुर</span>
-                <span>• 25 मिनट पहले</span>
-                <span>• ब्यूरो रिपोर्ट</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="card-compact">
-            <img src="../../src/assets/news-road.webp" class="compact-img">
-            <div class="compact-body">
-              <span class="cat-tag">विकास एवं निर्माण</span>
-              <div class="compact-title">नजीबाबाद-कोतवाली मार्ग पर नई पुलिया का निर्माण कार्य अंतिम चरण में</div>
-              <div class="compact-meta">नजीबाबाद • 1 घंटा पहले</div>
-            </div>
-          </div>
-
-          <div class="card-compact">
-            <img src="../../src/assets/news-health.webp" class="compact-img">
-            <div class="compact-body">
-              <span class="cat-tag">स्वास्थ्य सेवाएं</span>
-              <div class="compact-title">जिला अस्पताल में नई डिजिटल एक्स-रे मशीन स्थापित, मरीजों को मिलेगी राहत</div>
-              <div class="compact-meta">बिजनौर • 3 घंटे पहले</div>
-            </div>
-          </div>
-
-          <div class="bottom-nav">
-            <div class="nav-item active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg> <span>होम</span></div>
-            <div class="nav-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"></path></svg> <span>ई-पेपर</span></div>
-            <div class="nav-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.2 6 3 11l-.9-2.4 17.2-5.1L20.2 6z"></path><path d="m6.2 5.3 3.1 4"></path><path d="m12.2 3.5 3.1 4"></path><path d="M3 11h18v11H3z"></path></svg> <span>रील्स</span></div>
-            <div class="nav-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"></circle><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"></path><path d="M7.8 7.8c-2.3 2.3-2.3 6.1 0 8.5"></path></svg> <span>लाइव</span></div>
-            <div class="nav-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 11 18-5v12L3 14v-3z"></path><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"></path></svg> <span>जन की आवाज़</span></div>
-          </div>
-        
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        width: 1080px;
+        height: 2400px;
+        background: #0f0204;
+        font-family: "Mukta", sans-serif;
+        color: #ffffff;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+      }
+      .marketing-top {
+        width: 100%;
+        height: 520px;
+        background: radial-gradient(circle at 50% 20%, #b80000 0%, #4a0002 50%, #0f0204 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 60px 40px 20px;
+        position: relative;
+      }
+      .top-accent-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 10px;
+        background: linear-gradient(90deg, #d40000 0%, #ffc837 50%, #d40000 100%);
+      }
+      .tag-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 200, 50, 0.5);
+        border-radius: 999px;
+        padding: 8px 24px;
+        font-size: 26px;
+        font-weight: 700;
+        color: #ffc837;
+        margin-bottom: 20px;
+      }
+      .title-hi {
+        font-family: "Noto Serif Devanagari", serif;
+        font-size: 64px;
+        font-weight: 800;
+        line-height: 1.15;
+        color: #ffffff;
+        text-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
+        max-width: 950px;
+      }
+      .title-en {
+        font-family: "Outfit", sans-serif;
+        font-size: 30px;
+        font-weight: 800;
+        color: rgba(255, 255, 255, 0.85);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-top: 14px;
+      }
+      .device-shell {
+        width: 940px;
+        height: 1880px;
+        background: #1a1a1a;
+        border-radius: 64px 64px 0 0;
+        padding: 16px 16px 0 16px;
+        box-shadow:
+          0 -20px 60px rgba(0, 0, 0, 0.9),
+          0 0 0 4px rgba(255, 255, 255, 0.12);
+        position: relative;
+      }
+      .device-screen {
+        width: 100%;
+        height: 100%;
+        background: #0d0103;
+        border-radius: 52px 52px 0 0;
+        overflow: hidden;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+      }
+      .status-bar {
+        height: 54px;
+        padding: 0 36px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 20px;
+        font-weight: 700;
+        color: #ffffff;
+        background: #0d0103;
+        z-index: 10;
+      }
+      .app-header {
+        height: 100px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        background: #140204;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 30px;
+        flex-shrink: 0;
+      }
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .header-icon {
+        display: flex;
+        align-items: center;
+        color: #ffffff;
+      }
+      .app-logo {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+      }
+      .brand-title {
+        font-family: "Noto Serif Devanagari", serif;
+        font-size: 32px;
+        font-weight: 800;
+        color: #ffffff;
+        line-height: 1.1;
+      }
+      .brand-sub {
+        font-size: 20px;
+        color: #ffc837;
+        font-weight: 600;
+      }
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+      .live-pill-red {
+        background: #d40000;
+        color: #ffffff;
+        font-size: 18px;
+        font-weight: 800;
+        padding: 6px 16px;
+        border-radius: 999px;
+      }
+      .breaking-strip {
+        background: #200407;
+        border-bottom: 1px solid #d40000;
+        padding: 12px 24px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font-size: 22px;
+      }
+      .breaking-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #d40000;
+        color: white;
+        font-weight: 800;
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 18px;
+      }
+      .breaking-text {
+        color: #ffffff;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .card-featured {
+        background: #180306;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.08);
+        margin-bottom: 20px;
+      }
+      .img-container {
+        position: relative;
+        width: 100%;
+        height: 480px;
+      }
+      .card-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .cat-pill {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: #d40000;
+        color: white;
+        font-size: 20px;
+        font-weight: 700;
+        padding: 6px 18px;
+        border-radius: 8px;
+      }
+      .card-body {
+        padding: 24px 30px;
+      }
+      .card-title {
+        font-family: "Noto Serif Devanagari", serif;
+        font-size: 36px;
+        font-weight: 800;
+        line-height: 1.25;
+        color: #ffffff;
+      }
+      .card-meta {
+        margin-top: 14px;
+        font-size: 22px;
+        color: #ffc837;
+        font-weight: 600;
+        display: flex;
+        gap: 12px;
+      }
+      .card-compact {
+        display: flex;
+        gap: 20px;
+        padding: 16px 30px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        background: #120204;
+      }
+      .compact-img {
+        width: 220px;
+        height: 150px;
+        border-radius: 12px;
+        object-fit: cover;
+        flex-shrink: 0;
+      }
+      .compact-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .cat-tag {
+        font-size: 18px;
+        color: #d40000;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+      .compact-title {
+        font-family: "Noto Serif Devanagari", serif;
+        font-size: 26px;
+        font-weight: 700;
+        color: #ffffff;
+        line-height: 1.25;
+        margin-top: 4px;
+      }
+      .compact-meta {
+        font-size: 19px;
+        color: rgba(255, 255, 255, 0.6);
+        margin-top: 6px;
+      }
+      .jka-intro-banner {
+        background: linear-gradient(135deg, #3d0006 0%, #150002 100%);
+        border: 1px solid #d40000;
+        border-radius: 16px;
+        margin: 20px 24px;
+        padding: 24px;
+      }
+      .jka-badge {
+        display: inline-block;
+        background: #d40000;
+        color: white;
+        font-size: 18px;
+        font-weight: 800;
+        padding: 4px 14px;
+        border-radius: 6px;
+        margin-bottom: 10px;
+      }
+      .jka-banner-title {
+        font-size: 30px;
+        font-weight: 800;
+        color: #ffffff;
+      }
+      .jka-banner-sub {
+        font-size: 21px;
+        color: #ffc837;
+        margin-top: 6px;
+      }
+      .chips-row {
+        display: flex;
+        gap: 12px;
+        padding: 0 24px 16px;
+      }
+      .chip {
+        padding: 10px 20px;
+        border-radius: 999px;
+        background: #250508;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        font-size: 21px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .chip.active {
+        background: #d40000;
+        border-color: #d40000;
+        color: white;
+      }
+      .card-jka {
+        background: #180306;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 16px;
+        margin: 0 24px 20px;
+        padding: 22px;
+      }
+      .jka-user-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .user-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #d40000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 17px;
+        font-weight: 800;
+      }
+      .user-avatar.anon {
+        background: #444;
+      }
+      .user-name {
+        font-size: 22px;
+        font-weight: 700;
+      }
+      .issue-time {
+        font-size: 18px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+      .status-badge {
+        margin-left: auto;
+        font-size: 18px;
+        font-weight: 800;
+        padding: 6px 14px;
+        border-radius: 999px;
+      }
+      .status-badge.progress {
+        background: rgba(255, 180, 0, 0.2);
+        color: #ffb400;
+        border: 1px solid #ffb400;
+      }
+      .status-badge.submitted {
+        background: rgba(0, 180, 255, 0.2);
+        color: #00b4ff;
+        border: 1px solid #00b4ff;
+      }
+      .jka-title {
+        font-size: 26px;
+        font-weight: 700;
+        line-height: 1.3;
+        margin-top: 14px;
+      }
+      .jka-photo {
+        width: 100%;
+        height: 300px;
+        border-radius: 12px;
+        object-fit: cover;
+        margin-top: 14px;
+      }
+      .jka-footer-row {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 14px;
+        font-size: 20px;
+        color: #ffc837;
+        font-weight: 600;
+      }
+      .fab-btn {
+        position: absolute;
+        bottom: 120px;
+        right: 40px;
+        background: #d40000;
+        color: white;
+        font-size: 24px;
+        font-weight: 800;
+        padding: 18px 36px;
+        border-radius: 999px;
+        box-shadow: 0 10px 30px rgba(212, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .video-player-box {
+        position: relative;
+        width: 100%;
+        height: 480px;
+        background: black;
+      }
+      .player-bg {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.85;
+      }
+      .player-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, transparent 60%);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 24px;
+      }
+      .live-tag-corner {
+        background: #d40000;
+        color: white;
+        font-size: 20px;
+        font-weight: 800;
+        padding: 6px 18px;
+        border-radius: 6px;
+        align-self: flex-start;
+      }
+      .play-circle {
+        width: 90px;
+        height: 90px;
+        background: rgba(212, 0, 0, 0.9);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 40px;
+        color: white;
+        align-self: center;
+        box-shadow: 0 0 30px rgba(212, 0, 0, 0.8);
+      }
+      .player-caption {
+        font-size: 28px;
+        font-weight: 800;
+        color: white;
+        line-height: 1.25;
+      }
+      .section-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 24px 30px 14px;
+      }
+      .section-title {
+        font-size: 28px;
+        font-weight: 800;
+        color: white;
+      }
+      .view-all {
+        font-size: 22px;
+        color: #ffc837;
+        font-weight: 700;
+      }
+      .video-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        padding: 0 24px;
+      }
+      .vid-card {
+        background: #180306;
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .vid-thumb-wrap {
+        position: relative;
+        height: 180px;
+      }
+      .vid-thumb {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .vid-duration {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.8);
+        font-size: 16px;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 4px;
+      }
+      .vid-title {
+        font-size: 21px;
+        font-weight: 700;
+        padding: 12px 14px 6px;
+        line-height: 1.25;
+      }
+      .vid-meta {
+        font-size: 18px;
+        color: #ffc837;
+        padding: 0 14px 14px;
+      }
+      .towns-horizontal {
+        display: flex;
+        gap: 14px;
+        padding: 18px 24px;
+        overflow-x: hidden;
+      }
+      .town-chip {
+        padding: 10px 24px;
+        border-radius: 999px;
+        background: #250508;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        font-size: 22px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .town-chip.active {
+        background: #d40000;
+        border-color: #d40000;
+        color: white;
+      }
+      .town-banner {
+        background: linear-gradient(90deg, #3d0006 0%, #150002 100%);
+        border-left: 6px solid #d40000;
+        padding: 18px 24px;
+        margin: 0 24px 20px;
+      }
+      .town-banner-title {
+        font-size: 28px;
+        font-weight: 800;
+        color: #ffffff;
+      }
+      .town-banner-sub {
+        font-size: 20px;
+        color: #ffc837;
+        margin-top: 4px;
+      }
+      .date-picker-badge {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 8px 18px;
+        border-radius: 8px;
+        font-size: 20px;
+        font-weight: 700;
+        color: #ffc837;
+      }
+      .epaper-hero-card {
+        background: #180306;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 20px;
+        margin: 20px 24px;
+        padding: 24px;
+      }
+      .epaper-preview-box {
+        background: #fbf9f4;
+        color: #111111;
+        border-radius: 12px;
+        padding: 24px;
+        position: relative;
+        height: 380px;
+        display: flex;
+        flex-direction: column;
+      }
+      .epaper-header-mast {
+        font-family: "Noto Serif Devanagari", serif;
+        font-size: 38px;
+        font-weight: 900;
+        text-align: center;
+        color: #b80000;
+        border-bottom: 2px solid #111;
+        padding-bottom: 8px;
+      }
+      .epaper-sub-mast {
+        text-align: center;
+        font-size: 16px;
+        font-weight: 700;
+        color: #555;
+        padding: 4px 0;
+        border-bottom: 1px solid #ccc;
+      }
+      .epaper-lead-news {
+        font-family: "Noto Serif Devanagari", serif;
+        font-size: 26px;
+        font-weight: 800;
+        line-height: 1.25;
+        margin-top: 14px;
+      }
+      .epaper-columns-mock {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        font-size: 17px;
+        line-height: 1.3;
+        color: #333;
+        margin-top: 12px;
+      }
+      .epaper-overlay-btn {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #d40000;
+        color: white;
+        font-size: 22px;
+        font-weight: 800;
+        padding: 12px 32px;
+        border-radius: 999px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        white-space: nowrap;
+      }
+      .epaper-meta-bar {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 18px;
+        font-size: 22px;
+        color: #ffc837;
+        font-weight: 700;
+      }
+      .reels-teaser-row {
+        display: flex;
+        gap: 16px;
+        padding: 0 24px;
+      }
+      .reel-teaser-card {
+        flex: 1;
+        height: 240px;
+        border-radius: 16px;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+      }
+      .reel-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .reel-gradient {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, transparent 60%);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 14px;
+      }
+      .reel-caption {
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1.2;
+      }
+      .bottom-nav {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 100px;
+        background: #140204;
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+        padding-bottom: 10px;
+      }
+      .nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: rgba(255, 255, 255, 0.5);
+      }
+      .nav-item span {
+        font-size: 18px;
+        font-weight: 700;
+        margin-top: 4px;
+      }
+      .nav-item.active {
+        color: #d40000;
+      }
+      .nav-item.active span {
+        color: #ffffff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="marketing-top">
+      <div class="top-accent-bar"></div>
+      <div class="tag-pill">जनपद बिजनौर का अग्रणी न्यूज़ नेटवर्क</div>
+      <div class="title-hi">ताज़ा ख़बरें व ब्रेकिंग न्यूज़ अलर्ट</div>
+      <div class="title-en">District Bijnor 24x7 Breaking News</div>
     </div>
-  </div>
-</body>
+
+    <div class="device-shell">
+      <div class="device-screen">
+        <div class="status-bar">
+          <span>09:41</span>
+          <span>5G • WiFi 100%</span>
+        </div>
+
+        <div class="app-header">
+          <div class="header-left">
+            <div class="header-icon">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </div>
+            <img src="../../public/pwa-512.png" class="app-logo" />
+            <div>
+              <div class="brand-title">अभी तक</div>
+              <div class="brand-sub">जनपद बिजनौर</div>
+            </div>
+          </div>
+          <div class="header-right">
+            <div class="header-icon">
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </div>
+            <div class="header-icon">
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
+                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="breaking-strip">
+          <span class="breaking-badge"
+            ><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            ब्रेकिंग</span
+          >
+          <span class="breaking-text"
+            >नगीना-धामपुर मार्ग पर चौड़ीकरण कार्य शुरू, जाम से मिलेगी मुक्ति...</span
+          >
+        </div>
+
+        <div class="card-featured">
+          <div class="img-container">
+            <img src="../../src/assets/news-sugarcane.webp" class="card-img" />
+            <span class="cat-pill">कृषि व किसान</span>
+          </div>
+          <div class="card-body">
+            <div class="card-title">
+              बिजनौर में गन्ना पेराई सत्र की तैयारियां तेज, किसानों को समय पर भुगतान का आश्वासन
+            </div>
+            <div class="card-meta">
+              <span>धामपुर</span>
+              <span>• 25 मिनट पहले</span>
+              <span>• ब्यूरो रिपोर्ट</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-compact">
+          <img src="../../src/assets/news-road.webp" class="compact-img" />
+          <div class="compact-body">
+            <span class="cat-tag">विकास एवं निर्माण</span>
+            <div class="compact-title">
+              नजीबाबाद-कोतवाली मार्ग पर नई पुलिया का निर्माण कार्य अंतिम चरण में
+            </div>
+            <div class="compact-meta">नजीबाबाद • 1 घंटा पहले</div>
+          </div>
+        </div>
+
+        <div class="card-compact">
+          <img src="../../src/assets/news-health.webp" class="compact-img" />
+          <div class="compact-body">
+            <span class="cat-tag">स्वास्थ्य सेवाएं</span>
+            <div class="compact-title">
+              जिला अस्पताल में नई डिजिटल एक्स-रे मशीन स्थापित, मरीजों को मिलेगी राहत
+            </div>
+            <div class="compact-meta">बिजनौर • 3 घंटे पहले</div>
+          </div>
+        </div>
+
+        <div class="bottom-nav">
+          <div class="nav-item active">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            </svg>
+            <span>होम</span>
+          </div>
+          <div class="nav-item">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"
+              ></path>
+            </svg>
+            <span>ई-पेपर</span>
+          </div>
+          <div class="nav-item">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M20.2 6 3 11l-.9-2.4 17.2-5.1L20.2 6z"></path>
+              <path d="m6.2 5.3 3.1 4"></path>
+              <path d="m12.2 3.5 3.1 4"></path>
+              <path d="M3 11h18v11H3z"></path>
+            </svg>
+            <span>रील्स</span>
+          </div>
+          <div class="nav-item">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="2"></circle>
+              <path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"></path>
+              <path d="M7.8 7.8c-2.3 2.3-2.3 6.1 0 8.5"></path>
+            </svg>
+            <span>लाइव</span>
+          </div>
+          <div class="nav-item">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="m3 11 18-5v12L3 14v-3z"></path>
+              <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"></path>
+            </svg>
+            <span>जन की आवाज़</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
 </html>

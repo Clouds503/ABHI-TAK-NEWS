@@ -9,9 +9,10 @@
 
 ## Executive Summary
 
-A comprehensive, read-only investigation of the Android Gradle build setup, SDK environment, JVM tooling, and output artifacts was conducted. 
+A comprehensive, read-only investigation of the Android Gradle build setup, SDK environment, JVM tooling, and output artifacts was conducted.
 
 Key results:
+
 1. **Build Viability**: Both `assembleDebug` and `bundleRelease` successfully compile to completion when the Android SDK path is provided.
 2. **Deliverables Generated**:
    - Debug APK: `android/app/build/outputs/apk/debug/app-debug.apk` (5,716,726 bytes / ~5.71 MB).
@@ -27,13 +28,16 @@ Key results:
 ## 1. Android Project Directory Structure
 
 ### 1.1 `android/build.gradle` (Project Root)
+
 - **Android Gradle Plugin (AGP)**: `classpath 'com.android.tools.build:gradle:8.2.1'` (line 10).
 - **Google Services Plugin**: `classpath 'com.google.gms:google-services:4.4.0'` (line 11).
 - **Variables Import**: `apply from: "variables.gradle"` (line 18).
 - **Clean Task**: `task clean(type: Delete) { delete rootProject.buildDir }` (uses deprecated `rootProject.buildDir` API).
 
 ### 1.2 `android/variables.gradle`
+
 Configures project-wide versions:
+
 ```groovy
 ext {
     minSdkVersion = 23
@@ -54,7 +58,9 @@ ext {
 ```
 
 ### 1.3 `android/settings.gradle` & `android/capacitor.settings.gradle`
+
 Includes modules:
+
 - `:app`
 - `:capacitor-cordova-android-plugins` (from `./capacitor-cordova-android-plugins/`)
 - `:capacitor-android` (from `../node_modules/@capacitor/android/capacitor`)
@@ -63,13 +69,16 @@ Includes modules:
 - `:capacitor-status-bar` (from `../node_modules/@capacitor/status-bar/android`)
 
 ### 1.4 `android/gradle.properties`
+
 Current contents:
+
 ```properties
 org.gradle.jvmargs=-Xmx1536m
 android.useAndroidX=true
 ```
 
 ### 1.5 `android/app/build.gradle`
+
 - `namespace`: `"com.abhitak.news"`
 - `applicationId`: `"com.abhitak.news"`
 - `compileSdk`: `rootProject.ext.compileSdkVersion` (34)
@@ -97,20 +106,21 @@ android.useAndroidX=true
 
 ## 2. Gradle Wrapper & AGP Compatibility Matrix
 
-| Component | Configured Version | Compatibility & Health |
-|---|---|---|
-| **Gradle Distribution** | `gradle-8.2.1-all.zip` (`gradle/wrapper/gradle-wrapper.properties:3`) | Stable, fully compatible with AGP 8.2.1 |
-| **Android Gradle Plugin** | `8.2.1` (`android/build.gradle:10`) | Stable, requires JDK 17, supports compileSdk 34 |
-| **Active JVM for Gradle** | JDK 17.0.12 LTS (`C:\Program Files\Java\jdk-17`) | Clean match via `JAVA_HOME` resolution in `gradlew.bat` |
-| **System CLI Java** | JDK 25.0.2 LTS (`C:\Program Files\Java\jdk-25.0.2`) | Incompatible with Gradle 8.2.1. Handled only because `gradlew.bat` checks `JAVA_HOME` before `PATH`. |
-| **Installed Android SDK Platforms** | `android-34`, `android-35`, `android-36`, `android-36.1` (`%LOCALAPPDATA%\Android\Sdk\platforms`) | Target SDK 34 is present. |
-| **Installed Build Tools** | `34.0.0`, `35.0.0`, `36.0.0`, `36.1.0`, `37.0.0` | `34.0.0` available and utilized. |
+| Component                           | Configured Version                                                                                | Compatibility & Health                                                                               |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| **Gradle Distribution**             | `gradle-8.2.1-all.zip` (`gradle/wrapper/gradle-wrapper.properties:3`)                             | Stable, fully compatible with AGP 8.2.1                                                              |
+| **Android Gradle Plugin**           | `8.2.1` (`android/build.gradle:10`)                                                               | Stable, requires JDK 17, supports compileSdk 34                                                      |
+| **Active JVM for Gradle**           | JDK 17.0.12 LTS (`C:\Program Files\Java\jdk-17`)                                                  | Clean match via `JAVA_HOME` resolution in `gradlew.bat`                                              |
+| **System CLI Java**                 | JDK 25.0.2 LTS (`C:\Program Files\Java\jdk-25.0.2`)                                               | Incompatible with Gradle 8.2.1. Handled only because `gradlew.bat` checks `JAVA_HOME` before `PATH`. |
+| **Installed Android SDK Platforms** | `android-34`, `android-35`, `android-36`, `android-36.1` (`%LOCALAPPDATA%\Android\Sdk\platforms`) | Target SDK 34 is present.                                                                            |
+| **Installed Build Tools**           | `34.0.0`, `35.0.0`, `36.0.0`, `36.1.0`, `37.0.0`                                                  | `34.0.0` available and utilized.                                                                     |
 
 ---
 
 ## 3. Desugaring and DEX Configuration Analysis
 
 ### 3.1 Current Status
+
 - Neither `coreLibraryDesugaringEnabled` nor `desugar_jdk_libs` is present in `android/app/build.gradle`.
 - In `android/app/capacitor.build.gradle:4-7`:
   ```groovy
@@ -122,6 +132,7 @@ android.useAndroidX=true
 - No explicit `compileOptions` or `multiDexEnabled true` is configured in `android/app/build.gradle`.
 
 ### 3.2 Root Causes of `mergeDebugGlobalSynthetics` & DEX Transform Conflicts
+
 1. **Java 17 Bytecode to API 23 Backporting**:
    When targeting `minSdkVersion 23`, D8 must backport Java 8/11/17 bytecode features (lambdas, method references, try-with-resources, default interface methods, `java.time.*`, `java.util.function.*`).
 2. **Intermediate Global Synthetics Collision**:
@@ -138,6 +149,7 @@ android.useAndroidX=true
 ## 4. Keystore and Signing Configuration
 
 ### 4.1 Keystore Verification
+
 - **Keystore File**: `android/app/abhitak-release.keystore` exists (2,746 bytes).
 - **Format**: PKCS12 keystore.
 - **Alias Name**: `abhitak`
@@ -151,6 +163,7 @@ android.useAndroidX=true
   - SHA256: `9C:7A:7E:8C:1E:17:E8:E1:B9:66:BB:FF:70:1C:FC:D7:36:1F:1A:AA:46:51:F2:B1:3D:D3:DF:E7:C2:C3:CD:38`
 
 ### 4.2 Credentials & Gradle Integration
+
 - **Credentials File**: `android/app/keystore.properties` contains:
   ```properties
   KEYSTORE_PASS=AbhiTak@2024!
@@ -175,21 +188,22 @@ android.useAndroidX=true
 
 ## 5. SDK and Application Identifiers
 
-| Parameter | Target Requirement | Configured Value | Source Location | Status |
-|---|---|---|---|---|
-| **Application ID** | `com.abhitak.news` | `com.abhitak.news` | `app/build.gradle:7` | Pass |
-| **Namespace** | `com.abhitak.news` | `com.abhitak.news` | `app/build.gradle:4` | Pass |
-| **compileSdkVersion** | 34 | 34 | `variables.gradle:3` | Pass |
-| **minSdkVersion** | 23 | 23 | `variables.gradle:2` | Pass |
-| **targetSdkVersion** | 34 | 34 | `variables.gradle:4` | Pass |
-| **versionCode** | 1 | 1 | `app/build.gradle:10` | Pass |
-| **versionName** | "1.0.0" | "1.0.0" | `app/build.gradle:11` | Pass |
+| Parameter             | Target Requirement | Configured Value   | Source Location       | Status |
+| --------------------- | ------------------ | ------------------ | --------------------- | ------ |
+| **Application ID**    | `com.abhitak.news` | `com.abhitak.news` | `app/build.gradle:7`  | Pass   |
+| **Namespace**         | `com.abhitak.news` | `com.abhitak.news` | `app/build.gradle:4`  | Pass   |
+| **compileSdkVersion** | 34                 | 34                 | `variables.gradle:3`  | Pass   |
+| **minSdkVersion**     | 23                 | 23                 | `variables.gradle:2`  | Pass   |
+| **targetSdkVersion**  | 34                 | 34                 | `variables.gradle:4`  | Pass   |
+| **versionCode**       | 1                  | 1                  | `app/build.gradle:10` | Pass   |
+| **versionName**       | "1.0.0"            | "1.0.0"            | `app/build.gradle:11` | Pass   |
 
 ---
 
 ## 6. Windows-Specific Issues & Gradle Daemon Optimization
 
 ### 6.1 Missing `local.properties` (Immediate Blocker)
+
 - **Observation**: `android/local.properties` was absent from git/filesystem, and `ANDROID_HOME` was null in user environment variables. Running `./gradlew` fails immediately before task graph execution.
 - **Remediation**: Create `android/local.properties`:
   ```properties
@@ -197,6 +211,7 @@ android.useAndroidX=true
   ```
 
 ### 6.2 Low Daemon Memory Causing R8 Thrashing
+
 - **Observation**: `org.gradle.jvmargs=-Xmx1536m` in `gradle.properties` caused `minifyReleaseWithR8` to take ~10 minutes, consuming 1380 seconds of CPU due to garbage collection pressure.
 - **Remediation**: Increase heap and specify UTF-8 encoding in `gradle.properties`:
   ```properties
@@ -204,6 +219,7 @@ android.useAndroidX=true
   ```
 
 ### 6.3 Stale Daemons and Windows File Locking
+
 - **Observation**: The daemon log reported:
   `Starting a Gradle Daemon, 4 busy and 1 incompatible and 6 stopped Daemons could not be reused`
   On Windows, persistent daemon processes keep open file locks on `app/build/intermediates/` and `.gradle/caches/`, leading to `FileSystemException` or `Unable to delete directory` errors when cleaning.
@@ -215,10 +231,10 @@ android.useAndroidX=true
 
 ## 7. Output Deliverables Verification
 
-| Artifact | File Path | File Size | Verification Status |
-|---|---|---|---|
-| **Debug APK** | `android/app/build/outputs/apk/debug/app-debug.apk` | 5,716,726 bytes (~5.71 MB) | Built with return code 0; contains valid AndroidManifest, DEX files, resources, and web assets. |
-| **Release AAB** | `android/app/build/outputs/bundle/release/app-release.aab` | 2,865,978 bytes (~2.86 MB) | Built with return code 0; R8 minified; signed with `abhitak` alias; jarsigner verified. |
+| Artifact        | File Path                                                  | File Size                  | Verification Status                                                                             |
+| --------------- | ---------------------------------------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------- |
+| **Debug APK**   | `android/app/build/outputs/apk/debug/app-debug.apk`        | 5,716,726 bytes (~5.71 MB) | Built with return code 0; contains valid AndroidManifest, DEX files, resources, and web assets. |
+| **Release AAB** | `android/app/build/outputs/bundle/release/app-release.aab` | 2,865,978 bytes (~2.86 MB) | Built with return code 0; R8 minified; signed with `abhitak` alias; jarsigner verified.         |
 
 ---
 

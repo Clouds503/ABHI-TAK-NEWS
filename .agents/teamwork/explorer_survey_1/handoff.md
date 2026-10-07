@@ -10,6 +10,7 @@
 ## 1. Observation
 
 ### 1.1 Files and Direct Configurations Inspected
+
 - `android/build.gradle:10`: `classpath 'com.android.tools.build:gradle:8.2.1'`
 - `android/build.gradle:11`: `classpath 'com.google.gms:google-services:4.4.0'`
 - `android/build.gradle:18`: `apply from: "variables.gradle"`
@@ -72,6 +73,7 @@
   ```
 
 ### 1.2 Verbatim Errors & Tool Commands
+
 - **Initial assembleDebug run without SDK location defined**:
   - Command: `cmd.exe /c "gradlew.bat assembleDebug --stacktrace"`
   - Error:
@@ -122,9 +124,10 @@
 
 ## 4. Conclusion
 
-The Android build infrastructure is functionally sound and capable of cleanly producing both target binaries (`app-debug.apk` and signed `app-release.aab`). 
+The Android build infrastructure is functionally sound and capable of cleanly producing both target binaries (`app-debug.apk` and signed `app-release.aab`).
 
 To make builds reproducible, fast, and resilient against desugaring conflicts and Windows file locking:
+
 1. Create `android/local.properties` pointing to `sdk.dir=C\:\\Users\\Rudra\\AppData\\Local\\Android\\Sdk`.
 2. Update `android/gradle.properties` to increase heap (`-Xmx3072m`), set UTF-8 encoding, and disable VFS watching (`org.gradle.vfs.watch=false`).
 3. Add `coreLibraryDesugaringEnabled true`, `multiDexEnabled true`, and `desugar_jdk_libs:2.0.4` dependency to `android/app/build.gradle`.

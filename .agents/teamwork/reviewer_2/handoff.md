@@ -3,7 +3,7 @@
 **Reviewer**: Reviewer 2  
 **Role**: Reviewer & Adversarial Critic  
 **Date**: 2026-10-02  
-**Working Directory**: `c:\Users\Rudra\Desktop\Git\ABHI TAK NEWS\.agents\teamwork\reviewer_2`  
+**Working Directory**: `c:\Users\Rudra\Desktop\Git\ABHI TAK NEWS\.agents\teamwork\reviewer_2`
 
 ---
 
@@ -18,20 +18,25 @@
 ### 1.1 Android Gradle Pipeline Configuration Inspection
 
 1. **`android/local.properties`** (`lines 1-2`):
+
    ```properties
    sdk.dir=C\:\\Users\\Rudra\\AppData\\Local\\Android\\Sdk
    ```
+
    Directly observed valid SDK directory path pointing to local Android SDK installation.
 
 2. **`android/gradle.properties`** (`lines 12, 22-23`):
+
    ```properties
    org.gradle.jvmargs=-Xmx3072m -Dfile.encoding=UTF-8
    android.useAndroidX=true
    org.gradle.vfs.watch=false
    ```
+
    Directly observed heap memory tuned to 3072 MB, file encoding UTF-8, AndroidX enabled, and VFS file watching disabled to prevent Windows file-lock contention.
 
 3. **`android/variables.gradle`** (`lines 1-4`):
+
    ```groovy
    ext {
        minSdkVersion = 23
@@ -39,6 +44,7 @@
        targetSdkVersion = 34
    ...
    ```
+
    Directly observed SDK versions: `minSdkVersion = 23`, `compileSdkVersion = 34`, `targetSdkVersion = 34`.
 
 4. **`android/app/build.gradle`**:
@@ -124,7 +130,7 @@
      ```
    - Verbatim verification snippet:
      ```
-     s = signature was verified 
+     s = signature was verified
      m = entry is listed in manifest
      k = at least one certificate was found in keystore
 
@@ -166,13 +172,14 @@
 
 ### Challenge Summary: Overall Risk Assessment: LOW
 
-| # | Challenge Area | Severity | Attack / Failure Scenario | Blast Radius | Mitigation / Status |
-|---|----------------|----------|---------------------------|--------------|---------------------|
-| 1 | Hardcoded Default Passwords in `build.gradle` | Low / Advisory | If `build.gradle` is committed to a public repository, the fallback password string `"AbhiTak@2024!"` is exposed. | Credential exposure if keystore file was also leaked. | Keystore is gitignored. In CI/CD pipelines, require environment variables rather than fallback defaults. |
-| 2 | Optional `google-services.json` Missing | Low / Advisory | Build gracefully tolerates missing `google-services.json`, but physical FCM push tokens cannot be provisioned at runtime without it. | Push notifications will not trigger without active Firebase project registration. | Expected for initial build; Firebase console setup documented as operational prerequisite. |
-| 3 | Target SDK 34 Runtime Permissions | Low | Target SDK 34 strictly enforces runtime notification permission prompt (`POST_NOTIFICATIONS`) and photo pickers (`READ_MEDIA_IMAGES`). | Denied permissions if user rejects dialog. | Handled via Capacitor runtime permission APIs and manifest declarations. |
+| #   | Challenge Area                                | Severity       | Attack / Failure Scenario                                                                                                              | Blast Radius                                                                      | Mitigation / Status                                                                                      |
+| --- | --------------------------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| 1   | Hardcoded Default Passwords in `build.gradle` | Low / Advisory | If `build.gradle` is committed to a public repository, the fallback password string `"AbhiTak@2024!"` is exposed.                      | Credential exposure if keystore file was also leaked.                             | Keystore is gitignored. In CI/CD pipelines, require environment variables rather than fallback defaults. |
+| 2   | Optional `google-services.json` Missing       | Low / Advisory | Build gracefully tolerates missing `google-services.json`, but physical FCM push tokens cannot be provisioned at runtime without it.   | Push notifications will not trigger without active Firebase project registration. | Expected for initial build; Firebase console setup documented as operational prerequisite.               |
+| 3   | Target SDK 34 Runtime Permissions             | Low            | Target SDK 34 strictly enforces runtime notification permission prompt (`POST_NOTIFICATIONS`) and photo pickers (`READ_MEDIA_IMAGES`). | Denied permissions if user rejects dialog.                                        | Handled via Capacitor runtime permission APIs and manifest declarations.                                 |
 
 ### Integrity Audit
+
 - **Hardcoded test results / expected outputs**: None.
 - **Dummy or facade implementations**: None. Dex bytecode and R8 mappings confirm real binary compilation.
 - **Shortcuts bypassing build**: None. Full compilation via Gradle 8.2.1 was executed.
@@ -191,6 +198,7 @@
 ## 5. Conclusion
 
 Milestone 4 Gate review of the Android Gradle build pipeline and binary deliverables is **APPROVED**.
+
 - Pipeline configuration: Fully compliant (`compileSdk 34`, `targetSdk 34`, `minSdk 23`, `applicationId "com.abhitak.news"`).
 - Desugaring & MultiDex: Fully compliant (`coreLibraryDesugaringEnabled true`, `desugar_jdk_libs:2.0.4`, `multiDexEnabled true`).
 - Deliverables: Verified non-zero `app-debug.apk` (7,142,930 bytes) and `app-release.aab` (3,076,873 bytes).
@@ -201,6 +209,7 @@ Milestone 4 Gate review of the Android Gradle build pipeline and binary delivera
 ## 6. Verification Method
 
 To reproduce and independently verify:
+
 ```powershell
 # 1. Verify existence and non-zero size of binaries:
 Get-Item "c:\Users\Rudra\Desktop\Git\ABHI TAK NEWS\android\app\build\outputs\apk\debug\app-debug.apk" | Select-Object FullName, Length

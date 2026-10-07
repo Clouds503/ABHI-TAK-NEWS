@@ -88,6 +88,8 @@ export const JKA_CATEGORIES: { slug: string; hi: string; en: string }[] = [
 
 type Ctx = {
   lang: Lang | null;
+  hasChosenLanguage: boolean;
+  ready: boolean;
   setLang: (l: Lang) => void;
   t: (k: DictKey) => string;
   pick: (hi?: string | null, en?: string | null) => string;
@@ -100,14 +102,26 @@ const KEY = "abhitak.lang";
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang | null>("hi");
+  const [hasChosenLanguage, setHasChosenLanguage] = useState(true);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem(KEY) as Lang | null;
-    // If no language saved yet, keep "hi" as default (don't set null).
-    // Setting null would trigger LanguageGate full-screen picker on every cold start,
-    // blocking all touch interaction until the user picks a language.
-    setLangState(saved ?? "hi");
+    let saved: Lang | null = null;
+    try {
+      saved = localStorage.getItem(KEY) as Lang | null;
+    } catch {
+      // Ignore localStorage errors in private browsing
+    }
+
+    if (saved && (saved === "hi" || saved === "en")) {
+      setLangState(saved);
+      setHasChosenLanguage(true);
+    } else {
+      // First-time visitor: keep "hi" for fallback translation strings,
+      // but mark false to trigger the first-opening language prompt.
+      setLangState("hi");
+      setHasChosenLanguage(false);
+    }
     setReady(true);
   }, []);
 
@@ -116,12 +130,19 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }, [lang]);
 
   const setLang = (l: Lang) => {
-    localStorage.setItem(KEY, l);
+    try {
+      localStorage.setItem(KEY, l);
+    } catch {
+      // Ignore localStorage availability errors
+    }
     setLangState(l);
+    setHasChosenLanguage(true);
   };
   const l: Lang = lang ?? "hi";
   const value: Ctx = {
     lang: ready ? lang : "hi",
+    hasChosenLanguage: ready ? hasChosenLanguage : true,
+    ready,
     setLang,
     t: (k) => dict[k][l],
     pick: (hi, en) => (l === "en" ? en || hi || "" : hi || en || ""),

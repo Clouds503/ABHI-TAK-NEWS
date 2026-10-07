@@ -24,7 +24,7 @@ export const Route = createFileRoute("/about")({
 function About() {
   const { lang, t } = useI18n();
   return (
-    <div className="px-4 py-8">
+    <div className="max-w-4xl mx-auto px-4 lg:px-6 py-10">
       <Logo className="h-20 w-20" />
       <h1 className="mt-5 text-3xl font-bold">
         {lang === "en" ? "About Abhi Tak" : "अभी तक के बारे में"}

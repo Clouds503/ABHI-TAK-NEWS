@@ -38,7 +38,7 @@ const schema = z.object({
 
 function Onboarding() {
   const { user, profile, needsOnboarding, refreshProfile, loading } = useAuth();
-  const { t, lang, pick } = useI18n();
+  const { t, lang, pick, setLang } = useI18n();
   const navigate = useNavigate();
   const [towns, setTowns] = useState<{ id: string; name_hi: string; name_en: string }[]>([]);
   const [busy, setBusy] = useState(false);
@@ -91,6 +91,7 @@ function Onboarding() {
       return;
     }
     toast.success("स्वागत है! Welcome to Abhi Tak");
+    setLang(p.data.preferred_language);
     await refreshProfile();
   };
 

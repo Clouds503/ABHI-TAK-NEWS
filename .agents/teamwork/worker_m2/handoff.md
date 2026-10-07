@@ -3,7 +3,7 @@
 **Agent**: Worker 2 (`worker_m2`)  
 **Parent Orchestrator**: `58d264c9-da3b-4e10-8d65-18c146dda3d2`  
 **Date**: 2026-10-02  
-**Type**: Hard Handoff (Milestone 2 Complete)  
+**Type**: Hard Handoff (Milestone 2 Complete)
 
 ---
 
@@ -13,20 +13,20 @@
    - Lines 34–40 were updated from:
      ```typescript
      const permStatus = await PushNotifications.checkPermissions();
-     if (permStatus.receive === 'prompt') {
+     if (permStatus.receive === "prompt") {
        await PushNotifications.requestPermissions();
      }
-     if (permStatus.receive === 'granted') {
+     if (permStatus.receive === "granted") {
        await PushNotifications.register();
      }
      ```
      to:
      ```typescript
      let permStatus = await PushNotifications.checkPermissions();
-     if (permStatus.receive === 'prompt') {
+     if (permStatus.receive === "prompt") {
        permStatus = await PushNotifications.requestPermissions();
      }
-     if (permStatus.receive === 'granted') {
+     if (permStatus.receive === "granted") {
        await PushNotifications.register();
      }
      ```
@@ -111,7 +111,7 @@
    `/__l5e/...` asset endpoints are only reachable through Lovable web preview proxies. In Capacitor Android WebView (`https://localhost/`), requests to `/__l5e/...` fail with 404. The `onError` handler on `Logo` catches this error and switches the image source to local `/pwa-192.png`.
 
 5. **Step 5 (Campaign Event Attribution Compliance)**:
-   AGENTS.md mandates: *"Record public campaign metrics only through the validated public API route and narrow database function, never public table updates."*
+   AGENTS.md mandates: _"Record public campaign metrics only through the validated public API route and narrow database function, never public table updates."_
    In mobile WebView, a relative `/api/public/campaign-event` fetch resolves to `https://localhost/api/public/campaign-event`, which fails because no Nitro server runs locally. By checking `Capacitor.isNativePlatform()`, the mobile client automatically routes metrics to `https://abhitak.in/api/public/campaign-event`, maintaining strict compliance with the rule while recording impressions and clicks reliably.
 
 6. **Step 6 (Static Bundle Compilation & Asset Synchronization)**:
@@ -131,6 +131,7 @@
 ## 4. Conclusion
 
 Milestone 2 (Web Build & Capacitor Native Integration) is 100% complete and fully verified.
+
 - Push notification permission defect is resolved in `src/main.capacitor.tsx`.
 - `capacitor.config.ts` plugins configuration includes `PushNotifications` presentation options.
 - `android/app/src/main/AndroidManifest.xml` contains all required permissions and FCM metadata tags.
@@ -145,22 +146,28 @@ Milestone 2 (Web Build & Capacitor Native Integration) is 100% complete and full
 To independently verify the deliverables:
 
 1. **Verify Web Build**:
+
    ```powershell
    npm run build:mobile
    ```
-   *Expected*: Exits with code 0. Generates `dist/client/index.html` and bundles in `dist/client/assets/`.
+
+   _Expected_: Exits with code 0. Generates `dist/client/index.html` and bundles in `dist/client/assets/`.
 
 2. **Verify Capacitor Sync**:
+
    ```powershell
    npx cap copy android
    ```
-   *Expected*: Exits with code 0. Synchronizes `dist/client` to `android/app/src/main/assets/public/`.
+
+   _Expected_: Exits with code 0. Synchronizes `dist/client` to `android/app/src/main/assets/public/`.
 
 3. **Verify Bundle Contents & Synchronization**:
+
    ```powershell
    node -e "const fs = require('fs'); const a = fs.readFileSync('dist/client/index.html', 'utf8'); const b = fs.readFileSync('android/app/src/main/assets/public/index.html', 'utf8'); console.log('Identical:', a === b, 'Size:', a.length); const cap = JSON.parse(fs.readFileSync('android/app/src/main/assets/capacitor.config.json', 'utf8')); console.log('Push options:', cap.plugins?.PushNotifications?.presentationOptions);"
    ```
-   *Expected Output*:
+
+   _Expected Output_:
    `Identical: true Size: 1262`
    `Push options: [ 'badge', 'sound', 'alert' ]`
 

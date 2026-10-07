@@ -1,19 +1,22 @@
 # Abhi Tak News — Google Play Store Listing Metadata
 
 ## 1. App Title (Max 30 characters)
+
 **Abhi Tak — Bijnor News & Live** (29 chars)  
-*Alternative Hindi:* **अभी तक — बिजनौर न्यूज़ व लाइव** (30 chars)
+_Alternative Hindi:_ **अभी तक — बिजनौर न्यूज़ व लाइव** (30 chars)
 
 ---
 
 ## 2. Short Description (Max 80 characters)
 
 ### English (77 characters):
+
 ```text
 District Bijnor latest news, 24x7 live TV, Jan Ki Awaaz & daily e-paper network.
 ```
 
 ### Hindi (73 characters):
+
 ```text
 जनपद बिजनौर की ताज़ा ख़बरें, 24x7 लाइव टीवी, जन की आवाज़ और दैनिक ई-पेपर।
 ```
@@ -25,7 +28,7 @@ District Bijnor latest news, 24x7 live TV, Jan Ki Awaaz & daily e-paper network.
 ```text
 अभी तक न्यूज़ (Abhi Tak News) — जनपद बिजनौर का अग्रणी और सबसे विश्वसनीय डिजिटल समाचार नेटवर्क।
 
-बिजनौर शहर से लेकर नगीना, धामपुर, नजीबाबाद, चांदपुर, कीरतपुर, नूरपुर, स्योहारा, अफजलगढ़ और जिले के प्रत्येक गांव-देहात की ताज़ा और निष्पक्ष ख़बरें अब सीधे आपके मोबाइल पर। 
+बिजनौर शहर से लेकर नगीना, धामपुर, नजीबाबाद, चांदपुर, कीरतपुर, नूरपुर, स्योहारा, अफजलगढ़ और जिले के प्रत्येक गांव-देहात की ताज़ा और निष्पक्ष ख़बरें अब सीधे आपके मोबाइल पर।
 
 'अभी तक' केवल एक समाचार ऐप नहीं, बल्कि जनपद के नागरिकों की आवाज़ उठाने और जनसमस्याओं के समाधान का सशक्त माध्यम है।
 
@@ -79,6 +82,7 @@ District Bijnor latest news, 24x7 live TV, Jan Ki Awaaz & daily e-paper network.
 ---
 
 ## 4. Category & Tags
+
 - **Application Category**: News & Magazines (समाचार एवं पत्रिकाएं)
 - **Content Rating**: Everyone (सभी के लिए उपयुक्त)
 - **Tags**: News, Local News, Breaking News, Hindi News, Uttar Pradesh News, Bijnor News, Live TV, E-Paper

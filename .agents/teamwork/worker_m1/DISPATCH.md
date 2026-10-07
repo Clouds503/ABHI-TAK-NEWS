@@ -1,4 +1,5 @@
 ## 2026-10-02T07:50:20Z
+
 You are Worker 1 for Milestone 1 (Supabase Database Migrations).
 Your working directory is: c:\Users\Rudra\Desktop\Git\ABHI TAK NEWS\.agents\teamwork\worker_m1
 
@@ -14,6 +15,7 @@ Do NOT modify files outside supabase/migrations/.
 Task:
 Implement a clean, robust, versioned, idempotent PostgreSQL migration file in supabase/migrations/ accurately and completely reflecting the database schema required by src/integrations/supabase/types.ts and runtime queries.
 Specifically ensure:
+
 1. All 17 tables are completely defined with proper columns, data types, primary keys, and foreign key constraints:
    admin_activity_logs, advertisements, articles, bookmarks, categories, epapers, event_registrations, events, jan_ki_awaaz_posts, jan_ki_awaaz_status_history, live_streams, profiles, reels, towns, user_roles, videos, villages.
 2. Idempotent enum creation (DO $$ BEGIN CREATE TYPE ... EXCEPTION WHEN duplicate_object THEN null; END $$;) for:

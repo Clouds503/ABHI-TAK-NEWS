@@ -68,7 +68,7 @@ function EventsPage() {
   const list = events.filter((e) => tab === "all" || e.kind === tab);
 
   return (
-    <div className="mx-auto max-w-2xl pb-8">
+    <div className="mx-auto max-w-2xl lg:max-w-5xl pb-12">
       <div className="sticky top-0 z-20 flex items-center gap-2 border-b bg-background/95 px-3 py-3">
         <button
           aria-label={en ? "Back" : "वापस"}
@@ -79,7 +79,9 @@ function EventsPage() {
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <h1 className="text-lg font-bold">{en ? "Updates & Events" : "अपडेट और कार्यक्रम"}</h1>
+        <h1 className="text-lg lg:text-xl font-bold">
+          {en ? "Updates & Events" : "अपडेट और कार्यक्रम"}
+        </h1>
       </div>
       <div className="flex gap-2 px-4 pt-4">
         {(["all", "event", "update"] as const).map((k) => (
@@ -102,12 +104,14 @@ function EventsPage() {
           </button>
         ))}
       </div>
-      <div className="space-y-4 px-4 pt-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 px-4 pt-4">
         {isLoading && (
-          <p className="text-sm text-muted-foreground">{en ? "Loading…" : "लोड हो रहा है…"}</p>
+          <p className="col-span-full text-sm text-muted-foreground">
+            {en ? "Loading…" : "लोड हो रहा है…"}
+          </p>
         )}
         {!isLoading && !list.length && (
-          <p className="py-10 text-center text-muted-foreground">
+          <p className="col-span-full py-10 text-center text-muted-foreground">
             {en ? "Nothing here yet." : "अभी कुछ नहीं है।"}
           </p>
         )}

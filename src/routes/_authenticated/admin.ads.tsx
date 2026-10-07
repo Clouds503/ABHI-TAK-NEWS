@@ -25,6 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { UploadNote } from "@/components/UploadNote";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -529,6 +530,26 @@ function AdsAdmin() {
                   }}
                 />
               </label>
+              <UploadNote
+                type="JPG, PNG, WebP, MP4, WebM"
+                maxSize="50 MB"
+                ratio={
+                  form.placement === "home_top"
+                    ? "3:1 or 16:9 (Top Banner)"
+                    : form.placement === "home_inline"
+                      ? "16:9 or 3:1 (In-feed Banner)"
+                      : form.placement === "article_inline"
+                        ? "16:9 or 1:1 (Article Inline / Square)"
+                        : "16:9 or 1:1 (Card Sponsor)"
+                }
+                hint={
+                  form.placement === "home_top"
+                    ? "Best fit: 1200×400px (3:1) or 1920×1080px (16:9) landscape banner."
+                    : form.placement === "home_inline"
+                      ? "Best fit: 1200×675px (16:9) in-feed banner."
+                      : "Best fit: 600×600px (1:1) square or 1200×675px (16:9) landscape."
+                }
+              />
               {form.media_type === "video" && form.video_url ? (
                 <video
                   src={form.video_url}

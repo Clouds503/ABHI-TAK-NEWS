@@ -3,6 +3,7 @@
 ## 1. Observation
 
 ### 1.1 Debug APK Verification (`android/app/build/outputs/apk/debug/app-debug.apk`)
+
 - **File Existence & Properties**:
   - Command: `Get-Item "android\app\build\outputs\apk\debug\app-debug.apk" | Format-List Length, FullName, LastWriteTimeUtc`
   - Exact file length: **7,142,930 bytes** (~7.14 MB).
@@ -31,6 +32,7 @@
     - `uses-permission: name='android.permission.READ_MEDIA_IMAGES'`
 
 ### 1.2 Release AAB Verification (`android/app/build/outputs/bundle/release/app-release.aab`)
+
 - **File Existence & Properties**:
   - Command: `Get-Item "android\app\build\outputs\bundle\release\app-release.aab" | Format-List Length, FullName, LastWriteTimeUtc`
   - Exact file length: **3,076,873 bytes** (~3.08 MB).
@@ -53,6 +55,7 @@
   - Keystore Match: Keystore alias `abhitak` in `android/app/abhitak-release.keystore` verified via keytool with SHA256 fingerprint `9C:7A:7E:8C:1E:17:E8:E1:B9:66:BB:FF:70:1C:FC:D7:36:1F:1A:AA:46:51:F2:B1:3D:D3:DF:E7:C2:C3:CD:38`.
 
 ### 1.3 AndroidManifest.xml Permission Audit
+
 - **Source Manifest (`android/app/src/main/AndroidManifest.xml`)**:
   - Line 5: `<uses-permission android:name="android.permission.INTERNET" />`
   - Line 6: `<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />`
@@ -120,12 +123,13 @@ $zipAab.Dispose()
 **Overall risk assessment**: **LOW**
 
 ### Challenges & Stress Tests
+
 - **Challenge 1: Corrupted or dummy binary outputs**
-  - *Assumption*: Build succeeded superficially, producing empty or partial archives.
-  - *Result*: Refuted. Both `app-debug.apk` (7,142,930 bytes) and `app-release.aab` (3,076,873 bytes) contain complete DEX code (>1.86 MB in AAB), complete Web application assets (20 files, index.html + ~900KB JS bundle), and 460 compiled resources.
+  - _Assumption_: Build succeeded superficially, producing empty or partial archives.
+  - _Result_: Refuted. Both `app-debug.apk` (7,142,930 bytes) and `app-release.aab` (3,076,873 bytes) contain complete DEX code (>1.86 MB in AAB), complete Web application assets (20 files, index.html + ~900KB JS bundle), and 460 compiled resources.
 - **Challenge 2: Invalid or expired release signature**
-  - *Assumption*: Release AAB signing might have failed or used an unverified debug key.
-  - *Result*: Refuted. `jarsigner -verify` returns `jar verified.` matching the PKCS12 keystore certificate (`CN=Abhi Tak News...`) valid until 2054.
+  - _Assumption_: Release AAB signing might have failed or used an unverified debug key.
+  - _Result_: Refuted. `jarsigner -verify` returns `jar verified.` matching the PKCS12 keystore certificate (`CN=Abhi Tak News...`) valid until 2054.
 - **Challenge 3: Missing Android permissions after manifest merge**
-  - *Assumption*: Plugins or libraries stripped permissions during manifest merging.
-  - *Result*: Refuted. Merged manifest and APK badging confirm `POST_NOTIFICATIONS`, `INTERNET`, `ACCESS_NETWORK_STATE`, and `READ_MEDIA_IMAGES` are present.
+  - _Assumption_: Plugins or libraries stripped permissions during manifest merging.
+  - _Result_: Refuted. Merged manifest and APK badging confirm `POST_NOTIFICATIONS`, `INTERNET`, `ACCESS_NETWORK_STATE`, and `READ_MEDIA_IMAGES` are present.

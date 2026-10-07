@@ -6,6 +6,7 @@
 **Auditor**: Forensic Auditor 1 (`auditor_1`)  
 **Date**: 2026-10-02  
 **Target Components**:
+
 1. Android Binaries (`android/app/build/outputs/apk/debug/app-debug.apk`, `android/app/build/outputs/bundle/release/app-release.aab`)
 2. Web & Native Asset Pipeline (`dist/client/`, `android/app/src/main/assets/public/`, `src/main.capacitor.tsx`)
 3. Supabase Database Migration (`supabase/migrations/20241001000000_initial_schema.sql`)
@@ -18,6 +19,7 @@ A comprehensive forensic audit of all Milestone 1, 2, and 3 deliverables was con
 
 **Verdict**: **CLEAN**.  
 Every deliverable is authentic, production-grade, and independently verified with empirical evidence.
+
 - The Android binaries (`app-debug.apk` and `app-release.aab`) are genuine, non-zero compiled packages containing valid Dalvik Executable (DEX) bytecode, genuine Capacitor runtime classes, compiled resources, and valid Android manifests.
 - `app-release.aab` is cryptographically signed with the designated `android/app/abhitak-release.keystore`, with an exact bit-for-bit certificate fingerprint match (`SHA256: 9C:7A:7E:8C:1E:17:E8:E1:B9:66:BB:FF:70:1C:FC:D7:36:1F:1A:AA:46:51:F2:B1:3D:D3:DF:E7:C2:C3:CD:38`).
 - The Web client and native asset pipeline contain authentic, bundled React 18 / Vite application code (899,522 bytes JS bundle with matching SHA-256 hash in `dist/client/`, `assets/public/`, and inside the APK/AAB archives). Push notification permission requests and registration are genuinely implemented in `src/main.capacitor.tsx`.
@@ -29,6 +31,7 @@ Every deliverable is authentic, production-grade, and independently verified wit
 ## 1. Observation
 
 ### 1.1 Android Binary Authenticity & DEX Bytecode
+
 Direct empirical inspection of the generated binaries yielded:
 
 - **Debug APK (`android/app/build/outputs/apk/debug/app-debug.apk`)**:
@@ -63,6 +66,7 @@ Direct empirical inspection of the generated binaries yielded:
     - `base/manifest/AndroidManifest.xml`: 15,436 bytes
 
 ### 1.2 Cryptographic Keystore & AAB Signature Parity
+
 Direct inspection of keystore and extracted AAB signature block:
 
 - **Release Keystore (`android/app/abhitak-release.keystore`)**:
@@ -84,6 +88,7 @@ Direct inspection of keystore and extracted AAB signature block:
   - Status: `jar verified.`
 
 ### 1.3 Web Client & Native Asset Parity
+
 - Web Build directory (`dist/client/`): 18 files.
 - Native Assets directory (`android/app/src/main/assets/public/`): 20 files (18 mirrored web assets + 2 Capacitor cordova shims).
 - Main JavaScript bundle (`dist/client/assets/index-CuK73DHZ.js` vs `android/app/src/main/assets/public/assets/index-CuK73DHZ.js`):
@@ -95,16 +100,17 @@ Direct inspection of keystore and extracted AAB signature block:
 - Push Notification implementation (`src/main.capacitor.tsx:34-40`):
   ```typescript
   let permStatus = await PushNotifications.checkPermissions();
-  if (permStatus.receive === 'prompt') {
+  if (permStatus.receive === "prompt") {
     permStatus = await PushNotifications.requestPermissions();
   }
-  if (permStatus.receive === 'granted') {
+  if (permStatus.receive === "granted") {
     await PushNotifications.register();
   }
   ```
   Listeners for `registration`, `registrationError`, `pushNotificationReceived`, and `pushNotificationActionPerformed` are present.
 
 ### 1.4 Supabase Database Migration Authenticity
+
 - File: `supabase/migrations/20241001000000_initial_schema.sql` (740 lines, 33,079 bytes).
 - Defined Schema Objects:
   - 17 Tables: `admin_activity_logs`, `advertisements`, `articles`, `bookmarks`, `categories`, `epapers`, `event_registrations`, `events`, `jan_ki_awaaz_posts`, `jan_ki_awaaz_status_history`, `live_streams`, `profiles`, `reels`, `towns`, `user_roles`, `videos`, `villages`.
@@ -150,6 +156,7 @@ Direct inspection of keystore and extracted AAB signature block:
 **Verdict**: `CLEAN`.
 
 The work products submitted for Milestone 4 Gate meet all acceptance criteria defined in `ORIGINAL_REQUEST.md`:
+
 1. `app-debug.apk` is an authentic, installable Android debug APK (7.14 MB, package `com.abhitak.news`, minSdk 23, targetSdk 34).
 2. `app-release.aab` is an authentic, production-ready Android App Bundle (3.08 MB) signed with `abhitak-release.keystore`.
 3. Web application assets are fully compiled and mirrored into native assets and packaged into the binaries.
@@ -165,17 +172,20 @@ Zero integrity violations were detected. Milestone 4 Gate is APPROVED.
 To independently re-verify the auditor's findings:
 
 1. **Verify Binary Sizes and Hashes**:
+
    ```powershell
    Get-FileHash 'android/app/build/outputs/apk/debug/app-debug.apk' -Algorithm SHA256
    Get-FileHash 'android/app/build/outputs/bundle/release/app-release.aab' -Algorithm SHA256
    ```
 
 2. **Verify Cryptographic Signature on AAB**:
+
    ```powershell
    & "C:\Program Files\Java\jdk-17\bin\jarsigner.exe" -verify -verbose -certs "android/app/build/outputs/bundle/release/app-release.aab" | Select-String "Signed by|jar verified"
    ```
 
 3. **Verify DEX Bytecode and Packaged Assets**:
+
    ```powershell
    python -c "import zipfile; z = zipfile.ZipFile('android/app/build/outputs/apk/debug/app-debug.apk'); print([e for e in z.namelist() if e.endswith('.dex')])"
    ```

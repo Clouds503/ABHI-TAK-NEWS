@@ -1,14 +1,23 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { Bookmark, Share2, ArrowLeft, Heart } from "lucide-react";
+import {
+  Bookmark,
+  Share2,
+  ArrowLeft,
+  Heart,
+  MessageCircle,
+  Copy,
+  Type,
+  Megaphone,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { articleQuery, articlesQuery } from "@/lib/queries";
-import { useI18n } from "@/lib/i18n";
+import { useI18n, timeAgo } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { img } from "@/lib/media";
 import { supabase } from "@/integrations/supabase/client";
-import { ArticleRow, Meta, Empty } from "@/components/news";
+import { ArticleRow, Meta, Empty, AdSlot } from "@/components/news";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useDoubleTap } from "@/lib/useDoubleTap";
@@ -53,6 +62,7 @@ function ArticlePage() {
   const [heartPop, setHeartPop] = useState<{ show: boolean; x?: number; y?: number }>({
     show: false,
   });
+  const [fontSize, setFontSize] = useState<"normal" | "large">("normal");
 
   // Track article telemetry view on mount
   useEffect(() => {
@@ -168,7 +178,34 @@ function ArticlePage() {
     qc.invalidateQueries({ queryKey: ["bookmark"] });
   };
 
+  const copyArticleLink = async () => {
+    const url = window.location.href;
+    await navigator.clipboard.writeText(url);
+    toast.success(lang === "en" ? "Link copied" : "लिंक कॉपी हो गया");
+    void trackEngagement("share", "article", a.id);
+  };
+
+  const shareWhatsApp = () => {
+    if (!a) return;
+    const url = window.location.href;
+    const text = encodeURIComponent(`${pick(a.title_hi, a.title_en)}\n${url}`);
+    window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
+    void trackEngagement("share", "article", a.id);
+  };
+
+  const shareTwitter = () => {
+    if (!a) return;
+    const url = window.location.href;
+    const title = pick(a.title_hi, a.title_en) ?? "";
+    window.open(
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`,
+      "_blank",
+    );
+    void trackEngagement("share", "article", a.id);
+  };
+
   const body = pick(a.body_hi, a.body_en);
+  const otherRelated = related?.filter((r) => r.id !== a.id) ?? [];
 
   return (
     <article className="relative">
@@ -179,130 +216,451 @@ function ArticlePage() {
         onAnimationEnd={() => setHeartPop({ show: false })}
       />
 
-      <div className="flex items-center justify-between px-4 py-3">
-        <Button
-          asChild
-          variant="outline"
-          size="icon"
-          className="h-11 w-11 rounded-full"
-          aria-label="Back"
-        >
-          <Link to="/">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-        </Button>
-
-        {/* Action bar: Like + Bookmark + Share */}
-        <div className="flex rounded-full border bg-card p-1 shadow-sm">
-          {/* Like button */}
+      {/* ======================================================== */}
+      {/* MOBILE READING VIEW (lg:hidden) - STRICT 100% INVARIANCE */}
+      {/* ======================================================== */}
+      <div className="lg:hidden">
+        <div className="flex items-center justify-between px-4 py-3">
           <Button
-            onClick={toggleLike}
-            variant="ghost"
+            asChild
+            variant="outline"
             size="icon"
-            className={cn(
-              "flex h-9 items-center gap-1 rounded-full px-2.5",
-              isLiked
-                ? "text-rose-500 hover:text-rose-500"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-            aria-label="Like"
+            className="h-11 w-11 rounded-full"
+            aria-label="Back"
           >
-            <Heart
-              className="h-[18px] w-[18px]"
-              fill={isLiked ? "currentColor" : "none"}
-              strokeWidth={isLiked ? 0 : 1.8}
+            <Link to="/">
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+          </Button>
+
+          {/* Action bar: Like + Bookmark + Share */}
+          <div className="flex rounded-full border bg-card p-1 shadow-sm">
+            {/* Like button */}
+            <Button
+              onClick={toggleLike}
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "flex h-9 items-center gap-1 rounded-full px-2.5",
+                isLiked
+                  ? "text-rose-500 hover:text-rose-500"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+              aria-label="Like"
+            >
+              <Heart
+                className="h-[18px] w-[18px]"
+                fill={isLiked ? "currentColor" : "none"}
+                strokeWidth={isLiked ? 0 : 1.8}
+              />
+              {effectiveCount > 0 && (
+                <span className="text-xs font-semibold leading-none tabular-nums">
+                  {effectiveCount}
+                </span>
+              )}
+            </Button>
+
+            {/* Bookmark button */}
+            <Button
+              onClick={toggleSave}
+              variant="ghost"
+              size="icon"
+              className={cn("h-9 w-9 rounded-full", saved && "text-primary")}
+              aria-label={t("save")}
+            >
+              <Bookmark className="h-5 w-5" fill={saved ? "currentColor" : "none"} />
+            </Button>
+
+            {/* Share button */}
+            <Button
+              onClick={share}
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 rounded-full"
+              aria-label={t("share")}
+            >
+              <Share2 className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="px-4">
+          <Meta a={a} />
+          <h1 className="mt-3 text-[28px] font-bold leading-[1.25]">
+            {pick(a.title_hi, a.title_en)}
+          </h1>
+          {pick(a.summary_hi, a.summary_en) && (
+            <p className="mt-3 text-[17px] leading-relaxed text-muted-foreground">
+              {pick(a.summary_hi, a.summary_en)}
+            </p>
+          )}
+          <div className="mt-4 flex items-center gap-2 border-y py-3 text-[13px]">
+            <span className="h-6 w-1 bg-primary" />
+            <span className="font-semibold">{a.author_name}</span>
+            <span className="text-muted-foreground">
+              ·{" "}
+              {a.published_at &&
+                new Date(a.published_at).toLocaleString("en-IN", {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                })}
+            </span>
+          </div>
+        </div>
+
+        {a.cover_url && (
+          <div
+            {...doubleTapGesture}
+            className="relative mt-4 aspect-[16/9] w-full cursor-pointer select-none overflow-hidden bg-muted"
+          >
+            <img
+              src={img(a.cover_url) ?? "/pwa-512.png"}
+              alt=""
+              width={1200}
+              height={675}
+              decoding="async"
+              onError={(e) => {
+                e.currentTarget.src = "/pwa-512.png";
+                e.currentTarget.classList.add("object-contain");
+              }}
+              className="h-full w-full object-cover"
             />
-            {effectiveCount > 0 && (
-              <span className="text-xs font-semibold leading-none tabular-nums">
-                {effectiveCount}
-              </span>
-            )}
-          </Button>
-
-          {/* Bookmark button */}
-          <Button
-            onClick={toggleSave}
-            variant="ghost"
-            size="icon"
-            className={cn("h-9 w-9 rounded-full", saved && "text-primary")}
-            aria-label={t("save")}
-          >
-            <Bookmark className="h-5 w-5" fill={saved ? "currentColor" : "none"} />
-          </Button>
-
-          {/* Share button */}
-          <Button
-            onClick={share}
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 rounded-full"
-            aria-label={t("share")}
-          >
-            <Share2 className="h-5 w-5" />
-          </Button>
-        </div>
-      </div>
-
-      <div className="px-4">
-        <Meta a={a} />
-        <h1 className="mt-3 text-[28px] font-bold leading-[1.25]">
-          {pick(a.title_hi, a.title_en)}
-        </h1>
-        {pick(a.summary_hi, a.summary_en) && (
-          <p className="mt-3 text-[17px] leading-relaxed text-muted-foreground">
-            {pick(a.summary_hi, a.summary_en)}
-          </p>
+          </div>
         )}
-        <div className="mt-4 flex items-center gap-2 border-y py-3 text-[13px]">
-          <span className="h-6 w-1 bg-primary" />
-          <span className="font-semibold">{a.author_name}</span>
-          <span className="text-muted-foreground">
-            ·{" "}
-            {a.published_at &&
-              new Date(a.published_at).toLocaleString("en-IN", {
-                dateStyle: "medium",
-                timeStyle: "short",
-              })}
-          </span>
-        </div>
-      </div>
 
-      {a.cover_url && (
         <div
           {...doubleTapGesture}
-          className="relative mt-4 aspect-[16/9] w-full cursor-pointer select-none overflow-hidden bg-muted"
-        >
-          <img
-            src={img(a.cover_url) ?? "/pwa-512.png"}
-            alt=""
-            width={1200}
-            height={675}
-            decoding="async"
-            onError={(e) => {
-              e.currentTarget.src = "/pwa-512.png";
-              e.currentTarget.classList.add("object-contain");
-            }}
-            className="h-full w-full object-cover"
-          />
-        </div>
-      )}
+          className="space-y-5 px-4 py-6 text-[18px] leading-[1.8] prose prose-p:my-2 prose-a:text-primary max-w-none dark:prose-invert cursor-pointer select-text"
+          dangerouslySetInnerHTML={{ __html: body }}
+        />
 
-      <div
-        {...doubleTapGesture}
-        className="space-y-5 px-4 py-6 text-[18px] leading-[1.8] prose prose-p:my-2 prose-a:text-primary max-w-none dark:prose-invert cursor-pointer select-text"
-        dangerouslySetInnerHTML={{ __html: body }}
-      />
-
-      {related && related.filter((r) => r.id !== a.id).length > 0 && (
-        <div className="border-t pt-4">
-          <h2 className="px-4 text-lg font-bold">{t("related")}</h2>
-          {related
-            .filter((r) => r.id !== a.id)
-            .map((r) => (
+        {otherRelated.length > 0 && (
+          <div className="border-t pt-4">
+            <h2 className="px-4 text-lg font-bold">{t("related")}</h2>
+            {otherRelated.map((r) => (
               <ArticleRow key={r.id} a={r} />
             ))}
+          </div>
+        )}
+      </div>
+
+      {/* ======================================================== */}
+      {/* DESKTOP READING VIEW (hidden lg:block) - 12-COL EDITORIAL */}
+      {/* ======================================================== */}
+      <div className="hidden lg:block max-w-7xl mx-auto px-6 py-8">
+        {/* Top Breadcrumbs */}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-6">
+          <Link to="/" className="hover:text-primary transition-colors">
+            {t("home")}
+          </Link>
+          <span>/</span>
+          {a.category && (
+            <>
+              <Link
+                to="/news"
+                search={{ category: a.category.slug }}
+                className="hover:text-primary transition-colors"
+              >
+                {pick(a.category.name_hi, a.category.name_en)}
+              </Link>
+              <span>/</span>
+            </>
+          )}
+          {a.town && (
+            <>
+              <Link
+                to="/town/$slug"
+                params={{ slug: a.town.slug }}
+                className="hover:text-primary transition-colors"
+              >
+                {pick(a.town.name_hi, a.town.name_en)}
+              </Link>
+              <span>/</span>
+            </>
+          )}
+          <span className="text-foreground font-medium truncate max-w-xs">
+            {pick(a.title_hi, a.title_en)}
+          </span>
         </div>
-      )}
+
+        {/* 12-Column Grid: 1-col Share Rail + 7-col Story Body + 4-col Sidebar */}
+        <div className="grid grid-cols-12 gap-10 items-start">
+          {/* Col 1 (1/12 col): Sticky Share Rail */}
+          <div className="col-span-1 sticky top-24 self-start flex flex-col items-center gap-4 py-2 border-r pr-4">
+            {/* Like Button with Count */}
+            <button
+              type="button"
+              onClick={toggleLike}
+              aria-label="Like"
+              className="flex flex-col items-center gap-1 group"
+            >
+              <div
+                className={cn(
+                  "h-11 w-11 rounded-full grid place-items-center border transition-all",
+                  isLiked
+                    ? "bg-rose-50 border-rose-200 text-rose-500 shadow-xs dark:bg-rose-950/40 dark:border-rose-800"
+                    : "bg-card border-border text-muted-foreground group-hover:text-foreground group-hover:border-primary/50",
+                )}
+              >
+                <Heart
+                  className="h-5 w-5"
+                  fill={isLiked ? "currentColor" : "none"}
+                  strokeWidth={isLiked ? 0 : 2}
+                />
+              </div>
+              <span className="text-[11px] font-bold text-muted-foreground tabular-nums">
+                {effectiveCount}
+              </span>
+            </button>
+
+            {/* Bookmark Button */}
+            <button
+              type="button"
+              onClick={toggleSave}
+              aria-label="Bookmark"
+              className="flex flex-col items-center gap-1 group"
+            >
+              <div
+                className={cn(
+                  "h-11 w-11 rounded-full grid place-items-center border transition-all",
+                  saved
+                    ? "bg-primary/10 border-primary text-primary shadow-xs"
+                    : "bg-card border-border text-muted-foreground group-hover:text-foreground group-hover:border-primary/50",
+                )}
+              >
+                <Bookmark className="h-5 w-5" fill={saved ? "currentColor" : "none"} />
+              </div>
+            </button>
+
+            {/* WhatsApp Share Button */}
+            <button
+              type="button"
+              onClick={shareWhatsApp}
+              aria-label="Share on WhatsApp"
+              className="flex flex-col items-center gap-1 group"
+            >
+              <div className="h-11 w-11 rounded-full grid place-items-center border border-emerald-200 bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:border-emerald-800 hover:scale-105 transition-transform shadow-xs">
+                <MessageCircle className="h-5 w-5" />
+              </div>
+            </button>
+
+            {/* Twitter / X Share Button */}
+            <button
+              type="button"
+              onClick={shareTwitter}
+              aria-label="Share on X"
+              className="flex flex-col items-center gap-1 group"
+            >
+              <div className="h-11 w-11 rounded-full grid place-items-center border border-border bg-card text-foreground hover:border-primary transition-colors shadow-xs">
+                <span className="font-serif font-black text-sm">𝕏</span>
+              </div>
+            </button>
+
+            {/* Copy Link Button */}
+            <button
+              type="button"
+              onClick={copyArticleLink}
+              aria-label="Copy link"
+              className="flex flex-col items-center gap-1 group"
+            >
+              <div className="h-11 w-11 rounded-full grid place-items-center border border-border bg-card text-muted-foreground hover:text-foreground hover:border-primary transition-colors shadow-xs">
+                <Copy className="h-4 w-4" />
+              </div>
+            </button>
+
+            <span className="h-px w-6 bg-border my-1" />
+
+            {/* Text Resize Button */}
+            <button
+              type="button"
+              onClick={() => setFontSize((s) => (s === "normal" ? "large" : "normal"))}
+              aria-label="Toggle text size"
+              title="अक्षर का आकार बदलें"
+              className={cn(
+                "h-10 w-10 rounded-full grid place-items-center border text-xs font-bold transition-colors",
+                fontSize === "large"
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card border-border text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <Type className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Col 2 (7/12 cols): Main Editorial Reading Body */}
+          <div className="col-span-7 space-y-6">
+            <div>
+              <Meta a={a} />
+              <h1 className="mt-3 font-serif text-3xl xl:text-4xl font-black leading-[1.25] text-foreground">
+                {pick(a.title_hi, a.title_en)}
+              </h1>
+              {pick(a.summary_hi, a.summary_en) && (
+                <p className="mt-3 text-lg leading-relaxed text-muted-foreground font-medium">
+                  {pick(a.summary_hi, a.summary_en)}
+                </p>
+              )}
+              <div className="mt-5 flex items-center justify-between border-y py-3.5 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="h-6 w-1 rounded-full bg-primary" />
+                  <span className="font-bold text-foreground">
+                    {a.author_name || (lang === "en" ? "Bureau Reporter" : "ब्यूरो संवाददाता")}
+                  </span>
+                  <span className="text-muted-foreground">· जनपद बिजनौर</span>
+                </div>
+                <div className="text-muted-foreground font-medium">
+                  {a.published_at &&
+                    new Date(a.published_at).toLocaleString(lang === "en" ? "en-IN" : "hi-IN", {
+                      dateStyle: "long",
+                      timeStyle: "short",
+                    })}
+                </div>
+              </div>
+            </div>
+
+            {/* High-res Lead Cover Image */}
+            {a.cover_url && (
+              <div
+                {...doubleTapGesture}
+                className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl bg-muted shadow-sm select-none cursor-pointer"
+              >
+                <img
+                  src={img(a.cover_url) ?? "/pwa-512.png"}
+                  alt=""
+                  width={1200}
+                  height={675}
+                  fetchPriority="high"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            )}
+
+            {/* Editorial Prose Body */}
+            <div
+              {...doubleTapGesture}
+              className={cn(
+                "py-4 leading-[1.85] font-normal prose prose-neutral dark:prose-invert max-w-none prose-p:my-4 prose-a:text-primary prose-a:font-semibold select-text",
+                fontSize === "large" ? "text-[21px] leading-[1.95]" : "text-[19px] leading-[1.85]",
+              )}
+              dangerouslySetInnerHTML={{ __html: body }}
+            />
+          </div>
+
+          {/* Col 3 (4/12 cols): Sticky Editorial Sidebar */}
+          <aside className="col-span-4 sticky top-24 self-start space-y-6 pl-4 border-l">
+            {/* Trending / In Category Stories */}
+            {otherRelated.length > 0 && (
+              <div className="rounded-2xl border bg-card p-5 shadow-xs">
+                <div className="flex items-center justify-between pb-3 border-b mb-3">
+                  <h3 className="font-serif text-base font-bold text-foreground flex items-center gap-2">
+                    <span className="h-4 w-1 bg-primary rounded-full" />
+                    {lang === "en" ? "Related in District" : "जनपद की संबंधित ख़बरें"}
+                  </h3>
+                </div>
+                <div className="divide-y divide-border/60">
+                  {otherRelated.slice(0, 4).map((r) => (
+                    <Link
+                      key={r.id}
+                      to="/news/$slug"
+                      params={{ slug: r.slug }}
+                      className="group flex gap-3 py-3 first:pt-1 last:pb-1"
+                    >
+                      <div className="relative h-16 w-16 shrink-0 rounded-lg overflow-hidden bg-muted">
+                        <img
+                          src={img(r.cover_url) ?? "/pwa-192.png"}
+                          alt=""
+                          width={64}
+                          height={64}
+                          className="h-full w-full object-cover group-hover:scale-105 transition-transform"
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-xs font-bold leading-snug line-clamp-2 text-foreground group-hover:text-primary transition-colors">
+                          {pick(r.title_hi, r.title_en)}
+                        </h4>
+                        <div className="mt-1 text-[11px] text-muted-foreground">
+                          {timeAgo(r.published_at, lang)}
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Jan Ki Awaaz Spotlight Box */}
+            <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5 shadow-xs space-y-3">
+              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
+                <Megaphone className="h-4 w-4" />
+                <span>{t("jka")}</span>
+              </div>
+              <h4 className="font-serif text-base font-bold text-foreground">
+                {lang === "en"
+                  ? "Facing a civic issue in your area?"
+                  : "क्या आपके गांव या कस्बे में कोई समस्या है?"}
+              </h4>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                {lang === "en"
+                  ? "Report broken roads, electricity, water or hospital issues directly to local authorities through Abhi Tak."
+                  : "टूटी सड़कें, बिजली संकट, जलभराव या स्वास्थ्य संबंधी समस्याओं की सीधी शिकायत दर्ज करें।"}
+              </p>
+              <Button asChild size="sm" className="w-full rounded-full text-xs font-bold shadow-xs">
+                <Link to="/report">{t("reportIssue")}</Link>
+              </Button>
+            </div>
+
+            {/* Sidebar Ad */}
+            <AdSlot placement="home_inline" />
+          </aside>
+        </div>
+
+        {/* Below 12-Column Grid: 4-Column Related Stories */}
+        {otherRelated.length > 0 && (
+          <div className="mt-14 pt-10 border-t">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="font-serif text-2xl font-bold text-foreground flex items-center gap-2">
+                <span className="h-5 w-1.5 rounded-full bg-primary" />
+                {t("related")}
+              </h2>
+              <Link to="/news" className="text-sm font-semibold text-primary hover:underline">
+                {t("seeAll")} →
+              </Link>
+            </div>
+            <div className="grid grid-cols-4 gap-6">
+              {otherRelated.slice(0, 4).map((r) => (
+                <Link
+                  key={r.id}
+                  to="/news/$slug"
+                  params={{ slug: r.slug }}
+                  className="group flex flex-col rounded-xl border bg-card overflow-hidden shadow-xs hover:shadow-md hover:border-primary/50 transition-all"
+                >
+                  <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
+                    <img
+                      src={img(r.cover_url) ?? "/pwa-512.png"}
+                      alt=""
+                      width={400}
+                      height={225}
+                      className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                  <div className="p-4 flex flex-col flex-1">
+                    <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mb-1.5">
+                      {r.town && (
+                        <span className="font-semibold text-primary">
+                          {pick(r.town.name_hi, r.town.name_en)}
+                        </span>
+                      )}
+                      <span>· {timeAgo(r.published_at, lang)}</span>
+                    </div>
+                    <h3 className="font-serif text-sm font-bold leading-snug line-clamp-2 text-foreground group-hover:text-primary transition-colors">
+                      {pick(r.title_hi, r.title_en)}
+                    </h3>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </article>
   );
 }

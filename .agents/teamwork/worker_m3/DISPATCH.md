@@ -1,4 +1,5 @@
 ## 2026-10-02T09:02:00Z
+
 You are Worker 3 for Milestone 3 (Android Gradle Build Pipeline & Binary Generation).
 Your working directory is: c:\Users\Rudra\Desktop\Git\ABHI TAK NEWS\.agents\teamwork\worker_m3
 
@@ -10,13 +11,15 @@ Also read Explorer 1's handoff: c:\Users\Rudra\Desktop\Git\ABHI TAK NEWS\.agents
 
 WRITE OWNERSHIP:
 You EXCLUSIVELY own:
+
 - android/local.properties
 - android/gradle.properties
 - android/app/build.gradle
 - android/app/build/outputs/
-Do NOT modify files in supabase/ or src/.
+  Do NOT modify files in supabase/ or src/.
 
 Task:
+
 1. Environment & SDK configuration:
    - Create or update android/local.properties with:
      sdk.dir=C\:\\Users\\Rudra\\AppData\\Local\\Android\\Sdk

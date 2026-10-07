@@ -1,10 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
 import { BarChart3, Youtube, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { syncYouTubeVideosServerFn } from "@/lib/youtube.functions";
+import { useRealtimeVideos } from "@/lib/useRealtimeVideos";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   component: Dashboard,
@@ -48,18 +51,23 @@ function Dashboard() {
       ).data ?? [],
   });
 
+  const syncServerVideos = useServerFn(syncYouTubeVideosServerFn);
+  useRealtimeVideos();
+
   const handleSyncYouTube = async () => {
     setSyncingYt(true);
-    const toastId = toast.loading("Syncing videos from YouTube channel RSS...");
+    const toastId = toast.loading("Syncing YouTube channel videos...");
     try {
-      const { syncYouTubeVideosToDatabase } = await import("@/lib/youtube-sync");
-      const res = await syncYouTubeVideosToDatabase(supabase);
+      const res = await syncServerVideos();
       if (res.success) {
-        toast.success(`Successfully synced ${res.count} videos from YouTube!`, { id: toastId });
-        qc.invalidateQueries({ queryKey: ["admin-stats"] });
-        qc.invalidateQueries({ queryKey: ["videos"] });
+        toast.success(`Successfully synced ${res.count} videos from YouTube!`, {
+          id: toastId,
+          description: res.latestVideoTitle ? `Latest: ${res.latestVideoTitle}` : undefined,
+        });
+        void qc.invalidateQueries({ queryKey: ["admin-stats"] });
+        void qc.invalidateQueries({ queryKey: ["videos"] });
       } else {
-        toast.error(res.message || "Could not sync YouTube videos", { id: toastId });
+        toast.error(res.message || res.error || "Could not sync YouTube videos", { id: toastId });
       }
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Failed to sync YouTube videos", {

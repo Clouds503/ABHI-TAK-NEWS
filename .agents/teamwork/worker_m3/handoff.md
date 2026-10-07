@@ -10,6 +10,7 @@
 ## 1. Observation
 
 ### 1.1 Direct File Configurations Inspected and Modified
+
 - `android/local.properties`: Created with content:
   ```properties
   sdk.dir=C\:\\Users\\Rudra\\AppData\\Local\\Android\\Sdk
@@ -46,6 +47,7 @@
     - Matches credentials in `android/app/keystore.properties` (`KEYSTORE_PASS=AbhiTak@2024!`, `KEY_PASS=AbhiTak@2024!`)
 
 ### 1.2 Build Commands and Execution Results
+
 1. **Debug APK Build (`assembleDebug`)**:
    - Command: `cmd.exe /c "set ""JAVA_HOME=C:\Program Files\Java\jdk-17"" && set ""ANDROID_HOME=C:\Users\Rudra\AppData\Local\Android\Sdk"" && gradlew.bat assembleDebug"`
    - Result: Exit code 0, `BUILD SUCCESSFUL in 3m`, 161 actionable tasks (19 executed, 142 up-to-date).
@@ -82,7 +84,7 @@
    - Result: Exit code 0.
    - Verbatim Output Snippet:
      ```
-     s = signature was verified 
+     s = signature was verified
      m = entry is listed in manifest
      k = at least one certificate was found in keystore
 
@@ -115,6 +117,7 @@
 ## 4. Conclusion
 
 Milestone 3 is completely and successfully accomplished. The Android Gradle build pipeline is fully configured, desugared, and tuned. Both target binaries have been generated cleanly with return code 0:
+
 - Debug APK: `android/app/build/outputs/apk/debug/app-debug.apk` (7,142,930 bytes)
 - Signed Release AAB: `android/app/build/outputs/bundle/release/app-release.aab` (3,076,873 bytes, signed with `CN=Abhi Tak News, OU=App, O=Abhi Tak, L=Bijnor, ST=Uttar Pradesh, C=IN`).
 

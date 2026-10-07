@@ -12,6 +12,7 @@
 A comprehensive, read-only architectural investigation was conducted on the Supabase database configuration, schema types (`src/integrations/supabase/types.ts`), client application queries and mutations (`src/lib/`, `src/routes/`), and existing migration scripts (`supabase/migrations/`).
 
 ### Key Findings
+
 1. **Schema Scope**: `src/integrations/supabase/types.ts` defines **17 tables**, **1 view** (`jka_public`), **3 RPC functions** (`has_role`, `is_staff`, `record_campaign_event`), **3 enums** (`app_role`, `content_status`, `jka_status`), and **0 composite types**.
 2. **Current Migration State**: `supabase/migrations/20241001000000_initial_schema.sql` (574 lines) exists. While it provides baseline DDL for all 17 tables and RLS policies, it has **critical defects** preventing robust and reproducible execution:
    - **Non-idempotent `CREATE TYPE`**: Directly calls `CREATE TYPE public.app_role AS ENUM (...)` which crashes on re-runs (`ERROR: type already exists`).
@@ -27,15 +28,16 @@ A comprehensive, read-only architectural investigation was conducted on the Supa
 
 ### 1. Enums Summary
 
-| Enum Name | Values | Purpose |
-|---|---|---|
-| `app_role` | `super_admin`, `admin`, `editor`, `moderator`, `reporter`, `user` | Hierarchical role-based access control (RBAC). |
-| `content_status` | `draft`, `pending`, `published`, `archived` | Lifecycle status for news articles, videos, epapers. |
-| `jka_status` | `pending`, `approved`, `rejected`, `forwarded`, `in_progress`, `resolved`, `archived` | Jan Ki Awaaz citizen grievance tracking lifecycle. |
+| Enum Name        | Values                                                                                | Purpose                                              |
+| ---------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `app_role`       | `super_admin`, `admin`, `editor`, `moderator`, `reporter`, `user`                     | Hierarchical role-based access control (RBAC).       |
+| `content_status` | `draft`, `pending`, `published`, `archived`                                           | Lifecycle status for news articles, videos, epapers. |
+| `jka_status`     | `pending`, `approved`, `rejected`, `forwarded`, `in_progress`, `resolved`, `archived` | Jan Ki Awaaz citizen grievance tracking lifecycle.   |
 
 ### 2. Table-by-Table Specification (17 Tables)
 
 #### Table 1: `towns` (Topological Level 0 - Referenced by many tables)
+
 - **Columns**:
   - `id` (`uuid`, PK, DEFAULT `gen_random_uuid()`)
   - `name_hi` (`text`, NOT NULL)
@@ -48,6 +50,7 @@ A comprehensive, read-only architectural investigation was conducted on the Supa
 - **Used by**: `articles`, `advertisements`, `jan_ki_awaaz_posts`, `profiles`, `videos`, `villages`
 
 #### Table 2: `categories` (Topological Level 0 - Referenced by articles and videos)
+
 - **Columns**:
   - `id` (`uuid`, PK, DEFAULT `gen_random_uuid()`)
   - `name_hi` (`text`, NOT NULL)
@@ -60,6 +63,7 @@ A comprehensive, read-only architectural investigation was conducted on the Supa
 - **Used by**: `articles`, `videos`
 
 #### Table 3: `articles`
+
 - **Columns**:
   - `id` (`uuid`, PK, DEFAULT `gen_random_uuid()`)
   - `slug` (`text`, NOT NULL, UNIQUE)
@@ -87,6 +91,7 @@ A comprehensive, read-only architectural investigation was conducted on the Supa
 - **Triggers**: Auto-update `updated_at` on update.
 
 #### Table 4: `advertisements`
+
 - **Columns**:
   - `id` (`uuid`, PK, DEFAULT `gen_random_uuid()`)
   - `title` (`text`, NOT NULL)
@@ -109,6 +114,7 @@ A comprehensive, read-only architectural investigation was conducted on the Supa
 - **Special AGENTS.md Constraint**: Campaign metrics (`impressions`, `clicks`) mutated exclusively via RPC `record_campaign_event`.
 
 #### Table 5: `bookmarks`
+
 - **Columns**:
   - `id` (`uuid`, PK, DEFAULT `gen_random_uuid()`)
   - `user_id` (`uuid`, NOT NULL)
@@ -119,6 +125,7 @@ A comprehensive, read-only architectural investigation was conducted on the Supa
   - `bookmarks_article_id_fkey` -> `articles(id)`
 
 #### Table 6: `epapers`
+
 - **Columns**:
   - `id` (`uuid`, PK, DEFAULT `gen_random_uuid()`)
   - `title` (`text`, NOT NULL)
@@ -130,6 +137,7 @@ A comprehensive, read-only architectural investigation was conducted on the Supa
 - **Foreign Keys**: None
 
 #### Table 7: `events`
+
 - **Columns**:
   - `id` (`uuid`, PK, DEFAULT `gen_random_uuid()`)
   - `title` (`text`, NOT NULL)
@@ -144,6 +152,7 @@ A comprehensive, read-only architectural investigation was conducted on the Supa
 - **Foreign Keys**: None
 
 #### Table 8: `event_registrations`
+
 - **Columns**:
   - `id` (`uuid`, PK, DEFAULT `gen_random_uuid()`)
   - `event_id` (`uuid`, NOT NULL, REFERENCES `public.events(id)` ON DELETE CASCADE)
@@ -157,6 +166,7 @@ A comprehensive, read-only architectural investigation was conducted on the Supa
   - `event_registrations_event_id_fkey` -> `events(id)`
 
 #### Table 9: `jan_ki_awaaz_posts`
+
 - **Columns**:
   - `id` (`uuid`, PK, DEFAULT `gen_random_uuid()`)
   - `title` (`text`, NOT NULL)
@@ -183,6 +193,7 @@ A comprehensive, read-only architectural investigation was conducted on the Supa
   - Audit trigger inserting into `jan_ki_awaaz_status_history` on INSERT or status UPDATE.
 
 #### Table 10: `jan_ki_awaaz_status_history`
+
 - **Columns**:
   - `id` (`uuid`, PK, DEFAULT `gen_random_uuid()`)
   - `post_id` (`uuid`, NOT NULL, REFERENCES `public.jan_ki_awaaz_posts(id)` ON DELETE CASCADE)
@@ -194,6 +205,7 @@ A comprehensive, read-only architectural investigation was conducted on the Supa
   - `jan_ki_awaaz_status_history_post_id_fkey` -> `jan_ki_awaaz_posts(id)`
 
 #### Table 11: `live_streams`
+
 - **Columns**:
   - `id` (`uuid`, PK, DEFAULT `gen_random_uuid()`)
   - `title_hi` (`text`, NOT NULL)
@@ -206,6 +218,7 @@ A comprehensive, read-only architectural investigation was conducted on the Supa
 - **Foreign Keys**: None
 
 #### Table 12: `profiles`
+
 - **Columns**:
   - `id` (`uuid`, PK, REFERENCES `auth.users(id)` ON DELETE CASCADE)
   - `full_name` (`text`, NULL)
@@ -223,6 +236,7 @@ A comprehensive, read-only architectural investigation was conducted on the Supa
   - Auto-update `updated_at` on update.
 
 #### Table 13: `reels`
+
 - **Columns**:
   - `id` (`uuid`, PK, DEFAULT `gen_random_uuid()`)
   - `shortcode` (`text`, NOT NULL, UNIQUE)
@@ -234,6 +248,7 @@ A comprehensive, read-only architectural investigation was conducted on the Supa
 - **Foreign Keys**: None
 
 #### Table 14: `user_roles`
+
 - **Columns**:
   - `id` (`uuid`, PK, DEFAULT `gen_random_uuid()`)
   - `user_id` (`uuid`, NOT NULL)
@@ -242,6 +257,7 @@ A comprehensive, read-only architectural investigation was conducted on the Supa
 - **Foreign Keys**: Implicit reference to `auth.users(id)`.
 
 #### Table 15: `videos`
+
 - **Columns**:
   - `id` (`uuid`, PK, DEFAULT `gen_random_uuid()`)
   - `title_hi` (`text`, NOT NULL)
@@ -260,6 +276,7 @@ A comprehensive, read-only architectural investigation was conducted on the Supa
   - `videos_town_id_fkey` -> `towns(id)`
 
 #### Table 16: `villages`
+
 - **Columns**:
   - `id` (`uuid`, PK, DEFAULT `gen_random_uuid()`)
   - `name_hi` (`text`, NOT NULL)
@@ -271,6 +288,7 @@ A comprehensive, read-only architectural investigation was conducted on the Supa
   - `villages_town_id_fkey` -> `towns(id)`
 
 #### Table 17: `admin_activity_logs`
+
 - **Columns**:
   - `id` (`uuid`, PK, DEFAULT `gen_random_uuid()`)
   - `actor_id` (`uuid`, NULL)
@@ -286,6 +304,7 @@ A comprehensive, read-only architectural investigation was conducted on the Supa
 ### 3. Views Definition
 
 #### View: `public.jka_public`
+
 - **Source**: `public.jan_ki_awaaz_posts`
 - **Security & Privacy Logic**:
   - Conceals citizen identity if anonymous: `CASE WHEN p.is_anonymous THEN NULL ELSE p.reporter_name END AS reporter_name`.
@@ -310,42 +329,43 @@ A comprehensive, read-only architectural investigation was conducted on the Supa
 
 ## Part 2: Runtime Analysis & Cross-Verification with Client Code
 
-| Table / Object | Query/Mutation Path | Client Permission Required | Verified in Code |
-|---|---|---|---|
-| `towns` | `queries.ts`, `onboarding.tsx`, `index.tsx` | Public read `is_active = true` | Yes |
-| `categories` | `queries.ts` | Public read `is_active = true` | Yes |
-| `articles` | `queries.ts`, `news.$slug.tsx`, `admin.articles.tsx` | Public read `status = 'published'`, Staff ALL | Yes |
-| `advertisements` | `queries.ts`, `admin.ads.tsx` | Public read `is_active = true`, Staff ALL | Yes |
-| `bookmarks` | `saved.tsx`, `news.$slug.tsx` | User own rows `auth.uid() = user_id` | Yes |
-| `epapers` | `epaper.tsx`, `queries.ts` | Public read `status = 'published'`, Staff ALL | Yes |
-| `events` | `events.tsx`, `admin.events.tsx` | Public read `is_active = true`, Staff ALL | Yes |
-| `event_registrations` | `events.tsx`, `admin.events.tsx` | User own rows + **Staff ALL** (status update) | **Defect in initial migration** |
-| `jan_ki_awaaz_posts` | `report.tsx`, `admin.moderation.tsx` | Anon/Auth insert, User own read, Staff ALL | Yes |
-| `jka_public` | `queries.ts`, `jan-ki-awaaz/$id.tsx` | Public read approved/in_progress/resolved | Yes |
-| `jan_ki_awaaz_status_history`| `my-issues.tsx` | Public/Auth read + **Trigger automated insert** | **Defect: No trigger existed** |
-| `profiles` | `auth.tsx`, `report.tsx`, `onboarding.tsx` | User own row, Staff read | Yes |
-| `user_roles` | `auth.tsx`, `admin.users.tsx` | User own read + **Staff read** + Super admin ALL | **Defect: Staff read blocked** |
-| `media` (Storage) | `report.tsx`, `admin.*.tsx` | Auth upload own folder / Staff upload all, Public read | **Defect: Missing storage setup** |
+| Table / Object                | Query/Mutation Path                                  | Client Permission Required                             | Verified in Code                  |
+| ----------------------------- | ---------------------------------------------------- | ------------------------------------------------------ | --------------------------------- |
+| `towns`                       | `queries.ts`, `onboarding.tsx`, `index.tsx`          | Public read `is_active = true`                         | Yes                               |
+| `categories`                  | `queries.ts`                                         | Public read `is_active = true`                         | Yes                               |
+| `articles`                    | `queries.ts`, `news.$slug.tsx`, `admin.articles.tsx` | Public read `status = 'published'`, Staff ALL          | Yes                               |
+| `advertisements`              | `queries.ts`, `admin.ads.tsx`                        | Public read `is_active = true`, Staff ALL              | Yes                               |
+| `bookmarks`                   | `saved.tsx`, `news.$slug.tsx`                        | User own rows `auth.uid() = user_id`                   | Yes                               |
+| `epapers`                     | `epaper.tsx`, `queries.ts`                           | Public read `status = 'published'`, Staff ALL          | Yes                               |
+| `events`                      | `events.tsx`, `admin.events.tsx`                     | Public read `is_active = true`, Staff ALL              | Yes                               |
+| `event_registrations`         | `events.tsx`, `admin.events.tsx`                     | User own rows + **Staff ALL** (status update)          | **Defect in initial migration**   |
+| `jan_ki_awaaz_posts`          | `report.tsx`, `admin.moderation.tsx`                 | Anon/Auth insert, User own read, Staff ALL             | Yes                               |
+| `jka_public`                  | `queries.ts`, `jan-ki-awaaz/$id.tsx`                 | Public read approved/in_progress/resolved              | Yes                               |
+| `jan_ki_awaaz_status_history` | `my-issues.tsx`                                      | Public/Auth read + **Trigger automated insert**        | **Defect: No trigger existed**    |
+| `profiles`                    | `auth.tsx`, `report.tsx`, `onboarding.tsx`           | User own row, Staff read                               | Yes                               |
+| `user_roles`                  | `auth.tsx`, `admin.users.tsx`                        | User own read + **Staff read** + Super admin ALL       | **Defect: Staff read blocked**    |
+| `media` (Storage)             | `report.tsx`, `admin.*.tsx`                          | Auth upload own folder / Staff upload all, Public read | **Defect: Missing storage setup** |
 
 ---
 
 ## Part 3: Survey of `supabase/` Directory & Gap Analysis
 
 The repository contains:
+
 - `supabase/config.toml` (Project ID: `xhxjroxdgdftsngfkggi`)
 - `supabase/migrations/20241001000000_initial_schema.sql` (574 lines)
 
 ### Detailed Comparison: Current Migration vs Ideal Idempotent Target
 
-| Area | Current State in `20241001000000_initial_schema.sql` | Problem / Gap | Correct Resolution |
-|---|---|---|---|
-| **ENUM Creation** | Raw `CREATE TYPE public.app_role AS ENUM (...)` | Fails on re-run with `ERROR: type already exists`. | Wrap with `DO $$ BEGIN CREATE TYPE ... EXCEPTION WHEN duplicate_object THEN null; END $$;` |
-| **RLS Policies** | Raw `CREATE POLICY "name" ON table ...` | Fails on re-run with `ERROR: policy already exists`. | Precede each with `DROP POLICY IF EXISTS "name" ON table;` |
-| **`event_registrations` RLS** | `CREATE POLICY "event_reg_staff_read" ... FOR SELECT` | Admin CMS cannot update status (`status = 'approved'`). | Replace with `FOR ALL USING (public.is_staff(auth.uid()))`. |
-| **`user_roles` RLS** | `CREATE POLICY "user_roles_staff_all" ... has_role('super_admin')` | Admins and editors cannot view role badges on `/admin/users`. | Add `CREATE POLICY "user_roles_staff_read" ... FOR SELECT USING (public.is_staff(auth.uid()))`. |
-| **`jan_ki_awaaz` Status Audit** | Table exists, but no inserts anywhere in codebase. | Status history timeline in `my-issues.tsx` stays blank. | Add trigger `log_jka_status_change()` on `jan_ki_awaaz_posts`. |
-| **Storage Bucket** | Not created in migration. | Uploads fail on a newly spun-up instance. | Add `INSERT INTO storage.buckets` for `media` + storage RLS policies. |
-| **Initial Seed Data** | None in `supabase/`. | Fresh DB has 0 towns, leaving navigation and onboarding broken. | Provide baseline towns (Bijnor, Nagina, Dhampur, etc.) and categories. |
+| Area                            | Current State in `20241001000000_initial_schema.sql`               | Problem / Gap                                                   | Correct Resolution                                                                              |
+| ------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| **ENUM Creation**               | Raw `CREATE TYPE public.app_role AS ENUM (...)`                    | Fails on re-run with `ERROR: type already exists`.              | Wrap with `DO $$ BEGIN CREATE TYPE ... EXCEPTION WHEN duplicate_object THEN null; END $$;`      |
+| **RLS Policies**                | Raw `CREATE POLICY "name" ON table ...`                            | Fails on re-run with `ERROR: policy already exists`.            | Precede each with `DROP POLICY IF EXISTS "name" ON table;`                                      |
+| **`event_registrations` RLS**   | `CREATE POLICY "event_reg_staff_read" ... FOR SELECT`              | Admin CMS cannot update status (`status = 'approved'`).         | Replace with `FOR ALL USING (public.is_staff(auth.uid()))`.                                     |
+| **`user_roles` RLS**            | `CREATE POLICY "user_roles_staff_all" ... has_role('super_admin')` | Admins and editors cannot view role badges on `/admin/users`.   | Add `CREATE POLICY "user_roles_staff_read" ... FOR SELECT USING (public.is_staff(auth.uid()))`. |
+| **`jan_ki_awaaz` Status Audit** | Table exists, but no inserts anywhere in codebase.                 | Status history timeline in `my-issues.tsx` stays blank.         | Add trigger `log_jka_status_change()` on `jan_ki_awaaz_posts`.                                  |
+| **Storage Bucket**              | Not created in migration.                                          | Uploads fail on a newly spun-up instance.                       | Add `INSERT INTO storage.buckets` for `media` + storage RLS policies.                           |
+| **Initial Seed Data**           | None in `supabase/`.                                               | Fresh DB has 0 towns, leaving navigation and onboarding broken. | Provide baseline towns (Bijnor, Nagina, Dhampur, etc.) and categories.                          |
 
 ---
 
@@ -354,6 +374,7 @@ The repository contains:
 To establish a production-grade, reproducible database environment, the migration script must be idempotent, strictly ordered by foreign key dependencies, and feature complete.
 
 ### DDL Architecture & Order of Execution:
+
 1. **Extensions**:
    `CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`
    `CREATE EXTENSION IF NOT EXISTS "pgcrypto";`

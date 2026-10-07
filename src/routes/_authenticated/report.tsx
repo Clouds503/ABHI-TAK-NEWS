@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { UploadNote } from "@/components/UploadNote";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/report")({
@@ -147,7 +148,7 @@ function ReportPage() {
   const selectCls = "mt-1.5 h-12 w-full rounded-md border border-input bg-card px-3 text-[15px]";
 
   return (
-    <form onSubmit={submit} className="space-y-5 px-4 pb-10 pt-5">
+    <form onSubmit={submit} className="mx-auto max-w-2xl lg:max-w-3xl space-y-5 px-4 pb-10 pt-6">
       <div className="flex items-center gap-3">
         <span className="grid h-11 w-11 place-items-center rounded-sm bg-primary text-primary-foreground">
           <Megaphone className="h-5 w-5" />
@@ -237,28 +238,56 @@ function ReportPage() {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <label className="flex h-20 cursor-pointer flex-col items-center justify-center gap-1 rounded-sm border border-dashed bg-card text-[13px]">
-          <Camera className="h-5 w-5 text-primary" />{" "}
-          <span className="max-w-full truncate px-2">{photo?.name ?? t("photo")}</span>
-          <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="hidden"
-            onChange={(e) => setPhoto(e.target.files?.[0] ?? null)}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <label className="flex h-20 cursor-pointer flex-col items-center justify-center gap-1 rounded-sm border border-dashed bg-card text-[13px] hover:bg-muted/40 transition-colors">
+            <Camera className="h-5 w-5 text-primary" />{" "}
+            <span className="max-w-full truncate px-2 font-medium">
+              {photo?.name ?? t("photo")}
+            </span>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={(e) => setPhoto(e.target.files?.[0] ?? null)}
+            />
+          </label>
+          <UploadNote
+            type="JPG, PNG, WebP, HEIC"
+            maxSize="15 MB"
+            ratio="16:9 / 4:3 (Landscape / Portrait)"
+            hint={
+              lang === "hi"
+                ? "स्पष्ट तस्वीर अपलोड करें ताकि समस्या साफ दिखे।"
+                : "Clear issue photo with visible details."
+            }
           />
-        </label>
-        <label className="flex h-20 cursor-pointer flex-col items-center justify-center gap-1 rounded-sm border border-dashed bg-card text-[13px]">
-          <Video className="h-5 w-5 text-primary" />{" "}
-          <span className="max-w-full truncate px-2">{video?.name ?? t("video")}</span>
-          <input
-            type="file"
-            accept="video/*"
-            className="hidden"
-            onChange={(e) => setVideo(e.target.files?.[0] ?? null)}
+        </div>
+        <div>
+          <label className="flex h-20 cursor-pointer flex-col items-center justify-center gap-1 rounded-sm border border-dashed bg-card text-[13px] hover:bg-muted/40 transition-colors">
+            <Video className="h-5 w-5 text-primary" />{" "}
+            <span className="max-w-full truncate px-2 font-medium">
+              {video?.name ?? t("video")}
+            </span>
+            <input
+              type="file"
+              accept="video/*"
+              className="hidden"
+              onChange={(e) => setVideo(e.target.files?.[0] ?? null)}
+            />
+          </label>
+          <UploadNote
+            type="MP4, MOV, WebM"
+            maxSize="50 MB"
+            ratio="16:9 / 9:16 (Landscape / Vertical)"
+            hint={
+              lang === "hi"
+                ? "समस्या का संक्षिप्त वीडियो रिकॉर्ड या अपलोड करें।"
+                : "Brief video recording or issue clip."
+            }
           />
-        </label>
+        </div>
       </div>
 
       <button

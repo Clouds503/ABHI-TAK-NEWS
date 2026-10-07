@@ -24,13 +24,19 @@ function EPaper() {
   const { t } = useI18n();
   const { data, isLoading } = useQuery(epapersQuery);
   return (
-    <div>
-      <h1 className="px-4 pb-3 pt-6 text-2xl font-bold">{t("epaper")}</h1>
+    <div className="max-w-7xl mx-auto px-4 lg:px-6 py-4">
+      <h1 className="pb-4 pt-2 text-2xl lg:text-3xl font-bold font-serif">{t("epaper")}</h1>
       {!isLoading && !data?.length && <Empty text={t("noContent")} />}
-      <div className="grid grid-cols-2 gap-4 px-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
         {data?.map((e) => (
-          <a key={e.id} href={e.pdf_url} target="_blank" rel="noopener" className="block">
-            <div className="grid aspect-[3/4] place-items-center overflow-hidden rounded-sm border bg-card">
+          <a
+            key={e.id}
+            href={e.pdf_url}
+            target="_blank"
+            rel="noopener"
+            className="group block rounded-xl border bg-card p-3 shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div className="grid aspect-[3/4] place-items-center overflow-hidden rounded-lg border bg-muted">
               {e.cover_url ? (
                 <img
                   src={e.cover_url}
@@ -39,14 +45,16 @@ function EPaper() {
                   height={400}
                   loading="lazy"
                   decoding="async"
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
               ) : (
                 <FileText className="h-10 w-10 text-muted-foreground" />
               )}
             </div>
-            <div className="mt-2 text-sm font-semibold">{e.title}</div>
-            <div className="text-xs text-muted-foreground">
+            <div className="mt-3 text-sm font-semibold line-clamp-1 group-hover:text-primary transition-colors">
+              {e.title}
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">
               {new Date(e.edition_date).toLocaleDateString("en-IN", { dateStyle: "medium" })}
             </div>
           </a>

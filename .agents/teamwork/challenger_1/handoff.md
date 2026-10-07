@@ -5,6 +5,7 @@
 Direct empirical observations collected through automated test harness execution (`scripts/verify_m4_deliverables.mjs`, `scripts/verify_column_details.mjs`, `scripts/stress_test_sql.mjs`, and Node.js runtime AST analysis):
 
 ### 1.1 Database Schema Parity (`src/integrations/supabase/types.ts` vs `supabase/migrations/20241001000000_initial_schema.sql`)
+
 - **Table Count**: Exactly 17 tables defined in `src/integrations/supabase/types.ts` (`admin_activity_logs`, `advertisements`, `articles`, `bookmarks`, `categories`, `epapers`, `event_registrations`, `events`, `jan_ki_awaaz_posts`, `jan_ki_awaaz_status_history`, `live_streams`, `profiles`, `reels`, `towns`, `user_roles`, `videos`, `villages`).
 - **SQL Table Existence**: All 17 tables are defined in `supabase/migrations/20241001000000_initial_schema.sql` with `CREATE TABLE IF NOT EXISTS public.<table_name>`.
 - **Column Parity**:
@@ -28,6 +29,7 @@ Direct empirical observations collected through automated test harness execution
   - **Total columns across schema**: 154 columns in TypeScript, 154 columns in SQL. Bidirectional exact match: 100% (0 missing columns, 0 extra columns).
 
 ### 1.2 Enums, Functions, Views, Triggers, and RLS Idempotency
+
 - **Enums (3)**:
   - `app_role`: created in idempotent `DO $$ BEGIN ... CREATE TYPE ... EXCEPTION WHEN duplicate_object THEN NULL; END $$;` block, followed by 6 `ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS` clauses (`super_admin`, `admin`, `editor`, `moderator`, `reporter`, `user`).
   - `content_status`: created in idempotent `DO $$ ... $$;` block with 5 `ALTER TYPE public.content_status ADD VALUE IF NOT EXISTS` clauses (`draft`, `pending`, `review`, `published`, `archived`).
@@ -55,6 +57,7 @@ Direct empirical observations collected through automated test harness execution
   - `INSERT INTO public.categories (...) ON CONFLICT (slug) DO UPDATE ...`
 
 ### 1.3 Web & Android HTML Bundles
+
 - `dist/client/index.html` (1,262 bytes) and `android/app/src/main/assets/public/index.html` (1,262 bytes) exist, are non-empty, and are byte-identical.
 - Both files contain valid HTML5 structures:
   - `<!DOCTYPE html>`, `<html lang="hi">`, `<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />`
@@ -63,6 +66,7 @@ Direct empirical observations collected through automated test harness execution
   - Stylesheet `<link rel="stylesheet" crossorigin href="/assets/styles-Cfl5V9o-.css">`
 
 ### 1.4 Bundled JS Contents in `android/app/src/main/assets/public/assets/`
+
 - Verified via AST / lexical scanner in `index-CuK73DHZ.js`:
   - **Supabase URL**: `https://xhxjroxdgdftsngfkggi.supabase.co` is bundled and inlined (4 occurrences).
   - **Supabase Publishable Key**: `sb_publishable_EiyprYhAi2XiwC-cbWBb3w_KJQPd37p` is bundled and inlined (4 occurrences).
@@ -74,6 +78,7 @@ Direct empirical observations collected through automated test harness execution
   - **ES Module Syntax**: `vm.SourceTextModule` confirmed valid ES module syntax with 0 syntax errors across all bundle files.
 
 ### 1.5 Automated Verification Suite Execution
+
 ```text
 Command: node scripts/verify_m4_deliverables.mjs
 TOTAL TESTS: 367
@@ -134,7 +139,9 @@ To independently verify these findings, run the automated empirical test suite:
 ```powershell
 node scripts/verify_m4_deliverables.mjs
 ```
+
 Expected output:
+
 ```text
 TOTAL TESTS: 367
 PASSED: 367
@@ -142,11 +149,13 @@ FAILED: 0
 ```
 
 To re-run the SQL lexical and idempotency stress tests:
+
 ```powershell
 node scripts/stress_test_sql.mjs
 ```
 
 To re-run the column-by-column bidirectional parity audit:
+
 ```powershell
 node scripts/verify_column_details.mjs
 ```

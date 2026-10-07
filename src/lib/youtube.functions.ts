@@ -228,3 +228,35 @@ export const getLiveStatus = createServerFn({ method: "GET" }).handler(
     }
   },
 );
+
+export const syncYouTubeVideosServerFn = createServerFn({ method: "POST" }).handler(async () => {
+  try {
+    const { syncYouTubeVideosToDatabase } = await import("@/lib/youtube-sync");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    return await syncYouTubeVideosToDatabase(supabaseAdmin);
+  } catch (err: unknown) {
+    console.error("[syncYouTubeVideosServerFn] Error:", err);
+    return {
+      success: false,
+      count: 0,
+      error: err instanceof Error ? err.message : "Internal server sync failure",
+      message: err instanceof Error ? err.message : "Internal server sync failure",
+    };
+  }
+});
+
+export const requestWebSubSubscribeFn = createServerFn({ method: "POST" })
+  .inputValidator((data) => z.object({ callbackUrl: z.string().url() }).parse(data))
+  .handler(async ({ data }) => {
+    try {
+      const { requestWebSubSubscription } = await import("@/lib/youtube-sync");
+      return await requestWebSubSubscription(data.callbackUrl);
+    } catch (err: unknown) {
+      console.error("[requestWebSubSubscribeFn] Error:", err);
+      return {
+        success: false,
+        status: 500,
+        text: err instanceof Error ? err.message : "Subscription request failed",
+      };
+    }
+  });

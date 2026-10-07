@@ -27,7 +27,7 @@ function PrivacyPolicy() {
   const isHi = lang !== "en";
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6 text-foreground">
+    <div className="mx-auto max-w-2xl lg:max-w-4xl px-4 py-8 text-foreground">
       {/* Top Bar */}
       <div className="mb-6 flex items-center gap-3 border-b pb-4">
         <Link

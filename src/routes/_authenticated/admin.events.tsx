@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { UploadNote } from "@/components/UploadNote";
 
 export const Route = createFileRoute("/_authenticated/admin/events")({
   head: () => ({
@@ -137,15 +138,23 @@ function AdminEvents() {
             <Input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} />
           </div>
         )}
-        <label className="block text-sm text-muted-foreground">
-          Image (optional)
-          <input
-            type="file"
-            accept="image/*"
-            className="mt-1 block text-sm"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+        <div>
+          <label className="block text-sm text-muted-foreground">
+            Image (optional)
+            <input
+              type="file"
+              accept="image/*"
+              className="mt-1 block text-sm"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
+          </label>
+          <UploadNote
+            type="JPG, PNG, WebP"
+            maxSize="10 MB"
+            ratio="16:9 or 4:3 (Banner)"
+            hint="Recommended resolution: 1200×675px for community announcements and event cards."
           />
-        </label>
+        </div>
         <Button type="submit" disabled={busy}>
           {busy ? "Publishing…" : "Publish"}
         </Button>

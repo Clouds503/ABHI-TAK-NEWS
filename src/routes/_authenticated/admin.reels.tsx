@@ -6,6 +6,7 @@ import { Trash2, Eye, EyeOff, Upload, Film } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { UploadNote } from "@/components/UploadNote";
 
 export const Route = createFileRoute("/_authenticated/admin/reels")({
   head: () => ({
@@ -128,6 +129,13 @@ function AdminReels() {
         guaranteed playback, download the reel video and attach it with the upload button — uploaded
         videos play directly with tap-to-pause.
       </p>
+      <UploadNote
+        type="MP4, WebM"
+        maxSize="50 MB"
+        ratio="9:16 (Vertical Fullscreen Reel)"
+        hint="Directly attached video files guarantee reliable mobile playback with sound and scrubber controls."
+        className="mt-3"
+      />
       <form onSubmit={add} className="mt-5 space-y-2 rounded-lg border bg-card p-4">
         <Input
           placeholder="https://www.instagram.com/reel/…"
@@ -184,7 +192,8 @@ function AdminReels() {
             </div>
             <label
               className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-md hover:bg-muted"
-              aria-label="Upload video"
+              aria-label="Upload reel video"
+              title="Upload reel video (Type: MP4/WebM, Max size: 50 MB, Ratio: 9:16)"
             >
               <Upload className="h-4 w-4" />
               <input
