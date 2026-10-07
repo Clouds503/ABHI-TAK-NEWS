@@ -6,6 +6,7 @@ const dict = {
   home: { hi: "होम", en: "Home" },
   videos: { hi: "वीडियो", en: "Videos" },
   live: { hi: "लाइव", en: "Live" },
+  liveTv: { hi: "लाइव टीवी", en: "Live TV" },
   reels: { hi: "रील्स", en: "Reels" },
   jka: { hi: "जन की आवाज़", en: "Jan Ki Awaaz" },
   jkaTagline: { hi: "आपकी समस्या, आपकी आवाज़", en: "Your problem, your voice" },
@@ -144,7 +145,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     hasChosenLanguage: ready ? hasChosenLanguage : true,
     ready,
     setLang,
-    t: (k) => dict[k][l],
+    t: (k) => dict[k]?.[l] ?? (k as string),
     pick: (hi, en) => (l === "en" ? en || hi || "" : hi || en || ""),
     status: (s) => statusLabels[s]?.[l] ?? s,
     jkaCat: (slug) => {
