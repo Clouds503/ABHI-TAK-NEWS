@@ -20,6 +20,12 @@
         if (localStorage.getItem("abhitak.theme") === "dark")
           document.documentElement.classList.add("dark");
       } catch (e) {}
+      window.addEventListener("DOMContentLoaded", function () {
+        setTimeout(function () {
+          var p = document.getElementById("app-preloader");
+          if (p) p.style.display = "none";
+        }, 1500);
+      });
     </script>
   </head>
   <body>

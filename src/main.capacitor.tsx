@@ -91,6 +91,9 @@ async function initNative() {
 const rootEl = document.getElementById("root");
 if (!rootEl) throw new Error("#root element not found");
 
+const preloader = document.getElementById("app-preloader");
+if (preloader) preloader.remove();
+
 // No StrictMode: prevents React from running effects twice on Android,
 // which would create duplicate Supabase auth listeners and router state thrash.
 createRoot(rootEl).render(<RouterProvider router={router} />);

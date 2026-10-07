@@ -437,32 +437,52 @@ function Home() {
                   </div>
 
                   <div className="divide-y divide-border/60">
-                    {rest.slice(0, 5).map((a) => (
-                      <Link
-                        key={a.id}
-                        to="/news/$slug"
-                        params={{ slug: a.slug }}
-                        className="group block py-3.5 first:pt-1 last:pb-1"
-                      >
-                        <div className="flex items-center gap-2 text-[11px] text-muted-foreground mb-1">
-                          {a.town && (
-                            <span className="font-semibold text-primary">
-                              {pick(a.town.name_hi, a.town.name_en)}
-                            </span>
-                          )}
-                          <span>· {timeAgo(a.published_at, lang)}</span>
-                        </div>
-                        <h3 className="text-sm font-bold leading-snug text-foreground group-hover:text-primary transition-colors line-clamp-2">
-                          {pick(a.title_hi, a.title_en)}
-                        </h3>
-                      </Link>
-                    ))}
+                    {isLoading ? (
+                      <div className="space-y-4 py-2">
+                        <Skeleton className="h-14 w-full rounded-md" />
+                        <Skeleton className="h-14 w-full rounded-md" />
+                        <Skeleton className="h-14 w-full rounded-md" />
+                        <Skeleton className="h-14 w-full rounded-md" />
+                      </div>
+                    ) : (
+                      rest.slice(0, 5).map((a) => (
+                        <Link
+                          key={a.id}
+                          to="/news/$slug"
+                          params={{ slug: a.slug }}
+                          className="group block py-3.5 first:pt-1 last:pb-1"
+                        >
+                          <div className="flex items-center gap-2 text-[11px] text-muted-foreground mb-1">
+                            {a.town && (
+                              <span className="font-semibold text-primary">
+                                {pick(a.town.name_hi, a.town.name_en)}
+                              </span>
+                            )}
+                            <span>· {timeAgo(a.published_at, lang)}</span>
+                          </div>
+                          <h3 className="text-sm font-bold leading-snug text-foreground group-hover:text-primary transition-colors line-clamp-2">
+                            {pick(a.title_hi, a.title_en)}
+                          </h3>
+                        </Link>
+                      ))
+                    )}
                   </div>
                 </div>
 
                 {/* Center Column (6/12 cols): Lead Hero Story + Feature Duo */}
                 <div className="col-span-6 px-2">
-                  {hero && (
+                  {isLoading ? (
+                    <div className="space-y-4">
+                      <Skeleton className="aspect-[16/9] w-full rounded-xl" />
+                      <Skeleton className="h-9 w-4/5" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-2/3" />
+                      <div className="grid grid-cols-2 gap-5 pt-6 mt-6 border-t">
+                        <Skeleton className="aspect-[16/9] w-full rounded-lg" />
+                        <Skeleton className="aspect-[16/9] w-full rounded-lg" />
+                      </div>
+                    </div>
+                  ) : hero ? (
                     <Link to="/news/$slug" params={{ slug: hero.slug }} className="group block">
                       <div className="relative aspect-[16/9] w-full overflow-hidden rounded-xl bg-muted shadow-sm">
                         <img
@@ -504,10 +524,10 @@ function Home() {
                         )}
                       </div>
                     </Link>
-                  )}
+                  ) : null}
 
                   {/* Feature Story Duo below Lead Story */}
-                  {rest.length > 5 && (
+                  {!isLoading && rest.length > 5 && (
                     <div className="grid grid-cols-2 gap-5 pt-6 mt-6 border-t">
                       {rest.slice(5, 7).map((a) => (
                         <Link
