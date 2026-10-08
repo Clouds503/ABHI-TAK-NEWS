@@ -10,6 +10,7 @@ import { videosQuery } from "@/lib/queries";
 import { Button } from "@/components/ui/button";
 import { getLiveStatus, syncYouTubeVideosServerFn } from "@/lib/youtube.functions";
 import { useRealtimeVideos } from "@/lib/useRealtimeVideos";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/videos")({
   head: () => ({
