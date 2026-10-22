@@ -5,7 +5,8 @@ import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { YOUTUBE_CHANNEL } from "@/components/AppShell";
 import { Play, Youtube, Clock, Film } from "lucide-react";
-import { getLiveStatus, getChannelVideos } from "@/lib/youtube.functions";
+import { getLiveStatus, getChannelVideos, LIVE_CHANNEL_STREAM_URL } from "@/lib/youtube.functions";
+import { LivePlayer } from "@/components/LivePlayer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -49,10 +50,14 @@ function Live() {
     retry: 3,
     enabled: live.data?.live === false,
   });
-  const isLive = !!live.data?.live && !!live.data.videoId;
+
+  const isLive = live.data?.live ?? true;
+  const liveStreamUrl = live.data?.streamUrl ?? LIVE_CHANNEL_STREAM_URL;
   const latest = videos.data?.[0];
-  const embedId = isLive ? live.data?.videoId : latest?.id;
-  const title = isLive ? live.data?.title : latest?.title;
+  const embedId = latest?.id;
+  const title = isLive
+    ? (live.data?.title ?? (lang === "hi" ? "अभि तक 24x7 सीधा लाइव प्रसारण" : "Abhi Tak 24x7 Live Broadcast"))
+    : latest?.title;
   const [playLatest, setPlayLatest] = useState(false);
   // Browsers only allow autoplay when muted; a tap switches the live stream to sound on.
   const [soundOn, setSoundOn] = useState(false);
@@ -62,26 +67,23 @@ function Live() {
       {/* MOBILE VIEW (< 1024px) - 100% UNCHANGED */}
       <div className="lg:hidden min-h-[70vh] bg-ink text-ink-foreground">
         <div className="relative aspect-video w-full bg-ink">
-          {embedId && (isLive || playLatest) ? (
-            <>
-              <iframe
-                key={`${embedId}-${soundOn}`}
-                src={`https://www.youtube-nocookie.com/embed/${embedId}?playsinline=1&rel=0${isLive ? `&autoplay=1${soundOn ? "" : "&mute=1"}` : ""}`}
-                title={title ?? "Live"}
-                className="h-full w-full"
-                allow="autoplay; encrypted-media; picture-in-picture"
-                allowFullScreen
-              />
-              {isLive && !soundOn && (
-                <button
-                  type="button"
-                  onClick={() => setSoundOn(true)}
-                  className="absolute bottom-3 right-3 rounded-full bg-primary px-3 py-1.5 text-[12px] font-bold text-primary-foreground shadow-lg"
-                >
-                  {lang === "hi" ? "🔊 आवाज़ चालू करें" : "🔊 Tap for sound"}
-                </button>
-              )}
-            </>
+          {isLive && !playLatest ? (
+            <LivePlayer
+              src={liveStreamUrl}
+              title={title ?? "Live"}
+              soundOn={soundOn}
+              onSoundChange={setSoundOn}
+              lang={lang}
+            />
+          ) : embedId && playLatest ? (
+            <iframe
+              key={`mobile-bulletin-${embedId}`}
+              src={`https://www.youtube-nocookie.com/embed/${embedId}?playsinline=1&rel=0&autoplay=1`}
+              title={latest?.title ?? "Recorded Bulletin"}
+              className="h-full w-full border-0"
+              allow="autoplay; encrypted-media; picture-in-picture"
+              allowFullScreen
+            />
           ) : latest ? (
             <Button
               type="button"
@@ -137,15 +139,13 @@ function Live() {
                 <Youtube className="h-5 w-5" /> {t("ytChannel")}
               </a>
             </Button>
-            {!isLive && (
-              <Button
-                asChild
-                variant="glassDark"
-                className="h-11 rounded-full px-4 text-[15px] font-semibold"
-              >
-                <Link to="/videos">{t("videoGalaxy")}</Link>
-              </Button>
-            )}
+            <Button
+              asChild
+              variant="glassDark"
+              className="h-11 rounded-full px-4 text-[15px] font-semibold"
+            >
+              <Link to="/videos">{t("videoGalaxy")}</Link>
+            </Button>
           </div>
         </div>
       </div>
@@ -197,26 +197,23 @@ function Live() {
             {/* Main Broadcast Screen (8 cols) */}
             <div className="col-span-8">
               <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black shadow-2xl ring-1 ring-white/10">
-                {embedId && (isLive || playLatest) ? (
-                  <>
-                    <iframe
-                      key={`desktop-${embedId}-${soundOn}`}
-                      src={`https://www.youtube-nocookie.com/embed/${embedId}?playsinline=1&rel=0${isLive ? `&autoplay=1${soundOn ? "" : "&mute=1"}` : ""}`}
-                      title={title ?? "Live"}
-                      className="h-full w-full"
-                      allow="autoplay; encrypted-media; picture-in-picture"
-                      allowFullScreen
-                    />
-                    {isLive && !soundOn && (
-                      <button
-                        type="button"
-                        onClick={() => setSoundOn(true)}
-                        className="absolute bottom-4 right-4 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground shadow-xl transition-transform hover:scale-105"
-                      >
-                        {lang === "hi" ? "🔊 आवाज़ चालू करें (Unmute)" : "🔊 Tap for sound"}
-                      </button>
-                    )}
-                  </>
+                {isLive && !playLatest ? (
+                  <LivePlayer
+                    src={liveStreamUrl}
+                    title={title ?? "Live"}
+                    soundOn={soundOn}
+                    onSoundChange={setSoundOn}
+                    lang={lang}
+                  />
+                ) : embedId && playLatest ? (
+                  <iframe
+                    key={`desktop-bulletin-${embedId}`}
+                    src={`https://www.youtube-nocookie.com/embed/${embedId}?playsinline=1&rel=0&autoplay=1`}
+                    title={latest?.title ?? "Recorded Bulletin"}
+                    className="h-full w-full border-0"
+                    allow="autoplay; encrypted-media; picture-in-picture"
+                    allowFullScreen
+                  />
                 ) : latest ? (
                   <Button
                     type="button"
