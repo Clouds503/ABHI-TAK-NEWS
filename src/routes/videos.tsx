@@ -111,7 +111,7 @@ function Videos() {
     }) ?? [];
 
   const current = videos.find((v) => v.id === activeId) ?? videos[0];
-  const isLiveActive = !!live.data?.live && !!live.data.videoId;
+  const isLiveActive = !!live.data?.live;
 
   return (
     <div className="bg-ink pb-8 text-ink-foreground min-h-screen">
