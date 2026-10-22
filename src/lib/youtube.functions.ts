@@ -206,10 +206,14 @@ export const getChannelVideoPage = createServerFn({ method: "GET" })
     return { videos: [...merged.values()], continuation: catalog.continuation };
   });
 
-export const LIVE_CHANNEL_STREAM_URL =
-  "http://abhitaknews.livebox.co.in/AbhitakNewshls/ABHITAKNEWS.m3u8";
-export const LIVE_CHANNEL_STREAM_HTTPS_URL =
-  "https://abhitaknews.livebox.co.in/AbhitakNewshls/ABHITAKNEWS.m3u8";
+export {
+  LIVE_CHANNEL_STREAM_URL,
+  LIVE_CHANNEL_STREAM_HTTPS_URL,
+} from "@/lib/live.constants";
+import {
+  LIVE_CHANNEL_STREAM_URL,
+  LIVE_CHANNEL_STREAM_HTTPS_URL,
+} from "@/lib/live.constants";
 
 export const getLiveStatus = createServerFn({ method: "GET" }).handler(
   async (): Promise<{

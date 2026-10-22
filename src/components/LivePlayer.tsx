@@ -1,23 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import Hls from "hls.js";
-import { Volume2, VolumeX, RefreshCw, AlertCircle } from "lucide-react";
+import { Volume2, RefreshCw, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-export const LIVE_CHANNEL_STREAM_URL =
-  "http://abhitaknews.livebox.co.in/AbhitakNewshls/ABHITAKNEWS.m3u8";
-export const LIVE_CHANNEL_STREAM_HTTPS_URL =
-  "https://abhitaknews.livebox.co.in/AbhitakNewshls/ABHITAKNEWS.m3u8";
-
-/**
- * Returns the correct protocol URL to prevent browser Mixed-Content blocking on HTTPS.
- */
-export function getLiveChannelStreamUrl(customUrl?: string): string {
-  const url = customUrl || LIVE_CHANNEL_STREAM_URL;
-  if (typeof window !== "undefined" && window.location.protocol === "https:") {
-    return url.replace(/^http:\/\//i, "https://");
-  }
-  return url;
-}
+import { LIVE_CHANNEL_STREAM_URL, getLiveChannelStreamUrl } from "@/lib/live.constants";
 
 interface LivePlayerProps {
   src?: string;
@@ -42,7 +27,6 @@ export function LivePlayer({
 }: LivePlayerProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const hlsRef = useRef<Hls | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [internalMuted, setInternalMuted] = useState(!soundOn);
@@ -56,7 +40,6 @@ export function LivePlayer({
     setIsLoading(true);
     setHasError(false);
 
-    // Destroy existing HLS instance if any
     if (hlsRef.current) {
       hlsRef.current.destroy();
       hlsRef.current = null;
@@ -67,7 +50,7 @@ export function LivePlayer({
       video.src = resolvedUrl;
       if (autoPlay) {
         video.play().catch(() => {
-          // Autoplay policy might require user gesture if unmuted
+          // Autoplay policy might require gesture if unmuted
         });
       }
       return;
@@ -91,7 +74,7 @@ export function LivePlayer({
         setIsLoading(false);
         if (autoPlay) {
           video.play().catch(() => {
-            // Autoplay with sound blocked by browser policy
+            // Autoplay with sound blocked
           });
         }
       });
@@ -100,11 +83,11 @@ export function LivePlayer({
         if (data.fatal) {
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
-              console.warn("[LivePlayer] Network error encountered, attempting recovery...");
+              console.warn("[LivePlayer] Network error, attempting recovery...");
               hls.startLoad();
               break;
             case Hls.ErrorTypes.MEDIA_ERROR:
-              console.warn("[LivePlayer] Media error encountered, recovering media...");
+              console.warn("[LivePlayer] Media error, recovering...");
               hls.recoverMediaError();
               break;
             default:
@@ -133,7 +116,6 @@ export function LivePlayer({
     };
   }, [initPlayer]);
 
-  // Sync mute state
   useEffect(() => {
     const video = videoRef.current;
     if (video) {
@@ -152,16 +134,6 @@ export function LivePlayer({
       if (video.paused) {
         video.play().catch(() => {});
       }
-    }
-  };
-
-  const handleMuteToggle = () => {
-    const video = videoRef.current;
-    if (video) {
-      const nextMuted = !video.muted;
-      video.muted = nextMuted;
-      setInternalMuted(nextMuted);
-      onSoundChange?.(!nextMuted);
     }
   };
 
@@ -185,13 +157,8 @@ export function LivePlayer({
         muted={internalMuted}
         controls
         preload="auto"
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
         onWaiting={() => setIsLoading(true)}
-        onPlaying={() => {
-          setIsLoading(false);
-          setIsPlaying(true);
-        }}
+        onPlaying={() => setIsLoading(false)}
         onVolumeChange={handleVolumeChange}
         onError={() => {
           setHasError(true);
@@ -217,7 +184,9 @@ export function LivePlayer({
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-ink/90 p-4 text-center">
           <AlertCircle className="h-10 w-10 text-red-500 mb-2" />
           <h4 className="text-base font-bold text-white">
-            {lang === "hi" ? "लाइव स्ट्रीम लोड करने में असमर्थ" : "Live Stream Currently Unavailable"}
+            {lang === "hi"
+              ? "लाइव स्ट्रीम लोड करने में असमर्थ"
+              : "Live Stream Currently Unavailable"}
           </h4>
           <p className="mt-1 text-xs text-white/70 max-w-sm">
             {lang === "hi"
@@ -235,7 +204,7 @@ export function LivePlayer({
         </div>
       )}
 
-      {/* Unmute Prompt Button (shown when muted during autoplay) */}
+      {/* Unmute Prompt Button */}
       {internalMuted && !isLoading && !hasError && (
         <button
           type="button"
