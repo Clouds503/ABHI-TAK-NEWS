@@ -11,7 +11,7 @@ import {
   type ArticleCard,
 } from "@/lib/queries";
 import { useI18n, timeAgo } from "@/lib/i18n";
-import { img } from "@/lib/media";
+import { img, homeBanner } from "@/lib/media";
 import { SectionHead } from "@/components/AppShell";
 import {
   AdSlot,
@@ -136,6 +136,8 @@ function Home() {
   const { data: towns } = useQuery(townsQuery);
   const { data: videos } = useQuery(videosQuery);
   const { data: issues } = useQuery(jkaPublicQuery({ limit: 6 }));
+  const { data: topBanners } = useQuery(adsQuery("home_top"));
+  const topBanner = topBanners?.[0];
 
   const articles = isFiltered ? filteredArticles : standardArticles;
   const isLoading = isFiltered ? filteredLoading : standardLoading;
@@ -252,7 +254,7 @@ function Home() {
               {isLoading ? (
                 <Skeleton className="aspect-[16/9] w-full rounded-none" />
               ) : (
-                hero && <HeroStory a={hero} />
+                <TopHomeBanner banner={topBanner} fallbackImage={homeBanner} />
               )}
 
               {/* District Radar */}

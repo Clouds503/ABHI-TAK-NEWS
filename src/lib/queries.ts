@@ -176,7 +176,7 @@ export const adsQuery = (placement: string) =>
         .select("id,title,advertiser,image_url,link_url,campaign_type,media_type,video_url")
         .eq("placement", placement)
         .eq("is_active", true)
-        .lte("starts_at", now)
+        .or(`starts_at.is.null,starts_at.lte.${now}`)
         .or(`ends_at.is.null,ends_at.gt.${now}`)
         .order("created_at", { ascending: false })
         .limit(3);

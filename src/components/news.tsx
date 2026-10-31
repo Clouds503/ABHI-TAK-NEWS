@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { toast } from "sonner";
 import { useI18n, timeAgo } from "@/lib/i18n";
-import { img } from "@/lib/media";
+import { img, homeBanner } from "@/lib/media";
 import { adsQuery, type ArticleCard } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 import { useDoubleTap } from "@/lib/useDoubleTap";
@@ -37,6 +37,57 @@ export function Meta({ a, light }: { a: ArticleCard; light?: boolean }) {
       <span suppressHydrationWarning>· {timeAgo(a.published_at, lang)}</span>
     </div>
   );
+}
+
+
+export function TopHomeBanner({
+  banner,
+  fallbackImage,
+}: {
+  banner?: {
+    id: string;
+    image_url: string;
+    link_url?: string | null;
+    title?: string | null;
+  } | null;
+  fallbackImage?: string;
+}) {
+  const imageUrl = banner ? (img(banner.image_url) ?? banner.image_url) : (fallbackImage ?? homeBanner);
+  if (!imageUrl) return null;
+
+  const content = (
+    <div className="relative aspect-[16/9] w-full select-none overflow-hidden bg-muted">
+      <img
+        src={imageUrl}
+        alt={banner?.title || "Abhi Tak Banner"}
+        width={1200}
+        height={675}
+        fetchPriority="high"
+        decoding="async"
+        onError={(event) => {
+          if (homeBanner && event.currentTarget.src !== homeBanner) {
+            event.currentTarget.src = homeBanner;
+          }
+        }}
+        className="h-full w-full object-cover"
+      />
+    </div>
+  );
+
+  if (banner?.link_url && banner.link_url !== "#") {
+    return (
+      <a
+        href={banner.link_url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block w-full overflow-hidden"
+      >
+        {content}
+      </a>
+    );
+  }
+
+  return content;
 }
 
 export function HeroStory({ a }: { a: ArticleCard }) {

@@ -485,7 +485,7 @@ function AdsAdmin() {
                 <Label>Placement</Label>
                 <select className={selectClass} value={form.placement} onChange={set("placement")}>
                   <option value="home_inline">Home inline</option>
-                  <option value="home_top">Home top</option>
+                  <option value="home_top">Home Top Banner (Hero Slot)</option>
                   <option value="article_inline">Article inline</option>
                   <option value="jan_ki_awaaz">Jan Ki Awaaz</option>
                 </select>

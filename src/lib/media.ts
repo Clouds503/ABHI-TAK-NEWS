@@ -5,6 +5,9 @@ import school from "@/assets/news-school.webp";
 import health from "@/assets/news-health.webp";
 import cricket from "@/assets/news-cricket.webp";
 import road from "@/assets/news-road.webp";
+import homeBanner from "@/assets/home-banner.webp";
+
+export { homeBanner };
 
 const map: Record<string, string> = {
   river,
@@ -15,6 +18,7 @@ const map: Record<string, string> = {
   cricket,
   road,
   ad: market,
+  "home-banner": homeBanner,
 };
 
 /** Resolves seeded "asset:key" references to bundled images; passes real URLs through. */

@@ -1,13 +1,25 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
-import { BarChart3, Youtube, RefreshCw } from "lucide-react";
+import {
+  BarChart3,
+  Youtube,
+  RefreshCw,
+  Image as ImageIcon,
+  Upload,
+  Save,
+  ExternalLink,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { syncYouTubeVideosServerFn } from "@/lib/youtube.functions";
 import { useRealtimeVideos } from "@/lib/useRealtimeVideos";
+import { img, homeBanner } from "@/lib/media";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   component: Dashboard,
@@ -21,6 +33,261 @@ async function count(
   if (filter) q = q.eq(filter[0], filter[1]);
   const { count } = await q;
   return count ?? 0;
+}
+
+function TopBannerManager() {
+  const qc = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { data: bannerData } = useQuery({
+    queryKey: ["admin-top-banner"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("advertisements")
+        .select("*")
+        .eq("placement", "home_top")
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (error) throw error;
+      return data?.[0] ?? null;
+    },
+  });
+
+  const [imageUrl, setImageUrl] = useState("");
+  const [linkUrl, setLinkUrl] = useState("");
+  const [title, setTitle] = useState("Top Home Banner");
+  const [isActive, setIsActive] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (bannerData) {
+      setImageUrl(bannerData.image_url || "");
+      setLinkUrl(bannerData.link_url || "");
+      setTitle(bannerData.title || "Top Home Banner");
+      setIsActive(bannerData.is_active ?? true);
+    }
+  }, [bannerData]);
+
+  const handleFileUpload = async (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file (PNG, JPG, WebP)");
+      return;
+    }
+    setUploading(true);
+    const toastId = toast.loading("Uploading banner image to cloud storage...");
+    try {
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `banners/home-top-${Date.now()}-${safeName}`;
+      const { error: uploadError } = await supabase.storage
+        .from("media")
+        .upload(path, file, { contentType: file.type, upsert: true });
+      if (uploadError) throw uploadError;
+
+      const { data: signed, error: signError } = await supabase.storage
+        .from("media")
+        .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+      if (signError || !signed?.signedUrl) throw signError || new Error("Failed to get signed URL");
+
+      setImageUrl(signed.signedUrl);
+      toast.success("Image uploaded successfully! Click 'Save Banner' to publish.", { id: toastId });
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to upload image", { id: toastId });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!imageUrl) {
+      toast.error("Please provide or upload a banner image");
+      return;
+    }
+    setSaving(true);
+    const toastId = toast.loading("Publishing top banner...");
+    try {
+      if (bannerData?.id) {
+        const { error } = await supabase
+          .from("advertisements")
+          .update({
+            title: title || "Top Home Banner",
+            image_url: imageUrl,
+            link_url: linkUrl || "#",
+            is_active: isActive,
+            placement: "home_top",
+          })
+          .eq("id", bannerData.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("advertisements").insert({
+          title: title || "Top Home Banner",
+          advertiser: "Abhi Tak",
+          image_url: imageUrl,
+          link_url: linkUrl || "#",
+          placement: "home_top",
+          campaign_type: "promotion",
+          media_type: "image",
+          is_active: isActive,
+          starts_at: new Date().toISOString(),
+        });
+        if (error) throw error;
+      }
+
+      toast.success("Top home banner updated successfully! Live on Home page.", { id: toastId });
+      void qc.invalidateQueries({ queryKey: ["admin-top-banner"] });
+      void qc.invalidateQueries({ queryKey: ["ads", "home_top"] });
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to save banner", { id: toastId });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const displayImage = img(imageUrl) || (imageUrl.startsWith("http") ? imageUrl : homeBanner);
+
+  return (
+    <div className="mt-8 rounded-xl border bg-card p-5 shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <ImageIcon className="h-5 w-5 text-primary" />
+            <h2 className="text-lg font-bold">Top Home Banner (मुख्य बैनर)</h2>
+          </div>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            This clean banner is featured directly at the top of the mobile and desktop home screen without any text overlays.
+          </p>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Label htmlFor="banner-active" className="text-sm font-medium">
+              Live on App:
+            </Label>
+            <Switch
+              id="banner-active"
+              checked={isActive}
+              onCheckedChange={setIsActive}
+            />
+          </div>
+          <Button
+            onClick={handleSave}
+            disabled={saving || uploading}
+            size="sm"
+            className="gap-2 bg-primary"
+          >
+            <Save className="h-4 w-4" />
+            {saving ? "Saving..." : "Save Banner"}
+          </Button>
+        </div>
+      </div>
+
+      <div className="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-12">
+        {/* Banner Preview */}
+        <div className="lg:col-span-7">
+          <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Live Preview
+          </Label>
+          <div className="mt-2 relative aspect-[16/9] w-full overflow-hidden rounded-lg border bg-muted shadow-xs">
+            <img
+              src={displayImage}
+              alt="Home Banner Preview"
+              className="h-full w-full object-cover"
+            />
+            {isActive ? (
+              <span className="absolute top-3 left-3 rounded-full bg-emerald-600 px-2.5 py-0.5 text-[11px] font-bold text-white shadow-sm">
+                Active
+              </span>
+            ) : (
+              <span className="absolute top-3 left-3 rounded-full bg-muted-foreground px-2.5 py-0.5 text-[11px] font-bold text-white shadow-sm">
+                Inactive
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Upload & Link Controls */}
+        <div className="flex flex-col justify-between space-y-4 lg:col-span-5">
+          <div className="space-y-4">
+            <div>
+              <Label className="text-sm font-medium">Upload New Banner Image</Label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                disabled={uploading || saving}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void handleFileUpload(file);
+                }}
+              />
+              <div className="mt-1.5 flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading || saving}
+                  className="w-full gap-2 border-dashed"
+                >
+                  <Upload className="h-4 w-4" />
+                  {uploading ? "Uploading Image..." : "Choose Image from Device"}
+                </Button>
+              </div>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Recommended: 1024×768 or 16:9 ratio. JPG, PNG, or WebP.
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="banner-title" className="text-sm font-medium">
+                Banner Title (Internal CMS Reference)
+              </Label>
+              <Input
+                id="banner-title"
+                className="mt-1.5"
+                placeholder="e.g. Genius Kaun Quiz Show"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="banner-link" className="text-sm font-medium">
+                Destination Link URL (Optional)
+              </Label>
+              <div className="mt-1.5 flex gap-2">
+                <Input
+                  id="banner-link"
+                  placeholder="https://... (or leave '#' for non-clickable)"
+                  value={linkUrl}
+                  onChange={(e) => setLinkUrl(e.target.value)}
+                />
+                {linkUrl && linkUrl !== "#" && (
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                    title="Open destination link"
+                  >
+                    <a href={linkUrl} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  </Button>
+                )}
+              </div>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Tapping the banner in the app will open this website or deep link.
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground">
+            💡 <b>Instant sync:</b> Changes saved here automatically update the top banner for all users on the mobile app and website without needing a new app store release.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function Dashboard() {
@@ -144,6 +411,8 @@ function Dashboard() {
           );
         })}
       </div>
+
+      <TopBannerManager />
 
       <h2 className="mt-10 text-lg font-bold">Recent activity</h2>
       <div className="mt-3 divide-y rounded-md border bg-card">
