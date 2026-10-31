@@ -21,9 +21,22 @@ const map: Record<string, string> = {
   "home-banner": homeBanner,
 };
 
+const fallbackPool = [river, sugarcane, market, school, health, cricket, road];
+
+function getStableFallback(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash * 31 + str.charCodeAt(i)) >>> 0;
+  }
+  return fallbackPool[hash % fallbackPool.length];
+}
+
 /** Resolves seeded "asset:key" references to bundled images; passes real URLs through. */
 export function img(url: string | null | undefined): string | undefined {
   if (!url) return undefined;
-  if (url.startsWith("asset:")) return map[url.slice(6)];
+  if (url.startsWith("asset:")) return map[url.slice(6)] ?? river;
+  if (url.includes("wp-content") || url.includes("abhitaknews.in/wp-content")) {
+    return getStableFallback(url);
+  }
   return url;
 }

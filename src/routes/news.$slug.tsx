@@ -19,7 +19,7 @@ import { img } from "@/lib/media";
 import { supabase } from "@/integrations/supabase/client";
 import { ArticleRow, Meta, Empty, AdSlot } from "@/components/news";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, cleanArticleBody } from "@/lib/utils";
 import { useDoubleTap } from "@/lib/useDoubleTap";
 import { HeartPop } from "@/components/HeartPop";
 import { hasGuestLiked, toggleGuestLike } from "@/lib/guest-likes";
@@ -204,7 +204,7 @@ function ArticlePage() {
     void trackEngagement("share", "article", a.id);
   };
 
-  const body = pick(a.body_hi, a.body_en);
+  const body = cleanArticleBody(pick(a.body_hi, a.body_en));
   const otherRelated = related?.filter((r) => r.id !== a.id) ?? [];
 
   return (
