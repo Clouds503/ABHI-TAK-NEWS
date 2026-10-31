@@ -8,6 +8,7 @@ import {
   videosQuery,
   jkaPublicQuery,
   categoriesQuery,
+  adsQuery,
   type ArticleCard,
 } from "@/lib/queries";
 import { useI18n, timeAgo } from "@/lib/i18n";
@@ -18,6 +19,7 @@ import {
   ArticleRow,
   FeatureCard,
   HeroStory,
+  TopHomeBanner,
   StatusPill,
   Ticker,
   Empty,
