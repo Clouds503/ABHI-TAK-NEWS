@@ -45,6 +45,8 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https" android:host="abhitak.in" />
+                <data android:scheme="https" android:host="abhitaknews.in" />
+                <data android:scheme="https" android:host="www.abhitaknews.in" />
             </intent-filter>
 
         </activity>

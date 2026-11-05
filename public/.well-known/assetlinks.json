@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.abhitak.news",
+      "sha256_cert_fingerprints": [
+        "F2:5E:44:FC:7E:B8:B9:B1:8F:45:37:4E:4D:04:0A:33:B0:61:F6:02:F4:C5:4A:F4:4E:3A:3B:91:F0:C1:2F:63"
+      ]
+    }
+  }
+]
