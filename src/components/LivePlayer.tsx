@@ -44,6 +44,8 @@ export function LivePlayer({
       hlsRef.current.destroy();
       hlsRef.current = null;
     }
+    video.pause();
+    video.removeAttribute("src");
 
     // Safari (iOS / macOS) native HLS support
     if (video.canPlayType("application/vnd.apple.mpegurl")) {
@@ -112,6 +114,12 @@ export function LivePlayer({
       if (hlsRef.current) {
         hlsRef.current.destroy();
         hlsRef.current = null;
+      }
+      const video = videoRef.current;
+      if (video) {
+        video.pause();
+        video.removeAttribute("src");
+        video.load();
       }
     };
   }, [initPlayer]);

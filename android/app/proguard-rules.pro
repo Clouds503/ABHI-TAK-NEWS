@@ -24,3 +24,12 @@
 -keep @interface com.getcapacitor.** { *; }
 -keepattributes *Annotation*
 
+
+# Keep Capacitor core, bridge and plugins
+-keep class com.getcapacitor.** { *; }
+-keep public class * extends com.getcapacitor.Plugin { *; }
+-keep public class * extends com.getcapacitor.BridgeActivity { *; }
+-keepclassmembers class * extends com.getcapacitor.Plugin {
+    public *;
+}
+-keep class com.abhitak.news.** { *; }
