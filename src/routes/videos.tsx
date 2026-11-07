@@ -43,9 +43,27 @@ function getYouTubeId(urlOrId: string | null | undefined): string {
   return match && match[1] ? match[1] : urlOrId;
 }
 
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mql = window.matchMedia("(min-width: 1024px)");
+    const onChange = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+    mql.addEventListener("change", onChange);
+    setIsDesktop(window.innerWidth >= 1024);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
+
+  return isDesktop;
+}
+
 function Videos() {
   const { t, lang, pick } = useI18n();
   const qc = useQueryClient();
+  const isDesktop = useIsDesktop();
 
   // Enable real-time websocket subscription for video changes
   const { isConnected: isRealtimeConnected } = useRealtimeVideos();
@@ -210,7 +228,7 @@ function Videos() {
         {current && (
           <div className="mt-2">
             <div className="relative aspect-video w-full bg-black overflow-hidden shadow-lg">
-              {playingId === current.id && current.ytId ? (
+              {!isDesktop && playingId === current.id && current.ytId ? (
                 <iframe
                   key={current.id}
                   src={`https://www.youtube-nocookie.com/embed/${current.ytId}?playsinline=1&rel=0&autoplay=1`}
@@ -400,7 +418,7 @@ function Videos() {
             {current && (
               <div>
                 <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-black shadow-2xl border border-ink-foreground/10">
-                  {playingId === current.id && current.ytId ? (
+                  {isDesktop && playingId === current.id && current.ytId ? (
                     <iframe
                       key={current.id}
                       src={`https://www.youtube-nocookie.com/embed/${current.ytId}?playsinline=1&rel=0&autoplay=1`}
