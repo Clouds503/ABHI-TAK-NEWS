@@ -27,6 +27,9 @@ export function LivePlayer({
 }: LivePlayerProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const hlsRef = useRef<Hls | null>(null);
+  // Track an ever-incrementing init generation so stale async callbacks never
+  // act on a video element that has already been torn down and re-initialised.
+  const generationRef = useRef(0);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [internalMuted, setInternalMuted] = useState(!soundOn);
@@ -37,22 +40,35 @@ export function LivePlayer({
     const video = videoRef.current;
     if (!video) return;
 
+    // Bump generation so any in-flight callbacks from the previous session are ignored.
+    const generation = ++generationRef.current;
+
     setIsLoading(true);
     setHasError(false);
 
+    // Fully stop & destroy any previous HLS session before starting a new one.
     if (hlsRef.current) {
       hlsRef.current.destroy();
       hlsRef.current = null;
     }
     video.pause();
+    // Setting src="" stops the existing media resource and silences its audio track.
+    video.src = "";
     video.removeAttribute("src");
+    video.load(); // flush the decode pipeline immediately
+
+    // Always start muted to satisfy browser autoplay policy; user taps to unmute.
+    video.muted = true;
+    setInternalMuted(true);
+    // Reflect back to parent so the unmute prompt is shown after re-init.
+    onSoundChange?.(false);
 
     // Safari (iOS / macOS) native HLS support
     if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = resolvedUrl;
       if (autoPlay) {
         video.play().catch(() => {
-          // Autoplay policy might require gesture if unmuted
+          // Autoplay policy might require a gesture even when muted on some browsers
         });
       }
       return;
@@ -73,6 +89,8 @@ export function LivePlayer({
       hls.attachMedia(video);
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        // Ignore if a newer init has already taken over.
+        if (generation !== generationRef.current) return;
         setIsLoading(false);
         if (autoPlay) {
           video.play().catch(() => {
@@ -82,6 +100,7 @@ export function LivePlayer({
       });
 
       hls.on(Hls.Events.ERROR, (_event, data) => {
+        if (generation !== generationRef.current) return;
         if (data.fatal) {
           switch (data.type) {
             case Hls.ErrorTypes.NETWORK_ERROR:
@@ -106,11 +125,13 @@ export function LivePlayer({
       setHasError(true);
       setIsLoading(false);
     }
-  }, [resolvedUrl, autoPlay]);
+  }, [resolvedUrl, autoPlay, onSoundChange]);
 
   useEffect(() => {
     initPlayer();
     return () => {
+      // Invalidate any in-flight async callbacks from this session.
+      generationRef.current++;
       if (hlsRef.current) {
         hlsRef.current.destroy();
         hlsRef.current = null;
@@ -118,12 +139,14 @@ export function LivePlayer({
       const video = videoRef.current;
       if (video) {
         video.pause();
+        video.src = "";
         video.removeAttribute("src");
         video.load();
       }
     };
   }, [initPlayer]);
 
+  // Sync external soundOn prop → video.muted (without re-initialising the stream).
   useEffect(() => {
     const video = videoRef.current;
     if (video) {

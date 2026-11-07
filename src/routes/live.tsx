@@ -115,7 +115,7 @@ function Live() {
                   title={title ?? "Live"}
                   soundOn={soundOn}
                   onSoundChange={setSoundOn}
-                  lang={lang}
+                  lang={lang === "en" ? "en" : "hi"}
                 />
               ) : embedId && playLatest ? (
                 <iframe
