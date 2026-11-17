@@ -149,23 +149,17 @@ function AdminReels() {
       return;
     }
     const t = toast.loading("Uploading video…");
-    const path = `reels/${id}-${Date.now()}.${file.name.split(".").pop() || "mp4"}`;
-    const { error } = await supabase.storage
-      .from("media")
-      .upload(path, file, { contentType: file.type, cacheControl: "31536000" });
-    if (error) {
-      toast.error(error.message, { id: t });
-      return;
+    try {
+      const url = await uploadMedia(file, "reels");
+      await supabase
+        .from("reels")
+        .update({ video_url: url })
+        .eq("id", id);
+      toast.success("Video attached — it will play directly in the app", { id: t });
+      refresh();
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to upload video", { id: t });
     }
-    const { data: signed } = await supabase.storage
-      .from("media")
-      .createSignedUrl(path, 60 * 60 * 24 * 365 * 5);
-    await supabase
-      .from("reels")
-      .update({ video_url: signed?.signedUrl ?? null })
-      .eq("id", id);
-    toast.success("Video attached — it will play directly in the app", { id: t });
-    refresh();
   };
 
   return (
