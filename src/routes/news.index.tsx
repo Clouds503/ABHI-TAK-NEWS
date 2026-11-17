@@ -154,7 +154,8 @@ function NewsArchivePage() {
           ),
         )
         .eq("status", "published")
-        .order("published_at", { ascending: false })
+        .order("published_at", { ascending: false, nullsFirst: false })
+        .order("created_at", { ascending: false, nullsFirst: false })
         .range(pageParam * PAGE_SIZE, (pageParam + 1) * PAGE_SIZE - 1);
 
       if (filters.town) q = q.eq("town.slug", filters.town);
