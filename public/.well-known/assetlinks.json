@@ -1,18 +1,2 @@
-[
-  {
-    "relation": [
-      "delegate_permission/common.handle_all_urls",
-      "delegate_permission/common.get_login_creds"
-    ],
-    "target": {
-      "namespace": "android_app",
-      "package_name": "com.abhitak.news",
-      "sha256_cert_fingerprints": [
-        "F2:5E:44:FC:7E:B8:B9:B1:8F:45:37:4E:4D:04:0A:33:B0:61:F6:02:F4:C5:4A:F4:4E:3A:3B:91:F0:C1:2F:63",
-        "CB:C8:55:4D:01:D2:5B:0D:E7:0D:2E:CA:86:CB:B5:A7:2A:1A:8D:84:3D:CF:20:00:D0:74:7C:44:5C:2C:73:7C",
-        "F2:D1:C0:E6:BC:CC:65:28:5D:A2:2A:20:EB:09:6A:AA:E1:BB:CD:23:FD:0B:91:D1:74:DB:E5:7F:30:37:3B:7B",
-        "0A:E9:83:F0:76:4F:11:01:D0:32:A6:55:AB:CD:FD:00:94:93:89:63:CA:C2:3A:43:B2:2F:E8:15:A5:8E:F1:21"
-      ]
-    }
-  }
+[ { "relation": [ "delegate_permission/common.handle_all_urls", "delegate_permission/common.get_login_creds" ], "target": { "namespace": "android_app", "package_name": "com.abhitak.news", "sha256_cert_fingerprints": [ "F2:5E:44:FC:7E:B8:B9:B1:8F:45:37:4E:4D:04:0A:33:B0:61:F6:02:F4:C5:4A:F4:4E:3A:3B:91:F0:C1:2F:63", "CB:C8:55:4D:01:D2:5B:0D:E7:0D:2E:CA:86:CB:B5:A7:2A:1A:8D:84:3D:CF:20:00:D0:74:7C:44:5C:2C:73:7C", "F2:D1:C0:E6:BC:CC:65:28:5D:A2:2A:20:EB:09:6A:AA:E1:BB:CD:23:FD:0B:91:D1:74:DB:E5:7F:30:37:3B:7B", "0A:E9:83:F0:76:4F:11:01:D0:32:A6:55:AB:CD:FD:00:94:93:89:63:CA:C2:3A:43:B2:2F:E8:15:A5:8E:F1:21" ] } }
 ]
