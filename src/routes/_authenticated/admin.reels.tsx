@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { UploadNote } from "@/components/UploadNote";
 import { syncInstagramReelsServerFn } from "@/lib/instagram.functions";
 import { formatMetricCount } from "@/routes/reels";
+import { uploadMedia } from "@/lib/upload";
 
 export const Route = createFileRoute("/_authenticated/admin/reels")({
   head: () => ({
