@@ -703,7 +703,7 @@ function Home() {
                   <div className="flex items-end justify-between pb-3 border-b mb-6">
                     <h2 className="flex items-center gap-2 font-serif text-2xl font-bold text-foreground">
                       <span className="h-5 w-1.5 rounded-full bg-primary" />
-                      {lang === "en" ? "District Highlights" : "जनपद की प्रमुख ख़बरें"}
+                      {lang === "en" ? "Top Highlights" : "प्रमुख ख़बरें"}
                     </h2>
                     <Link to="/news" className="text-sm font-semibold text-primary hover:underline">
                       {t("seeAll")} →
@@ -730,8 +730,8 @@ function Home() {
                     </h2>
                     <p className="text-sm text-ink-foreground/75 leading-relaxed">
                       {lang === "en"
-                        ? "Abhi Tak's dedicated public grievance redressing platform. Raise civic problems in your town and track their journey to resolution with local authorities."
-                        : "जनपद बिजनौर के नागरिकों का निष्पक्ष समस्या निवारण मंच। सड़क, जलभराव, बिजली व स्वास्थ्य संबंधी समस्याओं को सीधे अधिकारियों तक पहुँचाएँ।"}
+                        ? "Abhitak's dedicated public grievance redressing platform. Raise civic problems in your town and track their journey to resolution with local authorities."
+                        : "नागरिकों का निष्पक्ष समस्या निवारण मंच। सड़क, जलभराव, बिजली व स्वास्थ्य संबंधी समस्याओं को सीधे अधिकारियों तक पहुँचाएँ।"}
                     </p>
                     <Button
                       asChild
