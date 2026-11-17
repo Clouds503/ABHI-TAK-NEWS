@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { UploadNote } from "@/components/UploadNote";
+import { uploadMedia } from "@/lib/upload";
 
 export const Route = createFileRoute("/_authenticated/admin/events")({
   head: () => ({
@@ -58,19 +59,13 @@ function AdminEvents() {
     setBusy(true);
     let image_url: string | null = null;
     if (file) {
-      const path = `events/${Date.now()}-${file.name.replace(/[^a-z0-9.]/gi, "")}`;
-      const { error } = await supabase.storage
-        .from("media")
-        .upload(path, file, { contentType: file.type, cacheControl: "31536000" });
-      if (error) {
+      try {
+        image_url = await uploadMedia(file, "events");
+      } catch (err: unknown) {
         setBusy(false);
-        toast.error(error.message);
+        toast.error(err instanceof Error ? err.message : "Failed to upload image");
         return;
       }
-      const { data: s } = await supabase.storage
-        .from("media")
-        .createSignedUrl(path, 60 * 60 * 24 * 365 * 5);
-      image_url = s?.signedUrl ?? null;
     }
     const { error } = await supabase.from("events").insert({
       kind,
