@@ -866,7 +866,7 @@ function ReelsPage() {
             className="relative flex h-full snap-start snap-always items-center justify-center bg-black"
           >
             {Math.abs(i - active) <= 1 ? (
-              <ReelSlide reel={r} active={i === active} lang={lang} />
+              <ReelSlide reel={r} active={!isDesktop && i === active} lang={lang} />
             ) : (
               <div className="h-full w-full" />
             )}
@@ -915,11 +915,11 @@ function ReelsPage() {
         </div>
 
         {/* Centered 9:16 Card + Adjacent Action & Navigation Rail */}
-        {reels[active] && (
+        {isDesktop && reels[active] && (
           <ReelSlide
             key={reels[active].id}
             reel={reels[active]}
-            active={true}
+            active={isDesktop}
             lang={lang}
             desktopControls={{
               onPrev: () => setActive((i) => Math.max(0, i - 1)),
