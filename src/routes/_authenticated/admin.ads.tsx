@@ -181,7 +181,7 @@ function AdsAdmin() {
     setOpen(true);
   };
 
-  const uploadMedia = async (file: File) => {
+  const handleUploadMedia = async (file: File) => {
     if (!user) return;
     const isVideo = file.type.startsWith("video/");
     const isImage = file.type.startsWith("image/");
@@ -198,9 +198,9 @@ function AdsAdmin() {
       const url = await uploadMedia(file, "campaigns");
       setForm((current) => ({
         ...current,
-        media_type: file.type.startsWith("video/") ? "video" : "image",
-        image_url: file.type.startsWith("video/") ? current.image_url : url,
-        video_url: file.type.startsWith("video/") ? url : current.video_url,
+        media_type: isVideo ? "video" : "image",
+        image_url: isVideo ? current.image_url : url,
+        video_url: isVideo ? url : current.video_url,
       }));
       toast.success("Media uploaded successfully!");
     } catch (err: unknown) {
@@ -208,11 +208,6 @@ function AdsAdmin() {
     } finally {
       setUploading(false);
     }
-      media_type: isVideo ? "video" : "image",
-      image_url: isVideo ? signed.signedUrl : signed.signedUrl,
-      video_url: isVideo ? signed.signedUrl : "",
-    }));
-    setUploading(false);
   };
 
   const save = async () => {
@@ -521,7 +516,7 @@ function AdsAdmin() {
                   className="sr-only"
                   onChange={(event) => {
                     const file = event.target.files?.[0];
-                    if (file) uploadMedia(file);
+                    if (file) handleUploadMedia(file);
                   }}
                 />
               </label>

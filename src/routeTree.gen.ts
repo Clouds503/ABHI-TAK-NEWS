@@ -45,6 +45,7 @@ import { Route as AuthenticatedAdminVillagesRouteImport } from './routes/_authen
 import { Route as ApiPublicCampaignEventRouteImport } from './routes/api/public/campaign-event'
 import { Route as ApiPublicSyncInstagramRouteImport } from './routes/api/public/sync-instagram'
 import { Route as ApiPublicSyncYoutubeRouteImport } from './routes/api/public/sync-youtube'
+import { Route as ApiPublicUploadMediaRouteImport } from './routes/api/public/upload-media'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -233,6 +234,11 @@ const ApiPublicSyncYoutubeRoute = ApiPublicSyncYoutubeRouteImport.update({
   path: '/api/public/sync-youtube',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicUploadMediaRoute = ApiPublicUploadMediaRouteImport.update({
+  id: '/api/public/upload-media',
+  path: '/api/public/upload-media',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -269,6 +275,7 @@ export interface FileRoutesByFullPath {
   '/api/public/campaign-event': typeof ApiPublicCampaignEventRoute
   '/api/public/sync-instagram': typeof ApiPublicSyncInstagramRoute
   '/api/public/sync-youtube': typeof ApiPublicSyncYoutubeRoute
+  '/api/public/upload-media': typeof ApiPublicUploadMediaRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -305,6 +312,7 @@ export interface FileRoutesByTo {
   '/api/public/campaign-event': typeof ApiPublicCampaignEventRoute
   '/api/public/sync-instagram': typeof ApiPublicSyncInstagramRoute
   '/api/public/sync-youtube': typeof ApiPublicSyncYoutubeRoute
+  '/api/public/upload-media': typeof ApiPublicUploadMediaRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesById {
@@ -344,6 +352,7 @@ export interface FileRoutesById {
   '/api/public/campaign-event': typeof ApiPublicCampaignEventRoute
   '/api/public/sync-instagram': typeof ApiPublicSyncInstagramRoute
   '/api/public/sync-youtube': typeof ApiPublicSyncYoutubeRoute
+  '/api/public/upload-media': typeof ApiPublicUploadMediaRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -383,6 +392,7 @@ export interface FileRouteTypes {
     | '/api/public/campaign-event'
     | '/api/public/sync-instagram'
     | '/api/public/sync-youtube'
+    | '/api/public/upload-media'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -419,6 +429,7 @@ export interface FileRouteTypes {
     | '/api/public/campaign-event'
     | '/api/public/sync-instagram'
     | '/api/public/sync-youtube'
+    | '/api/public/upload-media'
     | '/admin'
   id:
     | '__root__'
@@ -457,6 +468,7 @@ export interface FileRouteTypes {
     | '/api/public/campaign-event'
     | '/api/public/sync-instagram'
     | '/api/public/sync-youtube'
+    | '/api/public/upload-media'
     | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -480,6 +492,7 @@ export interface RootRouteChildren {
   ApiPublicCampaignEventRoute: typeof ApiPublicCampaignEventRoute
   ApiPublicSyncInstagramRoute: typeof ApiPublicSyncInstagramRoute
   ApiPublicSyncYoutubeRoute: typeof ApiPublicSyncYoutubeRoute
+  ApiPublicUploadMediaRoute: typeof ApiPublicUploadMediaRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -736,6 +749,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSyncYoutubeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/upload-media': {
+      id: '/api/public/upload-media'
+      path: '/api/public/upload-media'
+      fullPath: '/api/public/upload-media'
+      preLoaderRoute: typeof ApiPublicUploadMediaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -811,6 +831,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCampaignEventRoute: ApiPublicCampaignEventRoute,
   ApiPublicSyncInstagramRoute: ApiPublicSyncInstagramRoute,
   ApiPublicSyncYoutubeRoute: ApiPublicSyncYoutubeRoute,
+  ApiPublicUploadMediaRoute: ApiPublicUploadMediaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
