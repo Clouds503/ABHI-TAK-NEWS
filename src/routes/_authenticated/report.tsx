@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { UploadNote } from "@/components/UploadNote";
+import { uploadMedia } from "@/lib/upload";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/report")({
@@ -35,14 +36,8 @@ const schema = z.object({
   description: z.string().trim().min(20, "Please describe the issue (min 20 characters)").max(3000),
 });
 
-async function upload(userId: string, file: File) {
-  const path = `${userId}/${crypto.randomUUID()}-${file.name.replace(/[^\w.]/g, "_")}`;
-  const { error } = await supabase.storage.from("media").upload(path, file);
-  if (error) throw error;
-  const { data } = await supabase.storage
-    .from("media")
-    .createSignedUrl(path, 60 * 60 * 24 * 365 * 5);
-  return data?.signedUrl ?? null;
+async function upload(_userId: string, file: File) {
+  return uploadMedia(file, "reports");
 }
 
 function ReportPage() {
