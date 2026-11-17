@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, fetchProfile]);
   const isStaff = roles.some((r) => ["super_admin", "admin", "editor", "moderator"].includes(r));
   const needsOnboarding =
-    !!user && !!profile && (!profile.full_name || !profile.phone || !profile.town_id);
+    !!user && !!profile && (!profile.full_name || !profile.phone);
   return (
     <Ctx.Provider
       value={{ user, roles, isStaff, loading, profile, needsOnboarding, refreshProfile }}
