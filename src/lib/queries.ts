@@ -86,7 +86,8 @@ export const articlesQuery = (
           ),
         )
         .eq("status", "published")
-        .order("published_at", { ascending: false })
+        .order("published_at", { ascending: false, nullsFirst: false })
+        .order("created_at", { ascending: false, nullsFirst: false })
         .limit(opts.limit ?? 20);
       if (opts.town) q = q.eq("town.slug", opts.town);
       if (opts.category) q = q.eq("category.slug", opts.category);
