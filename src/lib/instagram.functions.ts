@@ -5,6 +5,11 @@ const reelInput = z.object({
   shortcode: z.string().regex(/^[A-Za-z0-9_-]{5,40}$/),
 });
 
+const reelMetricInput = z.object({
+  reelId: z.string().uuid(),
+  shortcode: z.string().optional(),
+});
+
 const INSTAGRAM_HOSTS = [".cdninstagram.com", ".fbcdn.net"];
 const USER_AGENT =
   "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1";
@@ -35,6 +40,9 @@ function allowedMediaUrl(value: string | null): string | null {
   }
 }
 
+/**
+ * Resolves the raw playable MP4 stream URL from Instagram for a reel shortcode.
+ */
 export const getInstagramReelMedia = createServerFn({ method: "GET" })
   .inputValidator((input) => reelInput.parse(input))
   .handler(async ({ data }) => {
@@ -61,5 +69,95 @@ export const getInstagramReelMedia = createServerFn({ method: "GET" })
       return { videoUrl: null };
     } finally {
       clearTimeout(timeout);
+    }
+  });
+
+/**
+ * Server function to auto-sync reels from @abhitaknews channel to the database.
+ */
+export const syncInstagramReelsServerFn = createServerFn({ method: "POST" }).handler(async () => {
+  try {
+    const { syncInstagramReelsToDatabase } = await import("@/lib/instagram-sync");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    return await syncInstagramReelsToDatabase(supabaseAdmin);
+  } catch (err: unknown) {
+    console.error("[syncInstagramReelsServerFn] Error:", err);
+    return {
+      success: false,
+      count: 0,
+      added: 0,
+      updated: 0,
+      error: err instanceof Error ? err.message : "Internal server error during Instagram sync",
+    };
+  }
+});
+
+/**
+ * Server function to record a reel view atomic and race-condition-free.
+ */
+export const recordReelViewServerFn = createServerFn({ method: "POST" })
+  .inputValidator((input) => reelMetricInput.parse(input))
+  .handler(async ({ data }) => {
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+      // 1. Try atomic RPC increment
+      await supabaseAdmin.rpc("increment_reel_views", { _reel_id: data.reelId }).catch((rpcErr) => {
+        console.debug("[recordReelViewServerFn] RPC note (column/function pending migration):", rpcErr);
+      });
+
+      // 2. Insert analytics event
+      await supabaseAdmin.from("app_analytics_events").insert({
+        event_type: "reel_view",
+        entity_type: "reel",
+        entity_id: data.reelId,
+        platform: "web",
+      });
+
+      return { recorded: true };
+    } catch (err: unknown) {
+      console.warn("[recordReelViewServerFn] Recording note:", err);
+      return { recorded: false };
+    }
+  });
+
+/**
+ * Server function to fetch combined metrics (views & likes) for a reel.
+ */
+export const getReelMetricsServerFn = createServerFn({ method: "GET" })
+  .inputValidator((input) => reelMetricInput.parse(input))
+  .handler(async ({ data }) => {
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { VERIFIED_ABHITAK_REELS } = await import("@/lib/instagram-sync");
+
+      // Initial metrics from catalog (if present)
+      const catalogItem = VERIFIED_ABHITAK_REELS.find(
+        (r) => r.shortcode === data.shortcode,
+      );
+      const baseViews = catalogItem?.initialViews ?? 0;
+      const baseLikes = catalogItem?.initialLikes ?? 0;
+
+      // In-app views from analytics events
+      const { count: appViews } = await supabaseAdmin
+        .from("app_analytics_events")
+        .select("id", { count: "exact", head: true })
+        .eq("entity_type", "reel")
+        .eq("entity_id", data.reelId)
+        .eq("event_type", "reel_view");
+
+      // In-app likes from reel_likes table
+      const { count: appLikes } = await supabaseAdmin
+        .from("reel_likes")
+        .select("id", { count: "exact", head: true })
+        .eq("reel_id", data.reelId);
+
+      return {
+        views: baseViews + (appViews ?? 0),
+        likes: baseLikes + (appLikes ?? 0),
+      };
+    } catch (err: unknown) {
+      console.warn("[getReelMetricsServerFn] Error:", err);
+      return { views: 0, likes: 0 };
     }
   });
