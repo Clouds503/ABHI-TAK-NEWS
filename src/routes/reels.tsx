@@ -392,8 +392,14 @@ function ReelSlide({
                 </div>
               )}
             </div>
-          ) : (
+          ) : isLoadingMedia ? (
+            <div className="relative flex h-full w-full items-center justify-center bg-black">
+              <RefreshCw className="h-8 w-8 animate-spin text-rose-500/70" />
+            </div>
+          ) : active ? (
             <InstagramIframeReel reel={reel} lang={lang} />
+          ) : (
+            <div className="h-full w-full bg-black" />
           )}
 
           {/* Mute button on top right */}
@@ -562,8 +568,14 @@ function ReelSlide({
             </div>
           )}
         </div>
-      ) : (
+      ) : isLoadingMedia ? (
+        <div className="relative flex h-full w-full items-center justify-center bg-black">
+          <RefreshCw className="h-8 w-8 animate-spin text-rose-500/70" />
+        </div>
+      ) : active ? (
         <InstagramIframeReel reel={reel} lang={lang} />
+      ) : (
+        <div className="h-full w-full bg-black" />
       )}
 
       {/* Right Action Rail (Mobile) */}
