@@ -1,2 +1,69 @@
-import { createFileRoute } from "@tanstack/react-router"; export const Route = createFileRoute("/api/public/upload-media")({ server: { handlers: { POST: async ({ request }) => { try { const contentType = request.headers.get("content-type") || ""; let buffer: Buffer; let filename = `upload-${Date.now()}`; let fileType = "application/octet-stream"; let folder = "uploads"; if (contentType.includes("multipart/form-data")) { const formData = await request.formData(); const file = formData.get("file"); if (!file || typeof file === "string") { return Response.json({ error: "No file provided" }, { status: 400 }); } folder = (formData.get("folder") as string) || "uploads"; filename = (file as File).name || filename; fileType = (file as File).type || fileType; const arrayBuffer = await (file as File).arrayBuffer(); buffer = Buffer.from(arrayBuffer); } else { const body = await request.json().catch(() => null); if (!body?.base64) { return Response.json({ error: "No file or base64 provided" }, { status: 400 }); } folder = body.folder || "uploads"; filename = body.filename || filename; fileType = body.contentType || fileType; buffer = Buffer.from(body.base64, "base64"); } const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, "_"); const path = `${folder}/${Date.now()}-${crypto.randomUUID()}-${safeName}`; const { supabaseAdmin } = await import("@/integrations/supabase/client.server"); const { error: uploadError } = await supabaseAdmin.storage .from("media") .upload(path, buffer, { contentType: fileType, upsert: true }); if (uploadError) { console.error("Server upload error:", uploadError); return Response.json({ error: uploadError.message }, { status: 500 }); } const { data: signed, error: signError } = await supabaseAdmin.storage .from("media") .createSignedUrl(path, 60 * 60 * 24 * 365 * 10); if (signError || !signed?.signedUrl) { return Response.json( { error: signError?.message || "Failed to create signed URL" }, { status: 500 }, ); } return Response.json({ url: signed.signedUrl, path }); } catch (err: unknown) { const msg = err instanceof Error ? err.message : "Internal server upload error"; console.error("Upload handler failed:", msg); return Response.json({ error: msg }, { status: 500 }); } }, }, },
+import { createFileRoute } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/api/public/upload-media")({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
+        try {
+          const contentType = request.headers.get("content-type") || "";
+          let buffer: Buffer;
+          let filename = `upload-${Date.now()}`;
+          let fileType = "application/octet-stream";
+          let folder = "uploads";
+
+          if (contentType.includes("multipart/form-data")) {
+            const formData = await request.formData();
+            const file = formData.get("file");
+            if (!file || typeof file === "string") {
+              return Response.json({ error: "No file provided" }, { status: 400 });
+            }
+            folder = (formData.get("folder") as string) || "uploads";
+            filename = (file as File).name || filename;
+            fileType = (file as File).type || fileType;
+            const arrayBuffer = await (file as File).arrayBuffer();
+            buffer = Buffer.from(arrayBuffer);
+          } else {
+            const body = await request.json().catch(() => null);
+            if (!body?.base64) {
+              return Response.json({ error: "No file or base64 provided" }, { status: 400 });
+            }
+            folder = body.folder || "uploads";
+            filename = body.filename || filename;
+            fileType = body.contentType || fileType;
+            buffer = Buffer.from(body.base64, "base64");
+          }
+
+          const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, "_");
+          const path = `${folder}/${Date.now()}-${crypto.randomUUID()}-${safeName}`;
+
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const { error: uploadError } = await supabaseAdmin.storage
+            .from("media")
+            .upload(path, buffer, { contentType: fileType, upsert: true });
+
+          if (uploadError) {
+            console.error("Server upload error:", uploadError);
+            return Response.json({ error: uploadError.message }, { status: 500 });
+          }
+
+          const { data: signed, error: signError } = await supabaseAdmin.storage
+            .from("media")
+            .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+
+          if (signError || !signed?.signedUrl) {
+            return Response.json(
+              { error: signError?.message || "Failed to create signed URL" },
+              { status: 500 },
+            );
+          }
+
+          return Response.json({ url: signed.signedUrl, path });
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : "Internal server upload error";
+          console.error("Upload handler failed:", msg);
+          return Response.json({ error: msg }, { status: 500 });
+        }
+      },
+    },
+  },
 });

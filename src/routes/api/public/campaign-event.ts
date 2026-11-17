@@ -1,1 +1,33 @@
-import { createFileRoute } from "@tanstack/react-router"; import { z } from "zod"; const campaignEventSchema = z.object({ campaignId: z.string().uuid(), event: z.enum(["impression", "click"]), }); export const Route = createFileRoute("/api/public/campaign-event")({ server: { handlers: { POST: async ({ request }) => { const parsed = campaignEventSchema.safeParse(await request.json().catch(() => null)); if (!parsed.success) { return Response.json({ recorded: false }, { status: 400 }); } const { supabaseAdmin } = await import("@/integrations/supabase/client.server"); const { data, error } = await supabaseAdmin.rpc("record_campaign_event", { _campaign_id: parsed.data.campaignId, _event: parsed.data.event, }); if (error) { console.error("Campaign event could not be recorded", error); return Response.json({ recorded: false }, { status: 500 }); } return Response.json({ recorded: data === true }); }, }, }, }); 
+import { createFileRoute } from "@tanstack/react-router";
+import { z } from "zod";
+
+const campaignEventSchema = z.object({
+  campaignId: z.string().uuid(),
+  event: z.enum(["impression", "click"]),
+});
+
+export const Route = createFileRoute("/api/public/campaign-event")({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
+        const parsed = campaignEventSchema.safeParse(await request.json().catch(() => null));
+        if (!parsed.success) {
+          return Response.json({ recorded: false }, { status: 400 });
+        }
+
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const { data, error } = await supabaseAdmin.rpc("record_campaign_event", {
+          _campaign_id: parsed.data.campaignId,
+          _event: parsed.data.event,
+        });
+
+        if (error) {
+          console.error("Campaign event could not be recorded", error);
+          return Response.json({ recorded: false }, { status: 500 });
+        }
+
+        return Response.json({ recorded: data === true });
+      },
+    },
+  },
+});

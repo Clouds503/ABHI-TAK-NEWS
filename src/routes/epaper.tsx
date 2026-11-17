@@ -1,1 +1,65 @@
-import { createFileRoute } from "@tanstack/react-router"; import { useQuery } from "@tanstack/react-query"; import { FileText } from "lucide-react"; import { epapersQuery } from "@/lib/queries"; import { useI18n } from "@/lib/i18n"; import { Empty } from "@/components/news"; export const Route = createFileRoute("/epaper")({ head: () => ({ meta: [ { title: "E-Paper — Abhitak" }, { name: "description", content: "Read the daily Abhitak e-paper for the Region." }, { property: "og:title", content: "E-Paper — Abhitak" }, { property: "og:description", content: "Read the daily Abhitak e-paper for the Region.", }, ], }), component: EPaper, }); function EPaper() { const { t } = useI18n(); const { data, isLoading } = useQuery(epapersQuery); return ( <div className="max-w-7xl mx-auto px-4 lg:px-6 py-4"> <h1 className="pb-4 pt-2 text-2xl lg:text-3xl font-bold font-serif">{t("epaper")}</h1> {!isLoading && !data?.length && <Empty text={t("noContent")} />} <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6"> {data?.map((e) => ( <a key={e.id} href={e.pdf_url} target="_blank" rel="noopener" className="group block rounded-xl border bg-card p-3 shadow-sm hover:shadow-md transition-shadow" > <div className="grid aspect-[3/4] place-items-center overflow-hidden rounded-lg border bg-muted"> {e.cover_url ? ( <img src={e.cover_url} alt="" width={300} height={400} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" /> ) : ( <FileText className="h-10 w-10 text-muted-foreground" /> )} </div> <div className="mt-3 text-sm font-semibold line-clamp-1 group-hover:text-primary transition-colors"> {e.title} </div> <div suppressHydrationWarning className="text-xs text-muted-foreground mt-1"> {new Date(e.edition_date).toLocaleDateString("en-IN", { dateStyle: "medium" })} </div> </a> ))} </div> </div> ); } 
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { FileText } from "lucide-react";
+import { epapersQuery } from "@/lib/queries";
+import { useI18n } from "@/lib/i18n";
+import { Empty } from "@/components/news";
+
+export const Route = createFileRoute("/epaper")({
+  head: () => ({
+    meta: [
+      { title: "E-Paper — Abhi Tak" },
+      { name: "description", content: "Read the daily Abhi Tak e-paper for District Bijnor." },
+      { property: "og:title", content: "E-Paper — Abhi Tak" },
+      {
+        property: "og:description",
+        content: "Read the daily Abhi Tak e-paper for District Bijnor.",
+      },
+    ],
+  }),
+  component: EPaper,
+});
+
+function EPaper() {
+  const { t } = useI18n();
+  const { data, isLoading } = useQuery(epapersQuery);
+  return (
+    <div className="max-w-7xl mx-auto px-4 lg:px-6 py-4">
+      <h1 className="pb-4 pt-2 text-2xl lg:text-3xl font-bold font-serif">{t("epaper")}</h1>
+      {!isLoading && !data?.length && <Empty text={t("noContent")} />}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
+        {data?.map((e) => (
+          <a
+            key={e.id}
+            href={e.pdf_url}
+            target="_blank"
+            rel="noopener"
+            className="group block rounded-xl border bg-card p-3 shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div className="grid aspect-[3/4] place-items-center overflow-hidden rounded-lg border bg-muted">
+              {e.cover_url ? (
+                <img
+                  src={e.cover_url}
+                  alt=""
+                  width={300}
+                  height={400}
+                  loading="lazy"
+                  decoding="async"
+                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+              ) : (
+                <FileText className="h-10 w-10 text-muted-foreground" />
+              )}
+            </div>
+            <div className="mt-3 text-sm font-semibold line-clamp-1 group-hover:text-primary transition-colors">
+              {e.title}
+            </div>
+            <div suppressHydrationWarning className="text-xs text-muted-foreground mt-1">
+              {new Date(e.edition_date).toLocaleDateString("en-IN", { dateStyle: "medium" })}
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}

@@ -1,1 +1,34 @@
-const GUEST_LIKES_KEY = "abhitak.guest_likes"; export function getGuestLikes(): string[] { if (typeof window === "undefined") return []; try { const raw = localStorage.getItem(GUEST_LIKES_KEY); return raw ? JSON.parse(raw) : []; } catch { return []; } } export function hasGuestLiked(id: string): boolean { return getGuestLikes().includes(id); } export function toggleGuestLike(id: string): boolean { if (typeof window === "undefined") return false; try { const likes = getGuestLikes(); const index = likes.indexOf(id); if (index >= 0) { likes.splice(index, 1); localStorage.setItem(GUEST_LIKES_KEY, JSON.stringify(likes)); return false; // unliked } else { likes.push(id); localStorage.setItem(GUEST_LIKES_KEY, JSON.stringify(likes)); return true; // liked } } catch { return false; } } 
+const GUEST_LIKES_KEY = "abhitak.guest_likes";
+
+export function getGuestLikes(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(GUEST_LIKES_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function hasGuestLiked(id: string): boolean {
+  return getGuestLikes().includes(id);
+}
+
+export function toggleGuestLike(id: string): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const likes = getGuestLikes();
+    const index = likes.indexOf(id);
+    if (index >= 0) {
+      likes.splice(index, 1);
+      localStorage.setItem(GUEST_LIKES_KEY, JSON.stringify(likes));
+      return false; // unliked
+    } else {
+      likes.push(id);
+      localStorage.setItem(GUEST_LIKES_KEY, JSON.stringify(likes));
+      return true; // liked
+    }
+  } catch {
+    return false;
+  }
+}

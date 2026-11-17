@@ -1,1 +1,427 @@
-import { useQuery } from "@tanstack/react-query"; import { useState, useEffect } from "react"; import { SlidersHorizontal, X, RotateCcw, Check } from "lucide-react"; import { townsQuery, villagesQuery, categoriesQuery } from "@/lib/queries"; import { useI18n } from "@/lib/i18n"; import { Button } from "@/components/ui/button"; import { Drawer, DrawerClose, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, } from "@/components/ui/drawer"; import { cn } from "@/lib/utils"; export type FilterState = { town?: string | undefined; village?: string | undefined; category?: string | undefined; datePreset?: ("all" | "today" | "week" | "month") | undefined; fromDate?: string | undefined; toDate?: string | undefined; }; export function getDateRangeFromPreset(preset?: "all" | "today" | "week" | "month"): { fromDate?: string; toDate?: string; } { if (!preset || preset === "all") return {}; if (preset === "today") { const d = new Date(); d.setHours(0, 0, 0, 0); return { fromDate: d.toISOString() }; } if (preset === "week") { const d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); return { fromDate: d.toISOString() }; } if (preset === "month") { const d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); return { fromDate: d.toISOString() }; } return {}; } export function getActiveFilterCount(filters: FilterState): number { let count = 0; if (filters.town) count++; if (filters.village) count++; if (filters.category) count++; if (filters.datePreset && filters.datePreset !== "all") count++; return count; } interface FilterDrawerProps { filters: FilterState; onFiltersChange: (filters: FilterState) => void; triggerClassName?: string; } export function FilterDrawer({ filters, onFiltersChange, triggerClassName }: FilterDrawerProps) { const { lang, pick } = useI18n(); const [open, setOpen] = useState(false); const [draft, setDraft] = useState<FilterState>(filters); const { data: towns } = useQuery(townsQuery); const { data: categories } = useQuery(categoriesQuery); const selectedTownObj = towns?.find((t) => t.slug === draft.town); const { data: villages } = useQuery(villagesQuery(selectedTownObj?.id)); useEffect(() => { setDraft(filters); }, [filters, open]); const activeCount = getActiveFilterCount(filters); const handleApply = () => { const dates = getDateRangeFromPreset(draft.datePreset); onFiltersChange({ ...draft, fromDate: dates.fromDate, toDate: dates.toDate, }); setOpen(false); }; const handleReset = () => { setDraft({ town: undefined, village: undefined, category: undefined, datePreset: "all", fromDate: undefined, toDate: undefined, }); }; return ( <Drawer open={open} onOpenChange={setOpen}> <DrawerTrigger asChild> <Button variant="outline" size="sm" className={cn( "relative h-9 shrink-0 gap-1.5 rounded-full px-3 text-xs font-semibold shadow-xs", activeCount > 0 ? "border-primary bg-primary/10 text-primary hover:bg-primary/15" : "text-muted-foreground", triggerClassName, )} > <SlidersHorizontal className="h-3.5 w-3.5" /> <span>{lang === "en" ? "Filter" : "फ़िल्टर"}</span> {activeCount > 0 && ( <span className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground"> {activeCount} </span> )} </Button> </DrawerTrigger> <DrawerContent className="max-h-[85vh] overflow-y-auto"> <DrawerHeader className="border-b pb-3"> <div className="flex items-center justify-between"> <DrawerTitle className="text-base font-bold"> {lang === "en" ? "Filter News" : "ख़बरें फ़िल्टर करें"} </DrawerTitle> <Button variant="ghost" size="sm" onClick={handleReset} className="h-8 gap-1 text-xs text-muted-foreground hover:text-foreground" > <RotateCcw className="h-3 w-3" /> {lang === "en" ? "Reset" : "रीसेट"} </Button> </div> </DrawerHeader> <div className="space-y-5 p-4 pb-24 text-sm"> {/* Town / District Selector */} <div> <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground"> {lang === "en" ? "Town / City" : "कस्बा / शहर"} </label> <div className="no-scrollbar mt-2 flex flex-wrap gap-1.5"> <button type="button" onClick={() => setDraft((p) => ({ ...p, town: undefined, village: undefined }))} className={cn( "rounded-full px-3 py-1.5 text-xs font-semibold transition-colors", !draft.town ? "bg-primary text-primary-foreground" : "bg-muted text-foreground hover:bg-muted/80", )} > {lang === "en" ? "All Towns" : "सभी कस्बे"} </button> {towns?.map((tw) => ( <button key={tw.id} type="button" onClick={() => setDraft((p) => ({ ...p, town: p.town === tw.slug ? undefined : tw.slug, village: undefined, })) } className={cn( "rounded-full px-3 py-1.5 text-xs font-semibold transition-colors", draft.town === tw.slug ? "bg-primary text-primary-foreground" : "bg-muted text-foreground hover:bg-muted/80", )} > {pick(tw.name_hi, tw.name_en)} </button> ))} </div> </div> {/* Villages (cascading if town selected) */} {draft.town && villages && villages.length > 0 && ( <div> <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground"> {lang === "en" ? "Village / Area" : "गाँव / क्षेत्र"} </label> <div className="no-scrollbar mt-2 flex flex-wrap gap-1.5"> <button type="button" onClick={() => setDraft((p) => ({ ...p, village: undefined }))} className={cn( "rounded-full px-3 py-1.5 text-xs font-semibold transition-colors", !draft.village ? "bg-secondary text-secondary-foreground" : "bg-muted text-foreground hover:bg-muted/80", )} > {lang === "en" ? "All Villages" : "सभी गाँव"} </button> {villages.map((v) => ( <button key={v.id} type="button" onClick={() => setDraft((p) => ({ ...p, village: p.village === v.id ? undefined : v.id, })) } className={cn( "rounded-full px-3 py-1.5 text-xs font-semibold transition-colors", draft.village === v.id ? "bg-secondary text-secondary-foreground" : "bg-muted text-foreground hover:bg-muted/80", )} > {pick(v.name_hi, v.name_en)} </button> ))} </div> </div> )} {/* Categories Selector */} <div> <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground"> {lang === "en" ? "Category" : "श्रेणी"} </label> <div className="no-scrollbar mt-2 flex flex-wrap gap-1.5"> <button type="button" onClick={() => setDraft((p) => ({ ...p, category: undefined }))} className={cn( "rounded-full px-3 py-1.5 text-xs font-semibold transition-colors", !draft.category ? "bg-primary text-primary-foreground" : "bg-muted text-foreground hover:bg-muted/80", )} > {lang === "en" ? "All Categories" : "सभी श्रेणियाँ"} </button> {categories?.map((cat) => ( <button key={cat.id} type="button" onClick={() => setDraft((p) => ({ ...p, category: p.category === cat.slug ? undefined : cat.slug, })) } className={cn( "rounded-full px-3 py-1.5 text-xs font-semibold transition-colors", draft.category === cat.slug ? "bg-primary text-primary-foreground" : "bg-muted text-foreground hover:bg-muted/80", )} > {pick(cat.name_hi, cat.name_en)} </button> ))} </div> </div> {/* Date Presets */} <div> <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground"> {lang === "en" ? "Date Range" : "दिनांक सीमा"} </label> <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4"> {( [ { id: "all", en: "All Time", hi: "सभी समय" }, { id: "today", en: "Today", hi: "आज" }, { id: "week", en: "This Week", hi: "इस सप्ताह" }, { id: "month", en: "This Month", hi: "इस महीने" }, ] as const ).map((p) => ( <button key={p.id} type="button" onClick={() => setDraft((prev) => ({ ...prev, datePreset: p.id }))} className={cn( "flex items-center justify-center rounded-lg border py-2 text-xs font-semibold transition-colors", (draft.datePreset || "all") === p.id ? "border-primary bg-primary text-primary-foreground" : "bg-card text-foreground hover:bg-muted", )} > {lang === "en" ? p.en : p.hi} </button> ))} </div> </div> </div> {/* Action Footer */} <div className="fixed inset-x-0 bottom-0 border-t bg-popover/95 p-4 backdrop-blur-md"> <div className="mx-auto flex max-w-md gap-3"> <DrawerClose asChild> <Button variant="outline" className="flex-1"> {lang === "en" ? "Cancel" : "रद्द करें"} </Button> </DrawerClose> <Button onClick={handleApply} className="flex-1 gap-1.5"> <Check className="h-4 w-4" /> {lang === "en" ? "Apply Filters" : "लागू करें"} </Button> </div> </div> </DrawerContent> </Drawer> ); } export function ActiveFilterChips({ filters, onFiltersChange, }: { filters: FilterState; onFiltersChange: (filters: FilterState) => void; }) { const { lang, pick } = useI18n(); const { data: towns } = useQuery(townsQuery); const { data: categories } = useQuery(categoriesQuery); const { data: villages } = useQuery(villagesQuery()); const activeCount = getActiveFilterCount(filters); if (activeCount === 0) return null; const selectedTown = towns?.find((t) => t.slug === filters.town); const selectedCategory = categories?.find((c) => c.slug === filters.category); const selectedVillage = villages?.find((v) => v.id === filters.village); const dateLabels: Record<string, { en: string; hi: string }> = { today: { en: "Today", hi: "आज" }, week: { en: "This Week", hi: "इस सप्ताह" }, month: { en: "This Month", hi: "इस महीने" }, }; return ( <div className="no-scrollbar flex snap-x items-center gap-1.5 overflow-x-auto px-4 py-2"> {selectedTown && ( <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary"> {pick(selectedTown.name_hi, selectedTown.name_en)} <button type="button" onClick={() => onFiltersChange({ ...filters, town: undefined, village: undefined })} aria-label="Remove town filter" className="hover:opacity-70" > <X className="h-3 w-3" /> </button> </span> )} {selectedVillage && ( <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-secondary/40 bg-secondary/20 px-2.5 py-1 text-xs font-semibold text-secondary-foreground"> {pick(selectedVillage.name_hi, selectedVillage.name_en)} <button type="button" onClick={() => onFiltersChange({ ...filters, village: undefined })} aria-label="Remove village filter" className="hover:opacity-70" > <X className="h-3 w-3" /> </button> </span> )} {selectedCategory && ( <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary"> {pick(selectedCategory.name_hi, selectedCategory.name_en)} <button type="button" onClick={() => onFiltersChange({ ...filters, category: undefined })} aria-label="Remove category filter" className="hover:opacity-70" > <X className="h-3 w-3" /> </button> </span> )} {filters.datePreset && filters.datePreset !== "all" && dateLabels[filters.datePreset] && ( <span className="inline-flex shrink-0 items-center gap-1 rounded-full border bg-muted px-2.5 py-1 text-xs font-semibold text-foreground"> {lang === "en" ? dateLabels[filters.datePreset]?.en : dateLabels[filters.datePreset]?.hi} <button type="button" onClick={() => { onFiltersChange({ ...filters, datePreset: "all", fromDate: undefined, toDate: undefined, }); }} aria-label="Remove date filter" className="hover:opacity-70" > <X className="h-3 w-3" /> </button> </span> )} <button type="button" onClick={() => onFiltersChange({ town: undefined, village: undefined, category: undefined, datePreset: "all", fromDate: undefined, toDate: undefined, }) } className="shrink-0 text-xs text-muted-foreground hover:text-foreground underline ml-1" > {lang === "en" ? "Clear all" : "सभी साफ़ करें"} </button> </div> ); } 
+import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { SlidersHorizontal, X, RotateCcw, Check } from "lucide-react";
+import { townsQuery, villagesQuery, categoriesQuery } from "@/lib/queries";
+import { useI18n } from "@/lib/i18n";
+import { Button } from "@/components/ui/button";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import { cn } from "@/lib/utils";
+
+export type FilterState = {
+  town?: string | undefined;
+  village?: string | undefined;
+  category?: string | undefined;
+  datePreset?: ("all" | "today" | "week" | "month") | undefined;
+  fromDate?: string | undefined;
+  toDate?: string | undefined;
+};
+
+export function getDateRangeFromPreset(preset?: "all" | "today" | "week" | "month"): {
+  fromDate?: string;
+  toDate?: string;
+} {
+  if (!preset || preset === "all") return {};
+  if (preset === "today") {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return { fromDate: d.toISOString() };
+  }
+  if (preset === "week") {
+    const d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    return { fromDate: d.toISOString() };
+  }
+  if (preset === "month") {
+    const d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    return { fromDate: d.toISOString() };
+  }
+  return {};
+}
+
+export function getActiveFilterCount(filters: FilterState): number {
+  let count = 0;
+  if (filters.town) count++;
+  if (filters.village) count++;
+  if (filters.category) count++;
+  if (filters.datePreset && filters.datePreset !== "all") count++;
+  return count;
+}
+
+interface FilterDrawerProps {
+  filters: FilterState;
+  onFiltersChange: (filters: FilterState) => void;
+  triggerClassName?: string;
+}
+
+export function FilterDrawer({ filters, onFiltersChange, triggerClassName }: FilterDrawerProps) {
+  const { lang, pick } = useI18n();
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState<FilterState>(filters);
+
+  const { data: towns } = useQuery(townsQuery);
+  const { data: categories } = useQuery(categoriesQuery);
+  const selectedTownObj = towns?.find((t) => t.slug === draft.town);
+  const { data: villages } = useQuery(villagesQuery(selectedTownObj?.id));
+
+  useEffect(() => {
+    setDraft(filters);
+  }, [filters, open]);
+
+  const activeCount = getActiveFilterCount(filters);
+
+  const handleApply = () => {
+    const dates = getDateRangeFromPreset(draft.datePreset);
+    onFiltersChange({
+      ...draft,
+      fromDate: dates.fromDate,
+      toDate: dates.toDate,
+    });
+    setOpen(false);
+  };
+
+  const handleReset = () => {
+    setDraft({
+      town: undefined,
+      village: undefined,
+      category: undefined,
+      datePreset: "all",
+      fromDate: undefined,
+      toDate: undefined,
+    });
+  };
+
+  return (
+    <Drawer open={open} onOpenChange={setOpen}>
+      <DrawerTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className={cn(
+            "relative h-9 shrink-0 gap-1.5 rounded-full px-3 text-xs font-semibold shadow-xs",
+            activeCount > 0
+              ? "border-primary bg-primary/10 text-primary hover:bg-primary/15"
+              : "text-muted-foreground",
+            triggerClassName,
+          )}
+        >
+          <SlidersHorizontal className="h-3.5 w-3.5" />
+          <span>{lang === "en" ? "Filter" : "फ़िल्टर"}</span>
+          {activeCount > 0 && (
+            <span className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+              {activeCount}
+            </span>
+          )}
+        </Button>
+      </DrawerTrigger>
+
+      <DrawerContent className="max-h-[85vh] overflow-y-auto">
+        <DrawerHeader className="border-b pb-3">
+          <div className="flex items-center justify-between">
+            <DrawerTitle className="text-base font-bold">
+              {lang === "en" ? "Filter News" : "ख़बरें फ़िल्टर करें"}
+            </DrawerTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleReset}
+              className="h-8 gap-1 text-xs text-muted-foreground hover:text-foreground"
+            >
+              <RotateCcw className="h-3 w-3" />
+              {lang === "en" ? "Reset" : "रीसेट"}
+            </Button>
+          </div>
+        </DrawerHeader>
+
+        <div className="space-y-5 p-4 pb-24 text-sm">
+          {/* Town / District Selector */}
+          <div>
+            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              {lang === "en" ? "Town / City" : "कस्बा / शहर"}
+            </label>
+            <div className="no-scrollbar mt-2 flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                onClick={() => setDraft((p) => ({ ...p, town: undefined, village: undefined }))}
+                className={cn(
+                  "rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
+                  !draft.town
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-foreground hover:bg-muted/80",
+                )}
+              >
+                {lang === "en" ? "All Towns" : "सभी कस्बे"}
+              </button>
+              {towns?.map((tw) => (
+                <button
+                  key={tw.id}
+                  type="button"
+                  onClick={() =>
+                    setDraft((p) => ({
+                      ...p,
+                      town: p.town === tw.slug ? undefined : tw.slug,
+                      village: undefined,
+                    }))
+                  }
+                  className={cn(
+                    "rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
+                    draft.town === tw.slug
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-foreground hover:bg-muted/80",
+                  )}
+                >
+                  {pick(tw.name_hi, tw.name_en)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Villages (cascading if town selected) */}
+          {draft.town && villages && villages.length > 0 && (
+            <div>
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                {lang === "en" ? "Village / Area" : "गाँव / क्षेत्र"}
+              </label>
+              <div className="no-scrollbar mt-2 flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setDraft((p) => ({ ...p, village: undefined }))}
+                  className={cn(
+                    "rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
+                    !draft.village
+                      ? "bg-secondary text-secondary-foreground"
+                      : "bg-muted text-foreground hover:bg-muted/80",
+                  )}
+                >
+                  {lang === "en" ? "All Villages" : "सभी गाँव"}
+                </button>
+                {villages.map((v) => (
+                  <button
+                    key={v.id}
+                    type="button"
+                    onClick={() =>
+                      setDraft((p) => ({
+                        ...p,
+                        village: p.village === v.id ? undefined : v.id,
+                      }))
+                    }
+                    className={cn(
+                      "rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
+                      draft.village === v.id
+                        ? "bg-secondary text-secondary-foreground"
+                        : "bg-muted text-foreground hover:bg-muted/80",
+                    )}
+                  >
+                    {pick(v.name_hi, v.name_en)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Categories Selector */}
+          <div>
+            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              {lang === "en" ? "Category" : "श्रेणी"}
+            </label>
+            <div className="no-scrollbar mt-2 flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                onClick={() => setDraft((p) => ({ ...p, category: undefined }))}
+                className={cn(
+                  "rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
+                  !draft.category
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-foreground hover:bg-muted/80",
+                )}
+              >
+                {lang === "en" ? "All Categories" : "सभी श्रेणियाँ"}
+              </button>
+              {categories?.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() =>
+                    setDraft((p) => ({
+                      ...p,
+                      category: p.category === cat.slug ? undefined : cat.slug,
+                    }))
+                  }
+                  className={cn(
+                    "rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
+                    draft.category === cat.slug
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-foreground hover:bg-muted/80",
+                  )}
+                >
+                  {pick(cat.name_hi, cat.name_en)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Date Presets */}
+          <div>
+            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              {lang === "en" ? "Date Range" : "दिनांक सीमा"}
+            </label>
+            <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {(
+                [
+                  { id: "all", en: "All Time", hi: "सभी समय" },
+                  { id: "today", en: "Today", hi: "आज" },
+                  { id: "week", en: "This Week", hi: "इस सप्ताह" },
+                  { id: "month", en: "This Month", hi: "इस महीने" },
+                ] as const
+              ).map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setDraft((prev) => ({ ...prev, datePreset: p.id }))}
+                  className={cn(
+                    "flex items-center justify-center rounded-lg border py-2 text-xs font-semibold transition-colors",
+                    (draft.datePreset || "all") === p.id
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "bg-card text-foreground hover:bg-muted",
+                  )}
+                >
+                  {lang === "en" ? p.en : p.hi}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Action Footer */}
+        <div className="fixed inset-x-0 bottom-0 border-t bg-popover/95 p-4 backdrop-blur-md">
+          <div className="mx-auto flex max-w-md gap-3">
+            <DrawerClose asChild>
+              <Button variant="outline" className="flex-1">
+                {lang === "en" ? "Cancel" : "रद्द करें"}
+              </Button>
+            </DrawerClose>
+            <Button onClick={handleApply} className="flex-1 gap-1.5">
+              <Check className="h-4 w-4" />
+              {lang === "en" ? "Apply Filters" : "लागू करें"}
+            </Button>
+          </div>
+        </div>
+      </DrawerContent>
+    </Drawer>
+  );
+}
+
+export function ActiveFilterChips({
+  filters,
+  onFiltersChange,
+}: {
+  filters: FilterState;
+  onFiltersChange: (filters: FilterState) => void;
+}) {
+  const { lang, pick } = useI18n();
+  const { data: towns } = useQuery(townsQuery);
+  const { data: categories } = useQuery(categoriesQuery);
+  const { data: villages } = useQuery(villagesQuery());
+
+  const activeCount = getActiveFilterCount(filters);
+  if (activeCount === 0) return null;
+
+  const selectedTown = towns?.find((t) => t.slug === filters.town);
+  const selectedCategory = categories?.find((c) => c.slug === filters.category);
+  const selectedVillage = villages?.find((v) => v.id === filters.village);
+
+  const dateLabels: Record<string, { en: string; hi: string }> = {
+    today: { en: "Today", hi: "आज" },
+    week: { en: "This Week", hi: "इस सप्ताह" },
+    month: { en: "This Month", hi: "इस महीने" },
+  };
+
+  return (
+    <div className="no-scrollbar flex snap-x items-center gap-1.5 overflow-x-auto px-4 py-2">
+      {selectedTown && (
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+          {pick(selectedTown.name_hi, selectedTown.name_en)}
+          <button
+            type="button"
+            onClick={() => onFiltersChange({ ...filters, town: undefined, village: undefined })}
+            aria-label="Remove town filter"
+            className="hover:opacity-70"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </span>
+      )}
+
+      {selectedVillage && (
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-secondary/40 bg-secondary/20 px-2.5 py-1 text-xs font-semibold text-secondary-foreground">
+          {pick(selectedVillage.name_hi, selectedVillage.name_en)}
+          <button
+            type="button"
+            onClick={() => onFiltersChange({ ...filters, village: undefined })}
+            aria-label="Remove village filter"
+            className="hover:opacity-70"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </span>
+      )}
+
+      {selectedCategory && (
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+          {pick(selectedCategory.name_hi, selectedCategory.name_en)}
+          <button
+            type="button"
+            onClick={() => onFiltersChange({ ...filters, category: undefined })}
+            aria-label="Remove category filter"
+            className="hover:opacity-70"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </span>
+      )}
+
+      {filters.datePreset && filters.datePreset !== "all" && dateLabels[filters.datePreset] && (
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border bg-muted px-2.5 py-1 text-xs font-semibold text-foreground">
+          {lang === "en" ? dateLabels[filters.datePreset]?.en : dateLabels[filters.datePreset]?.hi}
+          <button
+            type="button"
+            onClick={() => {
+              onFiltersChange({
+                ...filters,
+                datePreset: "all",
+                fromDate: undefined,
+                toDate: undefined,
+              });
+            }}
+            aria-label="Remove date filter"
+            className="hover:opacity-70"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </span>
+      )}
+
+      <button
+        type="button"
+        onClick={() =>
+          onFiltersChange({
+            town: undefined,
+            village: undefined,
+            category: undefined,
+            datePreset: "all",
+            fromDate: undefined,
+            toDate: undefined,
+          })
+        }
+        className="shrink-0 text-xs text-muted-foreground hover:text-foreground underline ml-1"
+      >
+        {lang === "en" ? "Clear all" : "सभी साफ़ करें"}
+      </button>
+    </div>
+  );
+}
