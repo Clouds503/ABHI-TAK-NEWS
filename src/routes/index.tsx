@@ -667,7 +667,7 @@ function Home() {
                   <span className="text-xs text-muted-foreground">
                     {lang === "en"
                       ? "All major cities and towns"
-                      : "जनपद बिजनौर के सभी प्रमुख 7 कस्बों की ख़बरें"}
+                      : "सभी प्रमुख शहरों एवं कस्बों की ख़बरें"}
                   </span>
                 </div>
                 <div className="grid grid-cols-7 gap-3.5">
