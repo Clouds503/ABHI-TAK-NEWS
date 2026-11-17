@@ -165,11 +165,11 @@ function Header({ onMenu }: { onMenu: () => void }) {
           <Logo className="h-9 w-9 shrink-0" />
           <div className="min-w-0 leading-none">
             <div className="truncate font-serif text-lg font-bold">
-              {lang === "en" ? (settings?.site_title || "Abhi Tak") : (settings?.site_title_hi || "अभी तक")}
+              {lang === "en" ? (settings?.site_title || "Abhitak") : (settings?.site_title_hi || "अभी तक")}
             </div>
             <div className="mt-0.5 flex items-center gap-1 text-[11px] uppercase tracking-wider text-muted-foreground">
               <MapPin className="h-3 w-3 text-primary" />{" "}
-              {lang === "en" ? "District Bijnor" : "जनपद बिजनौर"}
+              {lang === "en" ? "News Network" : "समाचार नेटवर्क"}
             </div>
           </div>
         </Link>
@@ -424,7 +424,7 @@ function SideMenu({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boo
           <Logo className="h-12 w-12" />
           <div className="min-w-0">
             <div className="font-serif text-xl font-bold">
-              {lang === "en" ? (settings?.site_title || "Abhi Tak") : (settings?.site_title_hi || "अभी तक")}
+              {lang === "en" ? (settings?.site_title || "Abhitak") : (settings?.site_title_hi || "अभी तक")}
             </div>
             <div className="truncate text-xs text-muted-foreground">
               {user ? user.email : lang === "en" ? "Your news network" : "आपका समाचार नेटवर्क"}
