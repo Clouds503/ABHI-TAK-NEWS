@@ -28,6 +28,30 @@ export function AndroidBackButtonHandler() {
   const pathnameRef = useRef(pathname);
   pathnameRef.current = pathname;
 
+  // Handle browser popstate on Home for mobile web / PWA
+  useEffect(() => {
+    const isHome = pathname === "/" || pathname === "" || pathname === "/index";
+    if (!isHome || typeof window === "undefined") return;
+
+    window.history.pushState({ page: "home" }, "", window.location.href);
+
+    const handlePopState = () => {
+      const openModal = document.querySelector(
+        '[role="dialog"][data-state="open"]:not([data-exit-dialog]), [role="alertdialog"][data-state="open"]:not([data-exit-dialog]), [role="menu"][data-state="open"], [role="listbox"][data-state="open"]',
+      );
+      if (openModal) {
+        document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+        window.history.pushState({ page: "home" }, "", window.location.href);
+        return;
+      }
+      setShowExitDialog(true);
+      window.history.pushState({ page: "home" }, "", window.location.href);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [pathname]);
+
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 
@@ -114,11 +138,19 @@ export function AndroidBackButtonHandler() {
           <AlertDialogAction
             onClick={() => {
               setShowExitDialog(false);
-              App.exitApp();
+              if (Capacitor.isNativePlatform()) {
+                App.exitApp();
+              } else {
+                try {
+                  window.close();
+                } catch {
+                  // ignore
+                }
+              }
             }}
             className="flex-1 rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {lang === "en" ? "Exit App" : "ऐप बंद करें"}
+            {lang === "en" ? "Quit / Exit App" : "ऐप बंद करें (Quit App)"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
