@@ -124,7 +124,7 @@ export function AndroidBackButtonHandler() {
           </AlertDialogTitle>
           <AlertDialogDescription className="text-center text-sm text-muted-foreground">
             {lang === "en"
-              ? `Are you sure you want to exit ${settings?.site_title || "Abhi Tak"}?`
+              ? `Are you sure you want to exit ${settings?.site_title || "Abhitak"}?`
               : `क्या आप वाकई ${settings?.site_title_hi || "अभी तक"} ऐप से बाहर निकलना चाहते हैं?`}
           </AlertDialogDescription>
         </AlertDialogHeader>

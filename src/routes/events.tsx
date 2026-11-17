@@ -13,15 +13,15 @@ import { Textarea } from "@/components/ui/textarea";
 export const Route = createFileRoute("/events")({
   head: () => ({
     meta: [
-      { title: "Updates & Events — Abhi Tak" },
+      { title: "Updates & Events — Abhitak" },
       {
         name: "description",
-        content: "Latest updates and upcoming events from Abhi Tak News, District Bijnor.",
+        content: "Latest updates and upcoming events from Abhitak News.",
       },
-      { property: "og:title", content: "Updates & Events — Abhi Tak" },
+      { property: "og:title", content: "Updates & Events — Abhitak" },
       {
         property: "og:description",
-        content: "Join Abhi Tak events and get the latest updates from Bijnor.",
+        content: "Join Abhitak events and get the latest updates.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

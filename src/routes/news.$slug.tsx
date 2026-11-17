@@ -29,8 +29,8 @@ export const Route = createFileRoute("/news/$slug")({
   loader: ({ context, params }) => context.queryClient.ensureQueryData(articleQuery(params.slug)),
   head: ({ loaderData }) => {
     if (!loaderData)
-      return { meta: [{ title: "Abhi Tak" }, { name: "robots", content: "noindex" }] };
-    const title = `${loaderData.title_hi} — Abhi Tak`;
+      return { meta: [{ title: "Abhitak" }, { name: "robots", content: "noindex" }] };
+    const title = `${loaderData.title_hi} — Abhitak`;
     const desc = loaderData.summary_hi ?? loaderData.title_en ?? "";
     return {
       meta: [
@@ -603,7 +603,7 @@ function ArticlePage() {
               </h4>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 {lang === "en"
-                  ? "Report broken roads, electricity, water or hospital issues directly to local authorities through Abhi Tak."
+                  ? "Report broken roads, electricity, water or hospital issues directly to local authorities through Abhitak."
                   : "टूटी सड़कें, बिजली संकट, जलभराव या स्वास्थ्य संबंधी समस्याओं की सीधी शिकायत दर्ज करें।"}
               </p>
               <Button asChild size="sm" className="w-full rounded-full text-xs font-bold shadow-xs">

@@ -12,7 +12,7 @@ import { uploadMedia } from "@/lib/upload";
 
 export const Route = createFileRoute("/_authenticated/admin/events")({
   head: () => ({
-    meta: [{ title: "Events & Updates — Abhi Tak CMS" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Events & Updates — Abhitak CMS" }, { name: "robots", content: "noindex" }],
   }),
   component: AdminEvents,
 });

@@ -80,7 +80,7 @@ import {
 export const Route = createFileRoute("/_authenticated/admin/users")({
   head: () => ({
     meta: [
-      { title: "User & Admin Management — Abhi Tak CMS" },
+      { title: "User & Admin Management — Abhitak CMS" },
       { name: "robots", content: "noindex" },
     ],
   }),

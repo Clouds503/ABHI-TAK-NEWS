@@ -6,16 +6,16 @@ import { useI18n } from "@/lib/i18n";
 export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
-      { title: "Privacy Policy — Abhi Tak News" },
+      { title: "Privacy Policy — Abhitak News" },
       {
         name: "description",
         content:
-          "Privacy Policy for Abhi Tak News digital network and mobile application (District Bijnor).",
+          "Privacy Policy for Abhitak News digital network and mobile application.",
       },
-      { property: "og:title", content: "Privacy Policy — Abhi Tak News" },
+      { property: "og:title", content: "Privacy Policy — Abhitak News" },
       {
         property: "og:description",
-        content: "Privacy Policy and data practices for Abhi Tak News.",
+        content: "Privacy Policy and data practices for Abhitak News.",
       },
     ],
   }),
@@ -54,14 +54,14 @@ function PrivacyPolicy() {
           <div className="text-sm leading-relaxed text-muted-foreground">
             {isHi ? (
               <>
-                <strong className="text-foreground">अभी तक न्यूज़ (Abhi Tak News)</strong> आपकी
+                <strong className="text-foreground">अभी तक न्यूज़ (Abhitak News)</strong> आपकी
                 गोपनीयता का पूरा सम्मान करता है। यह नीति बताती है कि जब आप हमारी वेबसाइट या Android
                 ऐप (<code className="text-xs font-mono">com.abhitak.news</code>) का उपयोग करते हैं
                 तो हम आपकी जानकारी का संग्रह, उपयोग और सुरक्षा कैसे करते हैं।
               </>
             ) : (
               <>
-                <strong className="text-foreground">Abhi Tak News</strong> respects your privacy.
+                <strong className="text-foreground">Abhitak News</strong> respects your privacy.
                 This policy explains how we collect, use, and protect your information when you use
                 our website or Android application (
                 <code className="text-xs font-mono">com.abhitak.news</code>).
@@ -112,8 +112,8 @@ function PrivacyPolicy() {
             </p>
             <p>
               {isHi
-                ? "• सूचनाएं (POST_NOTIFICATIONS): ब्रेकिंग न्यूज़ और जनपद बिजनौर के महत्वपूर्ण अलर्ट भेजने के लिए (आप इसे कभी भी डिवाइस सेटिंग्स से बंद कर सकते हैं)।"
-                : "• Notifications (POST_NOTIFICATIONS): Used only to deliver critical breaking news and updates for District Bijnor. You can toggle this anytime in device settings."}
+                ? "• सूचनाएं (POST_NOTIFICATIONS): ब्रेकिंग न्यूज़ और महत्वपूर्ण अलर्ट भेजने के लिए (आप इसे कभी भी डिवाइस सेटिंग्स से बंद कर सकते हैं)।"
+                : "• Notifications (POST_NOTIFICATIONS): Used only to deliver critical breaking news and updates. You can toggle this anytime in device settings."}
             </p>
             <p>
               {isHi
@@ -183,7 +183,7 @@ function PrivacyPolicy() {
           </h2>
           <div className="text-sm text-muted-foreground space-y-2">
             <p className="font-semibold text-foreground">अभी तक डिजिटल समाचार नेटवर्क</p>
-            <p>जनपद बिजनौर, उत्तर प्रदेश, भारत · District Bijnor, Uttar Pradesh, India</p>
+            <p>उत्तर प्रदेश, भारत · Uttar Pradesh, India</p>
             <div className="flex flex-wrap gap-4 pt-1">
               <a
                 href={`tel:${CONTACT_PHONE.replace(/-/g, "")}`}

@@ -8,12 +8,12 @@ import { Empty } from "@/components/news";
 export const Route = createFileRoute("/epaper")({
   head: () => ({
     meta: [
-      { title: "E-Paper — Abhi Tak" },
-      { name: "description", content: "Read the daily Abhi Tak e-paper for District Bijnor." },
-      { property: "og:title", content: "E-Paper — Abhi Tak" },
+      { title: "E-Paper — Abhitak" },
+      { name: "description", content: "Read the daily Abhitak e-paper." },
+      { property: "og:title", content: "E-Paper — Abhitak" },
       {
         property: "og:description",
-        content: "Read the daily Abhi Tak e-paper for District Bijnor.",
+        content: "Read the daily Abhitak e-paper.",
       },
     ],
   }),

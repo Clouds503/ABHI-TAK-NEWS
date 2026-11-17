@@ -17,7 +17,7 @@ import { Progress } from "@/components/ui/progress";
 
 export const Route = createFileRoute("/_authenticated/admin/analytics")({
   head: () => ({
-    meta: [{ title: "Analytics — Abhi Tak CMS" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Analytics — Abhitak CMS" }, { name: "robots", content: "noindex" }],
   }),
   component: AnalyticsDashboard,
 });
@@ -362,7 +362,7 @@ function AnalyticsDashboard() {
         <div className="rounded-xl border bg-card p-5 shadow-sm">
           <h2 className="text-lg font-bold">Regional Audience Share</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Audience engagement across District Bijnor towns
+            Audience engagement across regional towns
           </p>
 
           <div className="mt-5 space-y-4">

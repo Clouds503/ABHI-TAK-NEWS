@@ -24,13 +24,13 @@ export function LanguageGate({ children }: { children: ReactNode }) {
         </div>
 
         <h1 className="mt-6 font-serif text-3xl font-extrabold tracking-wide md:text-4xl">
-          ABHI TAK
+          ABHITAK
         </h1>
         <p className="mt-1.5 text-base font-medium text-ink-foreground/80 md:text-lg">
           आपका समाचार नेटवर्क · Your News Network
         </p>
         <p className="mt-0.5 text-xs font-semibold uppercase tracking-[0.25em] text-ink-foreground/50">
-          जनपद बिजनौर · District Bijnor, U.P.
+          सच, समय पर, सबसे पहले · Truth · Timely · Foremost
         </p>
 
         {/* Language Selection Card Area */}

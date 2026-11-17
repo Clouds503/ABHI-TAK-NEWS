@@ -1,7 +1,7 @@
 {
-  "name": "Abhi Tak — District Bijnor News",
-  "short_name": "Abhi Tak",
-  "description": "Local news, live TV, videos and Jan Ki Awaaz from District Bijnor.",
+  "name": "Abhitak News",
+  "short_name": "Abhitak",
+  "description": "Local news, live TV, videos and Jan Ki Awaaz.",
   "id": "/",
   "start_url": "/",
   "scope": "/",

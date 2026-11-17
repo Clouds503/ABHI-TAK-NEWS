@@ -6,11 +6,11 @@
 
 CREATE TABLE IF NOT EXISTS public.site_settings (
   id            text        PRIMARY KEY DEFAULT 'current',
-  site_title    text        NOT NULL DEFAULT 'Abhi Tak',
+  site_title    text        NOT NULL DEFAULT 'Abhitak',
   site_title_hi text        NOT NULL DEFAULT 'अभी तक',
   tagline       text        DEFAULT 'Truth · Timely · Foremost',
   tagline_hi    text        DEFAULT 'सच, समय पर, सबसे पहले',
-  description   text        DEFAULT 'District Bijnor News',
+  description   text        DEFAULT 'Premier Digital Broadsheet & News Network',
   logo_url      text        NOT NULL DEFAULT '/pwa-192.png',
   icon_url      text        NOT NULL DEFAULT '/favicon.png',
   updated_at    timestamptz NOT NULL DEFAULT now()
@@ -31,5 +31,5 @@ CREATE POLICY "site_settings_staff_all" ON public.site_settings
 
 -- Insert default row if not exists
 INSERT INTO public.site_settings (id, site_title, site_title_hi, tagline, tagline_hi, description, logo_url, icon_url)
-VALUES ('current', 'Abhi Tak', 'अभी तक', 'Truth · Timely · Foremost', 'सच, समय पर, सबसे पहले', 'District Bijnor News', '/pwa-192.png', '/favicon.png')
+VALUES ('current', 'Abhitak', 'अभी तक', 'Truth · Timely · Foremost', 'सच, समय पर, सबसे पहले', 'Premier Digital Broadsheet & News Network', '/pwa-192.png', '/favicon.png')
 ON CONFLICT (id) DO NOTHING;

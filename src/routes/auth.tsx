@@ -18,13 +18,13 @@ export const Route = createFileRoute("/auth")({
   validateSearch: search,
   head: () => ({
     meta: [
-      { title: "Sign in — Abhi Tak" },
+      { title: "Sign in — Abhitak" },
       {
         name: "description",
-        content: "Create your Abhi Tak profile to raise your voice through Jan Ki Awaaz.",
+        content: "Create your Abhitak profile to raise your voice through Jan Ki Awaaz.",
       },
-      { property: "og:title", content: "Sign in — Abhi Tak" },
-      { property: "og:description", content: "Create your Abhi Tak profile." },
+      { property: "og:title", content: "Sign in — Abhitak" },
+      { property: "og:description", content: "Create your Abhitak profile." },
     ],
   }),
   component: AuthPage,
@@ -71,7 +71,7 @@ function AuthPage() {
         },
       });
       if (error) toast.error(error.message);
-      else toast.success("प्रोफ़ाइल बन गई! Welcome to Abhi Tak.");
+      else toast.success("प्रोफ़ाइल बन गई! Welcome to Abhitak.");
     } else {
       const { error } = await supabase.auth.signInWithPassword({
         email: parsed.data.email,

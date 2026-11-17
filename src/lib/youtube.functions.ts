@@ -232,7 +232,7 @@ export const getLiveStatus = createServerFn({ method: "GET" }).handler(
         return {
           live: true,
           videoId: null,
-          title: "अभि तक 24x7 सीधा लाइव प्रसारण (Abhi Tak 24x7 Live)",
+          title: "अभि तक 24x7 सीधा लाइव प्रसारण (Abhitak 24x7 Live)",
           streamUrl: LIVE_CHANNEL_STREAM_URL,
         };
       }

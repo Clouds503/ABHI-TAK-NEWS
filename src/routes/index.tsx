@@ -42,12 +42,12 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Breaking news, live TV, videos and citizen reports from every town of District Bijnor — Nagina, Dhampur, Najibabad, Chandpur and more.",
+          "Breaking news, live TV, videos and citizen reports from every town — Nagina, Dhampur, Najibabad, Chandpur and more.",
       },
       { property: "og:title", content: "Abhitak News" },
       {
         property: "og:description",
-        content: "Local news network for District Bijnor with Jan Ki Awaaz citizen reporting.",
+        content: "Local news network with Jan Ki Awaaz citizen reporting.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

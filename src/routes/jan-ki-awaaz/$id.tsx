@@ -25,15 +25,15 @@ export const Route = createFileRoute("/jan-ki-awaaz/$id")({
   },
   head: () => ({
     meta: [
-      { title: "Citizen report — Jan Ki Awaaz | Abhi Tak" },
+      { title: "Citizen report — Jan Ki Awaaz | Abhitak" },
       {
         name: "description",
-        content: "A public-welfare issue reported by a citizen of District Bijnor.",
+        content: "A public-welfare issue reported by a citizen.",
       },
-      { property: "og:title", content: "Jan Ki Awaaz — Abhi Tak" },
+      { property: "og:title", content: "Jan Ki Awaaz — Abhitak" },
       {
         property: "og:description",
-        content: "A public-welfare issue reported by a citizen of District Bijnor.",
+        content: "A public-welfare issue reported by a citizen.",
       },
     ],
   }),

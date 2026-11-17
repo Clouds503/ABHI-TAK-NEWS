@@ -18,7 +18,7 @@ interface LivePlayerProps {
 export function LivePlayer({
   src = LIVE_CHANNEL_STREAM_URL,
   poster,
-  title = "Abhi Tak Live News",
+  title = "Abhitak Live News",
   className,
   autoPlay = true,
   soundOn = false,

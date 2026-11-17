@@ -14,7 +14,7 @@ import { uploadMedia } from "@/lib/upload";
 
 export const Route = createFileRoute("/_authenticated/admin/reels")({
   head: () => ({
-    meta: [{ title: "Reels — Abhi Tak CMS" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Reels — Abhitak CMS" }, { name: "robots", content: "noindex" }],
   }),
   component: AdminReels,
 });

@@ -110,13 +110,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "theme-color", content: "#D40000" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "mobile-web-app-capable", content: "yes" },
-      { name: "apple-mobile-web-app-title", content: "Abhi Tak" },
+      { name: "apple-mobile-web-app-title", content: "Abhitak" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
-      { title: "Abhi Tak — District Bijnor News" },
+      { title: "Abhitak — सच, समय पर, सबसे पहले" },
       {
         name: "description",
         content:
-          "Abhi Tak: local news, live TV, video and Jan Ki Awaaz for District Bijnor, Uttar Pradesh.",
+          "Abhitak: local news, live TV, video and Jan Ki Awaaz for Uttar Pradesh.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

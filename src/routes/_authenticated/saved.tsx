@@ -8,7 +8,7 @@ import type { ArticleCard } from "@/lib/queries";
 
 export const Route = createFileRoute("/_authenticated/saved")({
   head: () => ({
-    meta: [{ title: "Saved news — Abhi Tak" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Saved news — Abhitak" }, { name: "robots", content: "noindex" }],
   }),
   component: Saved,
 });

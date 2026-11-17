@@ -27,7 +27,7 @@ import {
 
 export const Route = createFileRoute("/_authenticated/admin/settings")({
   head: () => ({
-    meta: [{ title: "Site Identity & Logo — Abhi Tak CMS" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Site Identity & Logo — Abhitak CMS" }, { name: "robots", content: "noindex" }],
   }),
   component: AdminSettingsPage,
 });
@@ -104,7 +104,7 @@ function AdminSettingsPage() {
   };
 
   const handleReset = () => {
-    if (window.confirm("Reset site name, logo, and icon back to default Abhi Tak branding?")) {
+    if (window.confirm("Reset site name, logo, and icon back to default Abhitak branding?")) {
       setForm(DEFAULT_SITE_SETTINGS);
       toast.info("Restored default values in form. Click 'Save Changes' to apply.");
     }
@@ -174,7 +174,7 @@ function AdminSettingsPage() {
                   <Input
                     id="site_title"
                     className="mt-1.5"
-                    placeholder="e.g. Abhi Tak"
+                    placeholder="e.g. Abhitak"
                     value={form.site_title}
                     onChange={(e) => setForm((p) => ({ ...p, site_title: e.target.value }))}
                   />
@@ -235,7 +235,7 @@ function AdminSettingsPage() {
                 <Input
                   id="description"
                   className="mt-1.5 text-xs"
-                  placeholder="e.g. District Bijnor's Premier Digital Broadsheet & News Network"
+                  placeholder="e.g. Premier Digital Broadsheet & News Network"
                   value={form.description || ""}
                   onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
                 />
@@ -469,7 +469,7 @@ function AdminSettingsPage() {
                         {form.tagline || form.tagline_hi || "Truth · Timely · Foremost"}
                       </div>
                       <div className="mt-0.5 text-[10px] text-muted-foreground">
-                        {form.description || "District Bijnor's Premier Digital Broadsheet"}
+                        {form.description || "Premier Digital Broadsheet & News Network"}
                       </div>
                     </div>
                   </div>
@@ -523,7 +523,7 @@ function AdminSettingsPage() {
                             {form.site_title || "Site Title"}
                           </div>
                           <div className="text-[9px] uppercase tracking-wider text-muted-foreground">
-                            District Bijnor
+                            News Network
                           </div>
                         </div>
                       </div>

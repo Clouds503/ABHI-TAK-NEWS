@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/_authenticated/my-issues")({
   validateSearch: z.object({ new: z.string().optional() }),
   head: () => ({
-    meta: [{ title: "My submissions — Abhi Tak" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "My submissions — Abhitak" }, { name: "robots", content: "noindex" }],
   }),
   component: MyIssues,
 });

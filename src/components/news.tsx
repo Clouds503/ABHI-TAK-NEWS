@@ -59,7 +59,7 @@ export function TopHomeBanner({
     <div className="relative aspect-[16/9] w-full select-none overflow-hidden bg-muted">
       <img
         src={imageUrl}
-        alt={banner?.title || "Abhi Tak Banner"}
+        alt={banner?.title || "Abhitak Banner"}
         width={1200}
         height={675}
         fetchPriority="high"

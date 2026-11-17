@@ -25,16 +25,16 @@ export const Route = createFileRoute("/jan-ki-awaaz/")({
   },
   head: () => ({
     meta: [
-      { title: "Jan Ki Awaaz — आपकी समस्या, आपकी आवाज़ | Abhi Tak" },
+      { title: "Jan Ki Awaaz — आपकी समस्या, आपकी आवाज़ | Abhitak" },
       {
         name: "description",
         content:
-          "Citizens of District Bijnor report local problems — roads, water, electricity, sanitation — and track their resolution.",
+          "Citizens report local problems — roads, water, electricity, sanitation — and track their resolution.",
       },
-      { property: "og:title", content: "Jan Ki Awaaz — Abhi Tak" },
+      { property: "og:title", content: "Jan Ki Awaaz — Abhitak" },
       {
         property: "og:description",
-        content: "Report and track public-welfare issues across District Bijnor.",
+        content: "Report and track public-welfare issues across towns and cities.",
       },
     ],
   }),
@@ -93,7 +93,7 @@ function JkaHome() {
         <section className="relative overflow-hidden bg-deep px-4 pb-7 pt-8 text-primary-foreground">
           <Megaphone className="absolute -right-6 -top-4 h-40 w-40 rotate-[-12deg] opacity-10" />
           <div className="text-[11px] font-bold uppercase tracking-[0.3em] opacity-80">
-            Abhi Tak
+            Abhitak
           </div>
           <h1 className="mt-1 text-4xl font-extrabold">{t("jka")}</h1>
           <p className="mt-2 font-serif text-xl opacity-90">“{t("jkaTagline")}”</p>
@@ -192,7 +192,7 @@ function JkaHome() {
             <div className="max-w-2xl">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.3em] opacity-80">
                 <span className="inline-block h-2 w-2 rounded-full bg-info" />
-                Abhi Tak Civic Desk · जन की आवाज़
+                Abhitak Civic Desk · जन की आवाज़
               </div>
               <h1 className="mt-2 font-serif text-4xl font-extrabold tracking-tight">{t("jka")}</h1>
               <p className="mt-2 font-serif text-xl italic opacity-95 text-amber-200">
@@ -200,8 +200,8 @@ function JkaHome() {
               </p>
               <p className="mt-3 text-sm text-primary-foreground/80 leading-relaxed max-w-xl">
                 {lang === "hi"
-                  ? "बिजनौर ज़िले की सड़कें, बिजली, पानी, स्वास्थ्य और सफ़ाई से जुड़े जन-मुद्दों को सीधे प्रशासन और जनप्रतिनिधियों तक पहुँचाने का सशक्त मंच।"
-                  : "A dedicated civic platform connecting District Bijnor citizens directly with local administration to solve public-welfare problems."}
+                  ? "क्षेत्र की सड़कें, बिजली, पानी, स्वास्थ्य और सफ़ाई से जुड़े जन-मुद्दों को सीधे प्रशासन और जनप्रतिनिधियों तक पहुँचाने का सशक्त मंच।"
+                  : "A dedicated civic platform connecting citizens directly with local administration to solve public-welfare problems."}
               </p>
             </div>
             <div className="shrink-0">

@@ -308,7 +308,7 @@ function ReportPage() {
           <span className="font-semibold">{t("publishAnon")}</span>
           <span className="block text-muted-foreground">
             {lang === "en"
-              ? "Public will see “Anonymous Citizen”. Your details stay private with Abhi Tak."
+              ? "Public will see “Anonymous Citizen”. Your details stay private with Abhitak."
               : "जनता को “अज्ञात नागरिक” दिखेगा। आपकी जानकारी अभी तक के पास सुरक्षित रहेगी।"}
           </span>
         </span>

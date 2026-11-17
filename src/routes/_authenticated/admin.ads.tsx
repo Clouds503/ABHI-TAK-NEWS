@@ -87,7 +87,7 @@ const campaignSchema = z
 
 export const Route = createFileRoute("/_authenticated/admin/ads")({
   head: () => ({
-    meta: [{ title: "Ads & Promotions — Abhi Tak CMS" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Ads & Promotions — Abhitak CMS" }, { name: "robots", content: "noindex" }],
   }),
   component: AdsAdmin,
 });
@@ -559,7 +559,7 @@ function AdsAdmin() {
             <div>
               <Label>Town targeting</Label>
               <select className={selectClass} value={form.town_id} onChange={set("town_id")}>
-                <option value="">All District Bijnor</option>
+                <option value="">All Regions</option>
                 {towns?.map((town) => (
                   <option key={town.id} value={town.id}>
                     {town.name_en}

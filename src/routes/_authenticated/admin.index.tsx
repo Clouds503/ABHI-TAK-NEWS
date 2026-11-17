@@ -115,7 +115,7 @@ function TopBannerManager() {
       } else {
         const { error } = await supabase.from("advertisements").insert({
           title: title || "Top Home Banner",
-          advertiser: "Abhi Tak",
+          advertiser: "Abhitak",
           image_url: imageUrl,
           link_url: linkUrl || "#",
           placement: "home_top",

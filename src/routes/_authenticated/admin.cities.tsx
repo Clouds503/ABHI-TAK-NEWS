@@ -234,7 +234,7 @@ function Cities() {
                 className={inp}
                 value={f.name_en}
                 onChange={set("name_en")}
-                placeholder="e.g. Bijnor City"
+                placeholder="e.g. City Center"
               />
             </div>
             <div>

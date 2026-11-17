@@ -78,15 +78,15 @@ export const Route = createFileRoute("/news/")({
   }),
   head: () => ({
     meta: [
-      { title: "All News — Abhi Tak | सभी ख़बरें" },
+      { title: "All News — Abhitak | सभी ख़बरें" },
       {
         name: "description",
-        content: "Complete archive of breaking and local news from District Bijnor.",
+        content: "Complete archive of breaking and local news.",
       },
-      { property: "og:title", content: "All News — Abhi Tak" },
+      { property: "og:title", content: "All News — Abhitak" },
       {
         property: "og:description",
-        content: "Complete archive of breaking and local news from District Bijnor.",
+        content: "Complete archive of breaking and local news.",
       },
       { property: "og:type", content: "website" },
     ],
@@ -352,8 +352,8 @@ function NewsArchivePage() {
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
                 {lang === "en"
-                  ? "Explore all published ground reports across District Bijnor's towns and villages."
-                  : "जनपद बिजनौर के सभी कस्बों, गांवों और श्रेणियों से प्रकाशित सभी ताज़ा व विस्तृत ख़बरें।"}
+                  ? "Explore all published ground reports across towns and cities."
+                  : "सभी कस्बों, शहरों और श्रेणियों से प्रकाशित सभी ताज़ा व विस्तृत ख़बरें।"}
               </p>
             </div>
             <div className="text-xs font-semibold text-muted-foreground">

@@ -13,15 +13,15 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/live")({
   head: () => ({
     meta: [
-      { title: "Abhi Tak Live TV — Bijnor" },
+      { title: "Abhitak Live TV" },
       {
         name: "description",
-        content: "Watch Abhi Tak live news telecast from District Bijnor, right inside the app.",
+        content: "Watch Abhitak live news telecast, right inside the app.",
       },
-      { property: "og:title", content: "Abhi Tak Live TV" },
+      { property: "og:title", content: "Abhitak Live TV" },
       {
         property: "og:description",
-        content: "Watch Abhi Tak live news telecast from District Bijnor, right inside the app.",
+        content: "Watch Abhitak live news telecast, right inside the app.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -56,7 +56,7 @@ function Live() {
   const latest = videos.data?.[0];
   const embedId = latest?.id;
   const title = isLive
-    ? (live.data?.title ?? (lang === "hi" ? "अभि तक 24x7 सीधा लाइव प्रसारण" : "Abhi Tak 24x7 Live Broadcast"))
+    ? (live.data?.title ?? (lang === "hi" ? "अभी तक 24x7 सीधा लाइव प्रसारण" : "Abhitak 24x7 Live Broadcast"))
     : latest?.title;
   const [playLatest, setPlayLatest] = useState(false);
   // Browsers only allow autoplay when muted; a tap switches the live stream to sound on.
@@ -84,8 +84,8 @@ function Live() {
             </span>
             <h1 className="font-serif text-2xl font-bold tracking-tight text-white">
               {lang === "hi"
-                ? "अभि तक लाइव टीवी — बिजनौर स्टूडियो"
-                : "Abhi Tak Live TV — Bijnor Studio"}
+                ? "अभी तक लाइव टीवी — न्यूज़रूम स्टूडियो"
+                : "Abhitak Live TV — Newsroom Studio"}
             </h1>
             <span className="rounded bg-white/10 px-2.5 py-0.5 text-xs font-semibold text-white/80">
               24x7 Broadcast
@@ -166,7 +166,7 @@ function Live() {
                     {t("offAir")} <span className="hidden lg:inline">· {lang === "hi" ? "रिकॉर्डेड बुलेटिन" : "Recorded Bulletin"}</span>
                   </span>
                 )}
-                <span className="hidden lg:inline text-xs text-white/50">District Bijnor Control Center</span>
+                <span className="hidden lg:inline text-xs text-white/50">Newsroom Control Center</span>
               </div>
 
               {!isLive && !live.isLoading && (
@@ -186,11 +186,11 @@ function Live() {
               <p className="hidden lg:block mt-2 text-sm text-white/70 leading-relaxed">
                 {isLive
                   ? lang === "hi"
-                    ? "बिजनौर, नगीना, धामपुर, नजीबाबाद, चांदपुर, स्योहारा और नूरपुर से सीधा लाइव प्रसारण। पल-पल की निष्पक्ष कवरेज।"
-                    : "Live broadcasting across District Bijnor. Instant coverage directly from ground newsrooms."
+                    ? "नगीना, धामपुर, नजीबाबाद, चांदपुर, स्योहारा और नूरपुर से सीधा लाइव प्रसारण। पल-पल की निष्पक्ष कवरेज।"
+                    : "Live broadcasting. Instant coverage directly from ground newsrooms."
                   : lang === "hi"
-                    ? "वर्तमान में कोई लाइव बुलेटिन प्रसारित नहीं हो रहा है। आप ऊपर हमारा नवीनतम जिला बुलेटिन देख सकते हैं।"
-                    : "No live broadcast currently active. You can stream our latest district bulletin above."}
+                    ? "वर्तमान में कोई लाइव बुलेटिन प्रसारित नहीं हो रहा है। आप ऊपर हमारा नवीनतम बुलेटिन देख सकते हैं।"
+                    : "No live broadcast currently active. You can stream our latest bulletin above."}
               </p>
 
               <div className="mt-4 lg:mt-5 flex flex-wrap items-center gap-2 lg:gap-3">
@@ -229,7 +229,7 @@ function Live() {
                 <div className="flex items-start justify-between rounded-lg bg-white/5 p-3">
                   <div>
                     <div className="font-semibold text-sm text-white">
-                      {lang === "hi" ? "बिजनौर प्रभात" : "Bijnor Prabhat"}
+                      {lang === "hi" ? "प्रभात समाचार" : "Prabhat Samachar"}
                     </div>
                     <div className="text-xs text-white/60">
                       {lang === "hi"
@@ -261,7 +261,7 @@ function Live() {
                 <div className="flex items-start justify-between rounded-lg bg-white/5 p-3">
                   <div>
                     <div className="font-semibold text-sm text-white">
-                      {lang === "hi" ? "बिजनौर की बात" : "Bijnor Ki Baat"}
+                      {lang === "hi" ? "आज की बात" : "Aaj Ki Baat"}
                     </div>
                     <div className="text-xs text-white/60">
                       {lang === "hi"
@@ -303,7 +303,7 @@ function Live() {
                   : "Have a breaking story or civic emergency in your area? Send footage or tips to our 24x7 newsroom."}
               </p>
               <a
-                href="https://wa.me/919412100000?text=Live%20News%20Tip%20District%20Bijnor"
+                href="https://wa.me/919412100000?text=Live%20News%20Tip"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-4 flex items-center justify-center gap-2 rounded-lg bg-[#25D366] px-4 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
