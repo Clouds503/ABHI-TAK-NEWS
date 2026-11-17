@@ -15,10 +15,12 @@ import {
   FolderTree,
   BarChart3,
   Settings,
+  LogOut,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Logo } from "@/components/AppShell";
 import { useSiteSettings } from "@/lib/site-settings";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Newsroom CMS" }, { name: "robots", content: "noindex" }] }),
@@ -32,9 +34,7 @@ const nav = [
   { to: "/admin/moderation", label: "Jan Ki Awaaz", icon: Megaphone },
   { to: "/admin/articles", label: "News", icon: Newspaper },
   { to: "/admin/categories", label: "Categories", icon: FolderTree },
-  { to: "/admin/towns", label: "Towns", icon: MapPin },
   { to: "/admin/cities", label: "Cities", icon: Building2 },
-  { to: "/admin/villages", label: "Villages", icon: Sprout },
   { to: "/admin/ads", label: "Ads & Promotions", icon: BadgeIndianRupee },
   { to: "/admin/reels", label: "Reels", icon: Clapperboard },
   { to: "/admin/events", label: "Events & Updates", icon: CalendarDays },
@@ -92,9 +92,29 @@ function AdminLayout() {
           </Link>
         </nav>
       </aside>
-      <main className="min-w-0 p-4 md:p-8">
-        <Outlet />
-      </main>
+      <div className="flex flex-col min-w-0">
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-card/95 px-4 backdrop-blur-sm md:px-8">
+          <div className="flex items-center gap-2">
+            <span className="font-serif text-sm font-semibold text-muted-foreground">
+              {settings?.site_title || "News"} Administration
+            </span>
+          </div>
+          <Button
+            asChild
+            size="sm"
+            variant="outline"
+            className="gap-2 border-destructive/40 text-destructive hover:bg-destructive/10"
+          >
+            <Link to="/">
+              <LogOut className="h-4 w-4" />
+              Exit to Normal App
+            </Link>
+          </Button>
+        </header>
+        <main className="min-w-0 p-4 md:p-8">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }
