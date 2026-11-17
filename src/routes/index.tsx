@@ -378,7 +378,7 @@ function Home() {
               </div>
 
               <div className="mt-6 border-t">
-                {rest.slice(4).map((a) => (
+                {standardArticles?.slice(10).map((a) => (
                   <ArticleRow key={a.id} a={a} />
                 ))}
               </div>
