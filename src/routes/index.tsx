@@ -291,7 +291,7 @@ function Home() {
 
               <SectionHead title={t("latest")} to="/news" action={t("seeAll")} />
               <div className="border-t">
-                {rest.slice(0, 4).map((a, i) => (
+                {standardArticles?.slice(0, 10).map((a, i) => (
                   <ArticleRow key={a.id} a={a} index={i} />
                 ))}
               </div>
