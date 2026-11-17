@@ -681,11 +681,29 @@ function ReelSlide({
   );
 }
 
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mql = window.matchMedia("(min-width: 1024px)");
+    const onChange = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+    mql.addEventListener("change", onChange);
+    setIsDesktop(window.innerWidth >= 1024);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
+
+  return isDesktop;
+}
+
 function ReelsPage() {
   const { lang } = useI18n();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const syncInstagramReels = useServerFn(syncInstagramReelsServerFn);
+  const isDesktop = useIsDesktop();
 
   const { data: reels, isLoading } = useQuery({
     queryKey: ["reels"],
