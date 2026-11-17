@@ -662,27 +662,39 @@ export type Database = {
           created_at: string;
           id: string;
           is_active: boolean;
+          likes_count: number;
+          posted_at: string | null;
           shortcode: string;
           sort_order: number;
+          thumbnail_url: string | null;
           video_url: string | null;
+          views: number;
         };
         Insert: {
           caption?: string | null;
           created_at?: string;
           id?: string;
           is_active?: boolean;
+          likes_count?: number;
+          posted_at?: string | null;
           shortcode: string;
           sort_order?: number;
+          thumbnail_url?: string | null;
           video_url?: string | null;
+          views?: number;
         };
         Update: {
           caption?: string | null;
           created_at?: string;
           id?: string;
           is_active?: boolean;
+          likes_count?: number;
+          posted_at?: string | null;
           shortcode?: string;
           sort_order?: number;
+          thumbnail_url?: string | null;
           video_url?: string | null;
+          views?: number;
         };
         Relationships: [];
       };
@@ -932,6 +944,10 @@ export type Database = {
       };
       increment_article_views: {
         Args: { _article_id: string };
+        Returns: undefined;
+      };
+      increment_reel_views: {
+        Args: { _reel_id: string };
         Returns: undefined;
       };
     };

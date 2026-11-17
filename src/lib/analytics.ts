@@ -57,6 +57,38 @@ export async function trackArticleView(articleId: string) {
   }
 }
 
+export async function trackReelView(reelId: string) {
+  if (!reelId) return;
+  try {
+    const sessionKey = `abhitak.viewed.reel.${reelId}`;
+    if (typeof window !== "undefined" && window.sessionStorage.getItem(sessionKey)) {
+      return;
+    }
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(sessionKey, "1");
+    }
+
+    // Call RPC to increment views race-condition-free
+    await supabase.rpc("increment_reel_views", { _reel_id: reelId }).catch((err) => {
+      console.debug("increment_reel_views RPC notice:", err);
+    });
+
+    // Log telemetry event
+    const {
+      data: { user },
+    } = await supabase.auth.getUser().catch(() => ({ data: { user: null } }));
+    await supabase.from("app_analytics_events").insert({
+      event_type: "reel_view",
+      entity_type: "reel",
+      entity_id: reelId,
+      platform: getPlatform(),
+      user_id: user?.id ?? null,
+    });
+  } catch (err) {
+    console.debug("trackReelView error:", err);
+  }
+}
+
 export async function trackEngagement(
   eventType: "like" | "share" | "double_tap" | "bookmark",
   entityType: "article" | "reel",
