@@ -54,7 +54,7 @@ import { useSiteSettings } from "@/lib/site-settings";
 export function Logo({ className, alt }: { className?: string; alt?: string }) {
   const { settings } = useSiteSettings();
   const logoUrl = settings?.logo_url || "/pwa-192.png";
-  const siteTitle = settings?.site_title || "Abhi Tak";
+  const siteTitle = settings?.site_title || "Abhitak";
 
   return (
     <img
@@ -435,7 +435,7 @@ function SideMenu({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boo
         {!user && (
           <div className="mx-4 my-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
             <p className="text-sm font-semibold text-foreground">
-              {lang === "en" ? `Welcome to ${settings?.site_title || "Abhi Tak"}` : `${settings?.site_title_hi || "अभी तक"} में आपका स्वागत है`}
+              {lang === "en" ? `Welcome to ${settings?.site_title || "Abhitak"}` : `${settings?.site_title_hi || "अभी तक"} में आपका स्वागत है`}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
               {lang === "en"
@@ -450,25 +450,6 @@ function SideMenu({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boo
             </Button>
           </div>
         )}
-
-        <div className="py-2">
-          <div className="px-5 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-widest text-primary">
-            {t("districtNews")}
-          </div>
-          <div className="grid grid-cols-2 px-3">
-            {towns?.map((tw) => (
-              <Link
-                key={tw.id}
-                to="/town/$slug"
-                params={{ slug: tw.slug }}
-                onClick={close}
-                className="rounded px-2 py-2 text-[15px] hover:bg-muted"
-              >
-                {pick(tw.name_hi, tw.name_en)}
-              </Link>
-            ))}
-          </div>
-        </div>
 
         <div className="border-t py-2">
           <div className="px-5 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-widest text-primary">
@@ -603,7 +584,7 @@ function SideMenu({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boo
           )}
         </div>
         <div className="px-5 pb-8 pt-2 text-[11px] text-muted-foreground">
-          © {settings?.site_title || "Abhi Tak"} · District Bijnor, U.P.
+          © {settings?.site_title || "Abhitak"} · U.P.
         </div>
       </SheetContent>
     </Sheet>
@@ -774,7 +755,7 @@ function DesktopHeader() {
               <span className="h-3 w-px bg-border" />
               <span className="inline-flex items-center gap-1.5 font-medium text-primary">
                 <MapPin className="h-3.5 w-3.5" />
-                {lang === "en" ? "District Bijnor Digital Network" : "जनपद बिजनौर डिजिटल नेटवर्क"}
+                {lang === "en" ? "Digital News Network" : "डिजिटल समाचार नेटवर्क"}
               </span>
             </div>
 
@@ -859,7 +840,7 @@ function DesktopHeader() {
                   <Logo className="h-12 w-12 drop-shadow-sm transition-transform group-hover:scale-105" />
                   <span className="font-serif text-4xl xl:text-5xl font-black tracking-tight text-foreground">
                     {lang === "en"
-                      ? (settings?.site_title?.toUpperCase() || "ABHI TAK")
+                      ? (settings?.site_title?.toUpperCase() || "ABHITAK")
                       : (settings?.site_title_hi || "अभी तक")}
                   </span>
                 </div>
@@ -871,8 +852,8 @@ function DesktopHeader() {
                 <div className="text-[11px] text-muted-foreground tracking-wide mt-0.5">
                   {settings?.description ||
                     (lang === "en"
-                      ? "District Bijnor's Premier Digital Broadsheet & News Network"
-                      : "जनपद बिजनौर का अग्रणी डिजिटल ब्रॉडशीट व समाचार नेटवर्क")}
+                      ? "Premier Digital Broadsheet & News Network"
+                      : "अग्रणी डिजिटल ब्रॉडशीट व समाचार नेटवर्क")}
                 </div>
               </Link>
             </div>
@@ -1161,7 +1142,7 @@ function DesktopFooter() {
               <div>
                 <div className="font-serif text-2xl font-bold tracking-tight text-white">
                   {lang === "en"
-                    ? (settings?.site_title ? `${settings.site_title} News` : "Abhi Tak News")
+                    ? (settings?.site_title ? `${settings.site_title} News` : "Abhitak News")
                     : (settings?.site_title_hi || "अभी तक")}
                 </div>
                 <div className="text-xs text-primary font-serif font-semibold tracking-widest">
@@ -1173,13 +1154,13 @@ function DesktopFooter() {
             </div>
             <p className="text-sm text-ink-foreground/75 leading-relaxed pr-4">
               {lang === "en"
-                ? "District Bijnor's premier hyper-local digital news network. Providing fearless, verified journalism, breaking ground updates, civic grievance tracking, and multimedia reports across Western UP."
-                : "जनपद बिजनौर (उत्तर प्रदेश) का अग्रणी स्वतंत्र डिजिटल समाचार नेटवर्क। निष्पक्ष, सटीक व तेज़ क्षेत्रीय पत्रकारिता, जन की आवाज़ और वीडियो बुलेटिन।"}
+                ? "Premier hyper-local digital news network. Providing fearless, verified journalism, breaking ground updates, civic grievance tracking, and multimedia reports across the region."
+                : "उत्तर प्रदेश का अग्रणी स्वतंत्र डिजिटल समाचार नेटवर्क। निष्पक्ष, सटीक व तेज़ क्षेत्रीय पत्रकारिता, जन की आवाज़ और वीडियो बुलेटिन।"}
             </p>
             <div className="pt-2 space-y-2 text-xs text-ink-foreground/80">
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-primary shrink-0" />
-                <span>जनपद बिजनौर, उत्तर प्रदेश — 246701</span>
+                <span>उत्तर प्रदेश</span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-primary shrink-0" />
@@ -1279,9 +1260,9 @@ function DesktopFooter() {
         {/* Bottom Bar: Copyright & Attribution */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-ink-foreground/60 gap-4">
           <div suppressHydrationWarning>
-            © {new Date().getFullYear()} {settings?.site_title || "Abhi Tak"} News Network · All Rights Reserved.
+            © {new Date().getFullYear()} {settings?.site_title || "Abhitak"} News Network · All Rights Reserved.
           </div>
-          <div className="font-serif">सत्यमेव जयते · जनपद बिजनौर (उ.प्र.)</div>
+          <div className="font-serif">सत्यमेव जयते · उत्तर प्रदेश</div>
         </div>
       </div>
     </footer>
