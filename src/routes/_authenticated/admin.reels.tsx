@@ -1,12 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Trash2, Eye, EyeOff, Upload, Film } from "lucide-react";
+import { Trash2, Eye, EyeOff, Upload, Film, RefreshCw, Instagram, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { UploadNote } from "@/components/UploadNote";
+import { syncInstagramReelsServerFn } from "@/lib/instagram.functions";
+import { formatMetricCount } from "@/routes/reels";
 
 export const Route = createFileRoute("/_authenticated/admin/reels")({
   head: () => ({
@@ -25,19 +28,62 @@ function parseShortcode(input: string) {
 
 function AdminReels() {
   const qc = useQueryClient();
+  const syncServerReels = useServerFn(syncInstagramReelsServerFn);
+
   const [link, setLink] = useState("");
   const [caption, setCaption] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
   const [bulk, setBulk] = useState("");
-  const { data } = useQuery({
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const { data, isLoading } = useQuery({
     queryKey: ["admin-reels"],
     queryFn: async () =>
       (await supabase.from("reels").select("*").order("created_at", { ascending: false })).data ??
       [],
   });
+
+  // Query like counts from reel_likes
+  const { data: likeCounts } = useQuery({
+    queryKey: ["admin-reel-likes-summary"],
+    queryFn: async () => {
+      const { data: likes } = await supabase.from("reel_likes").select("reel_id");
+      const counts: Record<string, number> = {};
+      (likes || []).forEach((l) => {
+        counts[l.reel_id] = (counts[l.reel_id] || 0) + 1;
+      });
+      return counts;
+    },
+    staleTime: 30_000,
+  });
+
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ["admin-reels"] });
     qc.invalidateQueries({ queryKey: ["reels"] });
+    qc.invalidateQueries({ queryKey: ["admin-reel-likes-summary"] });
+  };
+
+  const handleSyncFromInstagram = async () => {
+    if (isSyncing) return;
+    setIsSyncing(true);
+    const t = toast.loading("Fetching latest reels from @abhitaknews…");
+    try {
+      const res = await syncServerReels();
+      if (res?.success) {
+        toast.success(
+          `Sync successful: ${res.added} new reels added, ${res.updated} updated (${res.count} total).`,
+          { id: t },
+        );
+        refresh();
+      } else {
+        toast.error(res?.error || "Failed to sync reels", { id: t });
+      }
+    } catch (err: unknown) {
+      console.error("Admin reels sync error:", err);
+      toast.error(err instanceof Error ? err.message : "Sync error", { id: t });
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const add = async (e: React.FormEvent) => {
@@ -49,7 +95,7 @@ function AdminReels() {
     }
     const { error } = await supabase.from("reels").insert({
       shortcode: code,
-      caption: caption.trim().slice(0, 300) || null,
+      caption: caption.trim().slice(0, 500) || null,
       video_url: videoUrl.trim() || null,
     });
     if (error) {
@@ -122,23 +168,37 @@ function AdminReels() {
   };
 
   return (
-    <div className="max-w-2xl">
-      <h1 className="text-2xl font-bold">Reels</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Open a reel on Instagram → Share → Copy link, then paste it here. Newest appear first. For
-        guaranteed playback, download the reel video and attach it with the upload button — uploaded
-        videos play directly with tap-to-pause.
-      </p>
+    <div className="max-w-3xl space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Reels Management</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Manage Instagram reels from <strong>@abhitaknews</strong>. Reels auto-sync directly and play in the app with likes and view tracking.
+          </p>
+        </div>
+        <Button
+          type="button"
+          onClick={handleSyncFromInstagram}
+          disabled={isSyncing}
+          className="gap-2 bg-gradient-to-r from-rose-600 to-amber-600 text-white shadow-md hover:from-rose-700 hover:to-amber-700 self-start sm:self-auto"
+        >
+          <RefreshCw className={`h-4 w-4 ${isSyncing ? "animate-spin" : ""}`} />
+          {isSyncing ? "Syncing Reels…" : "Auto-Sync @abhitaknews"}
+        </Button>
+      </div>
+
       <UploadNote
         type="MP4, WebM"
         maxSize="50 MB"
         ratio="9:16 (Vertical Fullscreen Reel)"
         hint="Directly attached video files guarantee reliable mobile playback with sound and scrubber controls."
-        className="mt-3"
       />
-      <form onSubmit={add} className="mt-5 space-y-2 rounded-lg border bg-card p-4">
+
+      {/* Manual Add Form */}
+      <form onSubmit={add} className="space-y-3 rounded-lg border bg-card p-4">
+        <h2 className="text-sm font-semibold">Add Individual Reel</h2>
         <Input
-          placeholder="https://www.instagram.com/reel/…"
+          placeholder="https://www.instagram.com/reel/… or shortcode"
           value={link}
           onChange={(e) => setLink(e.target.value)}
         />
@@ -151,94 +211,150 @@ function AdminReels() {
           placeholder="Caption (optional)"
           value={caption}
           onChange={(e) => setCaption(e.target.value)}
-          maxLength={300}
+          maxLength={500}
         />
-        <Button type="submit">Add reel</Button>
+        <Button type="submit">Add Reel</Button>
       </form>
-      <form onSubmit={addBulk} className="mt-3 space-y-2 rounded-lg border bg-card p-4">
-        <label className="text-sm font-medium">Add many at once</label>
+
+      {/* Bulk Add Form */}
+      <form onSubmit={addBulk} className="space-y-2 rounded-lg border bg-card p-4">
+        <label className="text-sm font-semibold">Add Multiple Reels at Once</label>
         <textarea
-          className="min-h-28 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          className="min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           placeholder={
-            "Paste many reel links — one per line or separated by spaces:\nhttps://www.instagram.com/reel/…\nhttps://www.instagram.com/reel/…"
+            "Paste multiple reel links or shortcodes separated by lines or spaces:\nhttps://www.instagram.com/reel/Df1x0IDvKBB/\nhttps://www.instagram.com/reel/Df1fxf6PllL/"
           }
           value={bulk}
           onChange={(e) => setBulk(e.target.value)}
         />
         <Button type="submit" variant="secondary">
-          Add all reels
+          Add All Reels
         </Button>
       </form>
-      <div className="mt-6 divide-y rounded-lg border bg-card">
-        {data?.map((r) => (
-          <div key={r.id} className="flex items-center gap-3 p-3">
-            <div className="min-w-0 flex-1">
-              <a
-                href={`https://www.instagram.com/reel/${r.shortcode}/`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-mono text-sm text-primary"
-              >
-                {r.shortcode}
-              </a>
-              {r.video_url && (
-                <div className="flex items-center gap-1 text-xs text-primary">
-                  <Film className="h-3 w-3" /> Video uploaded
+
+      {/* Reels List with Views and Likes */}
+      <div className="rounded-lg border bg-card">
+        <div className="flex items-center justify-between border-b p-3 text-sm font-medium text-muted-foreground">
+          <span>Active Reels ({data?.length ?? 0})</span>
+          <a
+            href="https://www.instagram.com/abhitaknews/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-xs text-rose-500 hover:underline"
+          >
+            <Instagram className="h-3.5 w-3.5" />
+            @abhitaknews
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        </div>
+
+        {isLoading ? (
+          <div className="p-6 text-center text-sm text-muted-foreground">Loading reels…</div>
+        ) : (
+          <div className="divide-y">
+            {data?.map((r) => {
+              const inAppLikes = likeCounts?.[r.id] ?? 0;
+              const displayLikes = (r.likes_count ?? 0) + inAppLikes;
+              const displayViews = r.views ?? 0;
+
+              return (
+                <div key={r.id} className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={`https://www.instagram.com/reel/${r.shortcode}/`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-mono text-sm font-medium text-primary hover:underline"
+                      >
+                        {r.shortcode}
+                      </a>
+                      {r.video_url && (
+                        <span className="inline-flex items-center gap-1 rounded bg-emerald-500/10 px-1.5 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+                          <Film className="h-3 w-3" /> Native Video
+                        </span>
+                      )}
+                      {!r.is_active && (
+                        <span className="rounded bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+                          Hidden
+                        </span>
+                      )}
+                    </div>
+                    {r.caption && (
+                      <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{r.caption}</p>
+                    )}
+                    <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Eye className="h-3.5 w-3.5 text-sky-500" />
+                        {formatMetricCount(displayViews)} views
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Instagram className="h-3.5 w-3.5 text-rose-500" />
+                        {formatMetricCount(displayLikes)} likes
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1 self-end sm:self-auto">
+                    <label
+                      className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-md hover:bg-muted"
+                      aria-label="Upload reel video"
+                      title="Upload MP4 reel video (9:16)"
+                    >
+                      <Upload className="h-4 w-4" />
+                      <input
+                        type="file"
+                        accept="video/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) void uploadVideo(r.id, f);
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      aria-label={r.is_active ? "Hide reel" : "Show reel"}
+                      title={r.is_active ? "Visible in app" : "Hidden in app"}
+                      onClick={async () => {
+                        await supabase.from("reels").update({ is_active: !r.is_active }).eq("id", r.id);
+                        refresh();
+                      }}
+                    >
+                      {r.is_active ? (
+                        <Eye className="h-4 w-4 text-primary" />
+                      ) : (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </Button>
+
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      aria-label="Delete"
+                      onClick={async () => {
+                        if (confirm(`Delete reel ${r.shortcode}?`)) {
+                          await supabase.from("reels").delete().eq("id", r.id);
+                          refresh();
+                        }
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
                 </div>
-              )}
-              {r.caption && (
-                <div className="truncate text-sm text-muted-foreground">{r.caption}</div>
-              )}
-            </div>
-            <label
-              className="inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-md hover:bg-muted"
-              aria-label="Upload reel video"
-              title="Upload reel video (Type: MP4/WebM, Max size: 50 MB, Ratio: 9:16)"
-            >
-              <Upload className="h-4 w-4" />
-              <input
-                type="file"
-                accept="video/*"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) void uploadVideo(r.id, f);
-                  e.target.value = "";
-                }}
-              />
-            </label>
-            <Button
-              size="icon"
-              variant="ghost"
-              aria-label="Toggle"
-              onClick={async () => {
-                await supabase.from("reels").update({ is_active: !r.is_active }).eq("id", r.id);
-                refresh();
-              }}
-            >
-              {r.is_active ? (
-                <Eye className="h-4 w-4" />
-              ) : (
-                <EyeOff className="h-4 w-4 text-muted-foreground" />
-              )}
-            </Button>
-            <Button
-              size="icon"
-              variant="ghost"
-              aria-label="Delete"
-              onClick={async () => {
-                if (confirm("Delete this reel?")) {
-                  await supabase.from("reels").delete().eq("id", r.id);
-                  refresh();
-                }
-              }}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+              );
+            })}
+            {!data?.length && (
+              <div className="p-8 text-center text-sm text-muted-foreground">
+                <Instagram className="mx-auto mb-2 h-8 w-8 text-muted-foreground/50" />
+                No reels in database yet. Click <strong>Auto-Sync @abhitaknews</strong> to import reels.
+              </div>
+            )}
           </div>
-        ))}
-        {!data?.length && (
-          <div className="p-4 text-sm text-muted-foreground">No reels added yet.</div>
         )}
       </div>
     </div>

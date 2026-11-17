@@ -14,18 +14,25 @@ import {
   ExternalLink,
   ChevronUp,
   ChevronDown,
+  Eye,
+  RefreshCw,
 } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
-import { getInstagramReelMedia } from "@/lib/instagram.functions";
+import {
+  getInstagramReelMedia,
+  syncInstagramReelsServerFn,
+  recordReelViewServerFn,
+  getReelMetricsServerFn,
+} from "@/lib/instagram.functions";
 import { Button } from "@/components/ui/button";
 import { useDoubleTap } from "@/lib/useDoubleTap";
 import { HeartPop } from "@/components/HeartPop";
 import { hasGuestLiked, toggleGuestLike } from "@/lib/guest-likes";
-import { trackEngagement } from "@/lib/analytics";
+import { trackEngagement, trackReelView } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 export const INSTAGRAM_URL = "https://www.instagram.com/abhitaknews";
@@ -44,7 +51,30 @@ export const Route = createFileRoute("/reels")({
   component: ReelsPage,
 });
 
-type Reel = { id: string; shortcode: string; caption: string | null; video_url: string | null };
+type Reel = {
+  id: string;
+  shortcode: string;
+  caption: string | null;
+  video_url: string | null;
+  views?: number | null;
+  likes_count?: number | null;
+};
+
+/**
+ * Formats view and like counts cleanly (e.g. 1.2K, 3.4M).
+ */
+export function formatMetricCount(num: number | undefined | null): string {
+  if (!num || num <= 0) return "0";
+  if (num >= 1_000_000) {
+    const val = (num / 1_000_000).toFixed(1);
+    return val.endsWith(".0") ? `${parseInt(val, 10)}M` : `${val}M`;
+  }
+  if (num >= 1_000) {
+    const val = (num / 1_000).toFixed(1);
+    return val.endsWith(".0") ? `${parseInt(val, 10)}K` : `${val}K`;
+  }
+  return num.toLocaleString();
+}
 
 function InstagramIframeReel({ reel, lang }: { reel: Reel; lang: string | null }) {
   const openInstagram = () => {
@@ -107,6 +137,8 @@ function ReelSlide({
   const qc = useQueryClient();
   const isNative = Capacitor.isNativePlatform();
   const resolveMedia = useServerFn(getInstagramReelMedia);
+  const fetchMetrics = useServerFn(getReelMetricsServerFn);
+  const recordViewServer = useServerFn(recordReelViewServerFn);
 
   const { data: scrapedMedia } = useQuery({
     queryKey: ["instagram-reel-media", reel.shortcode],
@@ -114,6 +146,13 @@ function ReelSlide({
     staleTime: 5 * 60_000,
     retry: 1,
     enabled: !isNative && !reel.video_url,
+  });
+
+  // Query combined metrics (views & likes) from server function
+  const { data: metrics } = useQuery({
+    queryKey: ["reel-metrics", reel.id, reel.shortcode],
+    queryFn: () => fetchMetrics({ data: { reelId: reel.id, shortcode: reel.shortcode } }),
+    staleTime: 30_000,
   });
 
   const rawSrc = reel.video_url ?? (!isNative ? scrapedMedia?.videoUrl : null);
@@ -129,19 +168,7 @@ function ReelSlide({
     show: false,
   });
 
-  // Reel likes query from database
-  const { data: dbLikeCount } = useQuery({
-    queryKey: ["reel-likes-count", reel.id],
-    queryFn: async () => {
-      const { count } = await supabase
-        .from("reel_likes")
-        .select("id", { count: "exact", head: true })
-        .eq("reel_id", reel.id);
-      return count ?? 0;
-    },
-    staleTime: 30_000,
-  });
-
+  // Registered user like status query
   const { data: authLiked } = useQuery({
     queryKey: ["reel-liked", reel.id, user?.id],
     enabled: !!user,
@@ -157,7 +184,20 @@ function ReelSlide({
   });
 
   const isLiked = user ? !!authLiked : guestLiked;
-  const effectiveLikes = (dbLikeCount ?? 0) + (!user && guestLiked ? 1 : 0);
+  const effectiveLikes = (metrics?.likes ?? 0) + (!user && guestLiked ? 1 : 0);
+  const effectiveViews = metrics?.views ?? 0;
+
+  // Track and register view when reel is active for > 1.2s
+  useEffect(() => {
+    if (!active) return;
+    const timer = setTimeout(() => {
+      void trackReelView(reel.id);
+      void recordViewServer({ data: { reelId: reel.id, shortcode: reel.shortcode } }).catch(() => {});
+      void qc.invalidateQueries({ queryKey: ["reel-metrics", reel.id] });
+    }, 1200);
+
+    return () => clearTimeout(timer);
+  }, [active, reel.id, reel.shortcode, qc, recordViewServer]);
 
   useEffect(() => {
     setVideoFailed(false);
@@ -229,7 +269,7 @@ function ReelSlide({
       void trackEngagement("like", "reel", reel.id);
     }
     qc.invalidateQueries({ queryKey: ["reel-liked", reel.id] });
-    qc.invalidateQueries({ queryKey: ["reel-likes-count", reel.id] });
+    qc.invalidateQueries({ queryKey: ["reel-metrics", reel.id] });
   };
 
   const shareReel = async () => {
@@ -383,12 +423,20 @@ function ReelSlide({
             >
               <Heart className="h-6 w-6" fill={isLiked ? "currentColor" : "none"} strokeWidth={2} />
             </div>
-            {effectiveLikes > 0 && (
-              <span className="text-[11px] font-bold text-white/80 tabular-nums">
-                {effectiveLikes}
-              </span>
-            )}
+            <span className="text-[11px] font-bold text-white/90 tabular-nums">
+              {formatMetricCount(effectiveLikes)}
+            </span>
           </button>
+
+          {/* Views Counter */}
+          <div className="flex flex-col items-center gap-1 select-none">
+            <div className="grid h-12 w-12 place-items-center rounded-full border border-white/10 bg-black/60 text-white/90 backdrop-blur-md shadow-lg">
+              <Eye className="h-5 w-5 text-sky-400" />
+            </div>
+            <span className="text-[11px] font-bold text-white/90 tabular-nums">
+              {formatMetricCount(effectiveViews)}
+            </span>
+          </div>
 
           {/* Share Button */}
           <button
@@ -476,7 +524,7 @@ function ReelSlide({
         <InstagramIframeReel reel={reel} lang={lang} />
       )}
 
-      {/* Right Action Rail */}
+      {/* Right Action Rail (Mobile) */}
       <div className="absolute right-3 bottom-[max(5rem,calc(env(safe-area-inset-bottom)+5rem))] z-30 flex flex-col items-center gap-4">
         {/* Like Button */}
         <button
@@ -493,12 +541,20 @@ function ReelSlide({
           >
             <Heart className="h-6 w-6" fill={isLiked ? "currentColor" : "none"} strokeWidth={2} />
           </div>
-          {effectiveLikes > 0 && (
-            <span className="text-[12px] font-bold text-white drop-shadow-md">
-              {effectiveLikes}
-            </span>
-          )}
+          <span className="text-[12px] font-bold text-white drop-shadow-md tabular-nums">
+            {formatMetricCount(effectiveLikes)}
+          </span>
         </button>
+
+        {/* Views Display */}
+        <div className="flex flex-col items-center gap-1 select-none">
+          <div className="grid h-12 w-12 place-items-center rounded-full bg-black/60 text-white backdrop-blur-md shadow-lg">
+            <Eye className="h-5 w-5 text-sky-400" />
+          </div>
+          <span className="text-[11px] font-bold text-white drop-shadow-md tabular-nums">
+            {formatMetricCount(effectiveViews)}
+          </span>
+        </div>
 
         {/* Share Button */}
         <button
@@ -574,6 +630,9 @@ function ReelSlide({
 function ReelsPage() {
   const { lang } = useI18n();
   const navigate = useNavigate();
+  const qc = useQueryClient();
+  const syncInstagramReels = useServerFn(syncInstagramReelsServerFn);
+
   const { data: reels, isLoading } = useQuery({
     queryKey: ["reels"],
     queryFn: async () => {
@@ -586,8 +645,48 @@ function ReelsPage() {
       return (data ?? []) as Reel[];
     },
   });
+
   const [active, setActive] = useState(0);
+  const [isSyncing, setIsSyncing] = useState(false);
   const refs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Auto-fetch new reels if database has no reels or on initial visit
+  useEffect(() => {
+    if (!isLoading && (!reels || reels.length === 0)) {
+      setIsSyncing(true);
+      syncInstagramReels()
+        .then(() => {
+          void qc.invalidateQueries({ queryKey: ["reels"] });
+        })
+        .catch((err) => {
+          console.warn("[reels] Auto-fetch error:", err);
+        })
+        .finally(() => {
+          setIsSyncing(false);
+        });
+    }
+  }, [isLoading, reels, qc, syncInstagramReels]);
+
+  const handleManualRefresh = async () => {
+    if (isSyncing) return;
+    setIsSyncing(true);
+    try {
+      const res = await syncInstagramReels();
+      await qc.invalidateQueries({ queryKey: ["reels"] });
+      if (res?.success) {
+        toast.success(
+          lang === "en"
+            ? `Reels updated (${res.added} new added)`
+            : `रील्स अपडेट हुईं (${res.added} नई जोड़ी गईं)`,
+        );
+      }
+    } catch (err) {
+      console.error("[reels] Refresh error:", err);
+      toast.error(lang === "en" ? "Failed to refresh reels" : "रील्स रीफ्रेश करने में विफल");
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   useEffect(() => {
     const obs = new IntersectionObserver(
@@ -627,38 +726,64 @@ function ReelsPage() {
   };
 
   const h = "h-[100dvh]";
-  if (isLoading)
+  if (isLoading && !reels?.length)
     return <div className={`${h} grid place-items-center text-muted-foreground bg-black`}>…</div>;
+
   if (!reels?.length)
     return (
       <div className={`${h} grid place-items-center p-6 text-center bg-black text-white`}>
-        <div>
-          <Instagram className="mx-auto h-10 w-10 text-primary" />
-          <p className="mt-3 text-muted-foreground">
-            {lang === "en" ? "No reels yet" : "अभी कोई रील नहीं"}
+        <div className="space-y-4">
+          <Instagram className="mx-auto h-12 w-12 text-rose-500 animate-pulse" />
+          <p className="text-muted-foreground">
+            {lang === "en" ? "Fetching latest reels from @abhitaknews…" : "@abhitaknews से रील्स लोड हो रही हैं…"}
           </p>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleManualRefresh}
+            disabled={isSyncing}
+            className="rounded-full border-white/20 bg-white/10 text-white hover:bg-white/20"
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${isSyncing ? "animate-spin text-rose-500" : ""}`} />
+            {isSyncing ? (lang === "en" ? "Syncing…" : "सिंक हो रहा है…") : (lang === "en" ? "Sync Now" : "अभी सिंक करें")}
+          </Button>
         </div>
       </div>
     );
 
   return (
     <div className="relative bg-black">
-      {/* ======================================================== */}
-      {/* MOBILE REELS (lg:hidden) - STRICT 100% INVARIANCE        */}
-      {/* ======================================================== */}
-      <div
-        className={`${h} snap-y snap-mandatory overflow-y-auto overscroll-contain bg-black no-scrollbar lg:hidden`}
-      >
+      {/* Top Mobile Header (Back + Refresh Sync Button) */}
+      <div className="fixed top-[max(1rem,env(safe-area-inset-top))] left-4 right-4 z-50 flex items-center justify-between lg:hidden pointer-events-none">
         <Button
           type="button"
           variant="secondary"
           size="icon"
           onClick={goBack}
           aria-label={lang === "en" ? "Back" : "वापस जाएं"}
-          className="fixed left-4 top-[max(1rem,env(safe-area-inset-top))] z-50 h-11 w-11 rounded-full border border-white/20 bg-black/60 text-white backdrop-blur-md shadow-lg hover:bg-black/80"
+          className="pointer-events-auto h-11 w-11 rounded-full border border-white/20 bg-black/60 text-white backdrop-blur-md shadow-lg hover:bg-black/80"
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          size="icon"
+          onClick={handleManualRefresh}
+          disabled={isSyncing}
+          aria-label={lang === "en" ? "Refresh" : "ताज़ा करें"}
+          className="pointer-events-auto h-11 w-11 rounded-full border border-white/20 bg-black/60 text-white backdrop-blur-md shadow-lg hover:bg-black/80"
+        >
+          <RefreshCw className={`h-4 w-4 ${isSyncing ? "animate-spin text-rose-400" : ""}`} />
+        </Button>
+      </div>
+
+      {/* ======================================================== */}
+      {/* MOBILE REELS (lg:hidden) - STRICT 100% INVARIANCE        */}
+      {/* ======================================================== */}
+      <div
+        className={`${h} snap-y snap-mandatory overflow-y-auto overscroll-contain bg-black no-scrollbar lg:hidden`}
+      >
         {reels.map((r, i) => (
           <div
             key={r.id}
@@ -681,21 +806,40 @@ function ReelsPage() {
       {/* DESKTOP REELS THEATER (hidden lg:flex) - 9:16 FRAME      */}
       {/* ======================================================== */}
       <div className="hidden lg:flex items-center justify-center min-h-[100dvh] w-full bg-neutral-950 text-white relative py-6">
-        {/* Top Header / Back Button */}
-        <div className="absolute top-6 left-8 z-50 flex items-center gap-3">
+        {/* Top Header / Back Button + Title + Refresh Button */}
+        <div className="absolute top-6 left-8 right-8 z-50 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              variant="secondary"
+              size="icon"
+              onClick={goBack}
+              aria-label={lang === "en" ? "Back" : "वापस जाएं"}
+              className="h-11 w-11 rounded-full border border-white/20 bg-black/60 text-white backdrop-blur-md shadow-lg hover:bg-black/80 cursor-pointer"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <span className="font-serif text-lg font-bold text-white tracking-wide">
+              {lang === "en" ? "Abhi Tak Reels" : "अभी तक रील्स"}
+            </span>
+          </div>
           <Button
             type="button"
-            variant="secondary"
-            size="icon"
-            onClick={goBack}
-            aria-label={lang === "en" ? "Back" : "वापस जाएं"}
-            className="h-11 w-11 rounded-full border border-white/20 bg-black/60 text-white backdrop-blur-md shadow-lg hover:bg-black/80"
+            variant="outline"
+            size="sm"
+            onClick={handleManualRefresh}
+            disabled={isSyncing}
+            className="rounded-full border-white/20 bg-black/60 text-white hover:bg-white/20 shadow-lg cursor-pointer"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <RefreshCw className={`mr-2 h-4 w-4 ${isSyncing ? "animate-spin text-rose-400" : ""}`} />
+            {isSyncing
+              ? lang === "en"
+                ? "Syncing…"
+                : "सिंक हो रहा है…"
+              : lang === "en"
+                ? "Sync from Instagram"
+                : "Instagram से सिंक करें"}
           </Button>
-          <span className="font-serif text-lg font-bold text-white tracking-wide">
-            {lang === "en" ? "Abhi Tak Reels" : "अभी तक रील्स"}
-          </span>
         </div>
 
         {/* Centered 9:16 Card + Adjacent Action & Navigation Rail */}
