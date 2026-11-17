@@ -1,5 +1,6 @@
 import { queryOptions, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadMedia } from "./upload";
 
 export interface SiteSettings {
   id: string;
@@ -15,11 +16,11 @@ export interface SiteSettings {
 
 export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   id: "current",
-  site_title: "Abhi Tak",
+  site_title: "Abhitak",
   site_title_hi: "अभी तक",
   tagline: "Truth · Timely · Foremost",
   tagline_hi: "सच, समय पर, सबसे पहले",
-  description: "District Bijnor News",
+  description: "Premier Digital Broadsheet & News Network",
   logo_url: "/pwa-192.png",
   icon_url: "/favicon.png",
 };
@@ -224,26 +225,7 @@ export async function saveSiteSettings(updated: Partial<SiteSettings>): Promise<
 }
 
 export async function uploadSiteAsset(file: File, type: "logo" | "icon"): Promise<string> {
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-  const path = `branding/${type}-${Date.now()}-${safeName}`;
-
-  const { error: uploadErr } = await supabase.storage
-    .from("media")
-    .upload(path, file, { contentType: file.type, upsert: true });
-
-  if (uploadErr) {
-    throw new Error(`Failed to upload ${type}: ${uploadErr.message}`);
-  }
-
-  const { data: signed, error: signErr } = await supabase.storage
-    .from("media")
-    .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
-
-  if (signErr || !signed?.signedUrl) {
-    throw new Error(signErr?.message || "Failed to generate signed URL");
-  }
-
-  return signed.signedUrl;
+  return uploadMedia(file, `branding/${type}`);
 }
 
 export const siteSettingsQuery = queryOptions({
