@@ -134,22 +134,6 @@ function Onboarding() {
           />
         </div>
         <div>
-          <Label htmlFor="tw">{t("town")}</Label>
-          <select
-            id="tw"
-            value={form.town_id}
-            onChange={set("town_id")}
-            className="mt-1.5 h-12 w-full rounded-md border border-input bg-background px-3 text-[15px]"
-          >
-            <option value="">{lang === "en" ? "Select your town" : "अपना कस्बा चुनें"}</option>
-            {towns.map((tw) => (
-              <option key={tw.id} value={tw.id}>
-                {pick(tw.name_hi, tw.name_en)}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
           <Label>{t("language")}</Label>
           <div className="mt-1.5 grid grid-cols-2 gap-2">
             {(["hi", "en"] as const).map((l) => (
