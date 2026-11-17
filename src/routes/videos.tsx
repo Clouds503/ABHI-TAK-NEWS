@@ -15,17 +15,17 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/videos")({
   head: () => ({
     meta: [
-      { title: "Video Galaxy — Abhi Tak" },
+      { title: "Video Galaxy — Abhitak" },
       {
         name: "description",
         content:
-          "Latest video news and ground reports from Abhi Tak's YouTube channel, District Bijnor.",
+          "Latest video news and ground reports from Abhitak's YouTube channel.",
       },
-      { property: "og:title", content: "Video Galaxy — Abhi Tak" },
+      { property: "og:title", content: "Video Galaxy — Abhitak" },
       {
         property: "og:description",
         content:
-          "Latest video news and ground reports from Abhi Tak's YouTube channel, District Bijnor.",
+          "Latest video news and ground reports from Abhitak's YouTube channel.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -140,7 +140,7 @@ function Videos() {
         <div className="px-4 pb-3 pt-5">
           <div className="flex items-center justify-between">
             <div className="text-[11px] font-bold uppercase tracking-[0.3em] text-primary">
-              Abhi Tak
+              Abhitak
             </div>
             {isRealtimeConnected && (
               <div className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-400">
@@ -331,7 +331,7 @@ function Videos() {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary">
-                Abhi Tak
+                Abhitak
               </span>
               {isRealtimeConnected && (
                 <span className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-400">
@@ -461,7 +461,7 @@ function Videos() {
                 <div className="mt-2 flex items-center justify-between text-xs text-ink-foreground/60">
                   <span suppressHydrationWarning>{timeAgo(current.published, lang)}</span>
                   <span>
-                    {lang === "hi" ? "अभी तक न्यूज़ नेटवर्क बिजनौर" : "Abhi Tak News Channel"}
+                    {lang === "hi" ? "अभी तक डिजिटल न्यूज़ नेटवर्क" : "Abhitak News Channel"}
                   </span>
                 </div>
               </div>

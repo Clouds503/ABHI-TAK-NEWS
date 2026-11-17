@@ -10,12 +10,12 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/town/$slug")({
   head: ({ params }) => ({
     meta: [
-      { title: `${params.slug.charAt(0).toUpperCase() + params.slug.slice(1)} News — Abhi Tak` },
-      { name: "description", content: `Latest local news from ${params.slug}, District Bijnor.` },
-      { property: "og:title", content: `${params.slug} News — Abhi Tak` },
+      { title: `${params.slug.charAt(0).toUpperCase() + params.slug.slice(1)} News — Abhitak` },
+      { name: "description", content: `Latest local news from ${params.slug}.` },
+      { property: "og:title", content: `${params.slug} News — Abhitak` },
       {
         property: "og:description",
-        content: `Latest local news from ${params.slug}, District Bijnor.`,
+        content: `Latest local news from ${params.slug}.`,
       },
     ],
   }),

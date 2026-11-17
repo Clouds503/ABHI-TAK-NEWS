@@ -40,10 +40,10 @@ export const INSTAGRAM_URL = "https://www.instagram.com/abhitaknews";
 export const Route = createFileRoute("/reels")({
   head: () => ({
     meta: [
-      { title: "Reels — Abhi Tak" },
-      { name: "description", content: "Short video reels from Abhi Tak News, District Bijnor." },
-      { property: "og:title", content: "Reels — Abhi Tak" },
-      { property: "og:description", content: "Swipe through the latest Abhi Tak News reels." },
+      { title: "Reels — Abhitak" },
+      { name: "description", content: "Short video reels from Abhitak News." },
+      { property: "og:title", content: "Reels — Abhitak" },
+      { property: "og:description", content: "Swipe through the latest Abhitak News reels." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -317,7 +317,7 @@ function ReelSlide({
   const shareReel = async () => {
     const url = `https://www.instagram.com/reel/${reel.shortcode}/`;
     if (navigator.share) {
-      await navigator.share({ title: reel.caption ?? "Abhi Tak Reel", url }).catch(() => {});
+      await navigator.share({ title: reel.caption ?? "Abhitak Reel", url }).catch(() => {});
     } else {
       await navigator.clipboard.writeText(url);
       toast.success("Link copied");
@@ -892,7 +892,7 @@ function ReelsPage() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <span className="font-serif text-lg font-bold text-white tracking-wide">
-              {lang === "en" ? "Abhi Tak Reels" : "अभी तक रील्स"}
+              {lang === "en" ? "Abhitak Reels" : "अभी तक रील्स"}
             </span>
           </div>
           <Button

@@ -594,7 +594,7 @@ function SideMenu({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boo
 function WeatherWidget() {
   const { lang } = useI18n();
   const { data: temp } = useQuery({
-    queryKey: ["bijnor-weather"],
+    queryKey: ["weather-data"],
     queryFn: async () => {
       try {
         const res = await fetch(
@@ -617,7 +617,7 @@ function WeatherWidget() {
       className="inline-flex items-center gap-1.5 text-muted-foreground"
       suppressHydrationWarning
     >
-      <span>{lang === "en" ? "Bijnor" : "बिजनौर"}</span>
+      <span>{lang === "en" ? "Weather" : "मौसम"}</span>
       <span className="font-semibold text-foreground" suppressHydrationWarning>
         {temp ?? "28°C"}
       </span>
@@ -1053,7 +1053,7 @@ function DesktopHeader() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-56 p-1.5">
                 <div className="px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-primary">
-                  {lang === "en" ? "District Towns" : "जनपद के प्रमुख कस्बे"}
+                  {lang === "en" ? "Regional Towns" : "प्रमुख कस्बे"}
                 </div>
                 {towns?.map((tw) => (
                   <DropdownMenuItem key={tw.id} asChild>
