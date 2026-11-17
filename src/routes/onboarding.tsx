@@ -13,13 +13,13 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
     meta: [
-      { title: "Complete your profile — Abhi Tak" },
+      { title: "Complete your profile — Abhitak" },
       {
         name: "description",
-        content: "Tell us your name, mobile number and town to personalise Abhi Tak news.",
+        content: "Tell us your name and mobile number to personalise Abhitak news.",
       },
-      { property: "og:title", content: "Complete your profile — Abhi Tak" },
-      { property: "og:description", content: "Personalise your Abhi Tak experience." },
+      { property: "og:title", content: "Complete your profile — Abhitak" },
+      { property: "og:description", content: "Personalise your Abhitak experience." },
     ],
   }),
   component: Onboarding,
@@ -32,32 +32,21 @@ const schema = z.object({
     .trim()
     .regex(/^(\+91[\s-]?)?[6-9]\d{9}$/, "Enter a valid 10-digit mobile number"),
   email: z.string().trim().email("Invalid email").max(255),
-  town_id: z.string().uuid("Please select your town"),
   preferred_language: z.enum(["hi", "en"]),
 });
 
 function Onboarding() {
   const { user, profile, needsOnboarding, refreshProfile, loading } = useAuth();
-  const { t, lang, pick, setLang } = useI18n();
+  const { t, lang, setLang } = useI18n();
   const navigate = useNavigate();
-  const [towns, setTowns] = useState<{ id: string; name_hi: string; name_en: string }[]>([]);
   const [busy, setBusy] = useState(false);
   const [form, setForm] = useState({
     full_name: "",
     phone: "",
     email: "",
-    town_id: "",
     preferred_language: (lang ?? "hi") as "hi" | "en",
   });
 
-  useEffect(() => {
-    supabase
-      .from("towns")
-      .select("id, name_hi, name_en")
-      .eq("is_active", true)
-      .order("sort_order")
-      .then(({ data }) => setTowns(data ?? []));
-  }, []);
   useEffect(() => {
     if (profile || user)
       setForm((f) => ({
@@ -65,7 +54,6 @@ function Onboarding() {
         full_name: f.full_name || profile?.full_name || "",
         phone: f.phone || profile?.phone || "",
         email: f.email || profile?.email || user?.email || "",
-        town_id: f.town_id || profile?.town_id || "",
       }));
   }, [profile, user]);
   useEffect(() => {
@@ -90,7 +78,7 @@ function Onboarding() {
       toast.error(error.message);
       return;
     }
-    toast.success("स्वागत है! Welcome to Abhi Tak");
+    toast.success("स्वागत है! Welcome to Abhitak");
     setLang(p.data.preferred_language);
     await refreshProfile();
   };
