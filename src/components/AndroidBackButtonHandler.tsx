@@ -3,6 +3,7 @@ import { useRouter, useRouterState } from "@tanstack/react-router";
 import { App } from "@capacitor/app";
 import { Capacitor, type PluginListenerHandle } from "@capacitor/core";
 import { useI18n } from "@/lib/i18n";
+import { useSiteSettings } from "@/lib/site-settings";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,6 +19,7 @@ export function AndroidBackButtonHandler() {
   const router = useRouter();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { lang } = useI18n();
+  const { settings } = useSiteSettings();
   const [showExitDialog, setShowExitDialog] = useState(false);
 
   const showExitDialogRef = useRef(showExitDialog);
@@ -98,8 +100,8 @@ export function AndroidBackButtonHandler() {
           </AlertDialogTitle>
           <AlertDialogDescription className="text-center text-sm text-muted-foreground">
             {lang === "en"
-              ? "Are you sure you want to exit Abhi Tak?"
-              : "क्या आप वाकई अभी तक ऐप से बाहर निकलना चाहते हैं?"}
+              ? `Are you sure you want to exit ${settings?.site_title || "Abhi Tak"}?`
+              : `क्या आप वाकई ${settings?.site_title_hi || "अभी तक"} ऐप से बाहर निकलना चाहते हैं?`}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="mt-4 flex flex-row gap-2 sm:justify-center">

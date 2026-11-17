@@ -14,17 +14,20 @@ import {
   Sprout,
   FolderTree,
   BarChart3,
+  Settings,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Logo } from "@/components/AppShell";
+import { useSiteSettings } from "@/lib/site-settings";
 
 export const Route = createFileRoute("/_authenticated/admin")({
-  head: () => ({ meta: [{ title: "Abhi Tak CMS" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Newsroom CMS" }, { name: "robots", content: "noindex" }] }),
   component: AdminLayout,
 });
 
 const nav = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { to: "/admin/settings", label: "Site Identity & Logo", icon: Settings },
   { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/admin/moderation", label: "Jan Ki Awaaz", icon: Megaphone },
   { to: "/admin/articles", label: "News", icon: Newspaper },
@@ -40,6 +43,7 @@ const nav = [
 
 function AdminLayout() {
   const { isStaff, loading } = useAuth();
+  const { settings } = useSiteSettings();
   if (loading) return null;
   if (!isStaff)
     return (
@@ -61,7 +65,9 @@ function AdminLayout() {
       <aside className="border-b border-sidebar-border bg-sidebar text-sidebar-foreground md:min-h-screen md:border-b-0">
         <div className="flex items-center gap-3 p-4">
           <Logo className="h-9 w-9" />
-          <div className="font-serif text-lg font-bold">Abhi Tak CMS</div>
+          <div className="truncate font-serif text-lg font-bold">
+            {settings?.site_title || "News"} CMS
+          </div>
         </div>
         <nav className="no-scrollbar flex gap-1 overflow-x-auto px-2 pb-2 md:flex-col">
           {nav.map((n) => (

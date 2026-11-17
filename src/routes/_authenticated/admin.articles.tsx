@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { UploadNote } from "@/components/UploadNote";
+import { uploadMedia } from "@/lib/upload";
 import type { Database } from "@/integrations/supabase/types";
 
 type Article = Database["public"]["Tables"]["articles"]["Row"];
@@ -99,18 +100,15 @@ function Articles() {
 
   const uploadCover = async (file: File) => {
     setUploading(true);
-    const path = `${user!.id}/cover-${crypto.randomUUID()}-${file.name.replace(/[^\w.]/g, "_")}`;
-    const { error } = await supabase.storage.from("media").upload(path, file);
-    if (error) {
-      toast.error(error.message);
+    try {
+      const url = await uploadMedia(file, "covers");
+      setF((p) => ({ ...p, cover_url: url }));
+      toast.success("Cover image uploaded successfully!");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to upload cover image");
+    } finally {
       setUploading(false);
-      return;
     }
-    const { data } = await supabase.storage
-      .from("media")
-      .createSignedUrl(path, 60 * 60 * 24 * 365 * 5);
-    setF((p) => ({ ...p, cover_url: data?.signedUrl ?? "" }));
-    setUploading(false);
   };
 
   const save = async () => {

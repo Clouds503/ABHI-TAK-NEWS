@@ -11,6 +11,9 @@ import {
   Upload,
   Save,
   ExternalLink,
+  Settings,
+  Sparkles,
+  LogOut,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -20,6 +23,8 @@ import { Switch } from "@/components/ui/switch";
 import { syncYouTubeVideosServerFn } from "@/lib/youtube.functions";
 import { useRealtimeVideos } from "@/lib/useRealtimeVideos";
 import { img, homeBanner } from "@/lib/media";
+import { useSiteSettings } from "@/lib/site-settings";
+import { uploadMedia } from "@/lib/upload";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   component: Dashboard,
@@ -77,19 +82,8 @@ function TopBannerManager() {
     setUploading(true);
     const toastId = toast.loading("Uploading banner image to cloud storage...");
     try {
-      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const path = `banners/home-top-${Date.now()}-${safeName}`;
-      const { error: uploadError } = await supabase.storage
-        .from("media")
-        .upload(path, file, { contentType: file.type, upsert: true });
-      if (uploadError) throw uploadError;
-
-      const { data: signed, error: signError } = await supabase.storage
-        .from("media")
-        .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
-      if (signError || !signed?.signedUrl) throw signError || new Error("Failed to get signed URL");
-
-      setImageUrl(signed.signedUrl);
+      const url = await uploadMedia(file, "banners");
+      setImageUrl(url);
       toast.success("Image uploaded successfully! Click 'Save Banner' to publish.", { id: toastId });
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Failed to upload image", { id: toastId });
@@ -290,6 +284,74 @@ function TopBannerManager() {
   );
 }
 
+function SiteIdentityQuickCard() {
+  const { settings } = useSiteSettings();
+
+  return (
+    <div className="mt-8 rounded-xl border bg-card p-5 shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-checkerboard p-1 shadow-xs">
+            <img
+              src={settings.logo_url || "/pwa-192.png"}
+              alt="Logo"
+              className="max-h-full max-w-full object-contain"
+              onError={(e) => {
+                e.currentTarget.src = "/pwa-192.png";
+              }}
+            />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-bold">
+                {settings.site_title} / {settings.site_title_hi}
+              </h2>
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                Active Branding
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {settings.tagline || settings.tagline_hi || "Truth · Timely · Foremost"}
+            </p>
+          </div>
+        </div>
+
+        <Button asChild size="sm" className="gap-2 bg-primary font-semibold">
+          <Link to="/admin/settings">
+            <Settings className="h-4 w-4" />
+            Rename Site & Change Logo →
+          </Link>
+        </Button>
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3 text-xs text-muted-foreground">
+        <div className="rounded-lg bg-muted/40 p-3">
+          <span className="block font-semibold text-foreground">English Masthead</span>
+          <span className="text-sm font-serif text-foreground font-bold">{settings.site_title}</span>
+        </div>
+        <div className="rounded-lg bg-muted/40 p-3">
+          <span className="block font-semibold text-foreground">Hindi Masthead (स्थानीय)</span>
+          <span className="text-sm font-serif text-foreground font-bold">{settings.site_title_hi}</span>
+        </div>
+        <div className="rounded-lg bg-muted/40 p-3 flex items-center justify-between">
+          <div>
+            <span className="block font-semibold text-foreground">Favicon & Icon</span>
+            <span className="text-xs text-muted-foreground">Active in tabs & shortcuts</span>
+          </div>
+          <img
+            src={settings.icon_url || "/favicon.png"}
+            alt="Favicon preview"
+            className="h-6 w-6 rounded-xs border object-contain p-0.5"
+            onError={(e) => {
+              e.currentTarget.src = "/favicon.png";
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Dashboard() {
   const qc = useQueryClient();
   const [syncingYt, setSyncingYt] = useState(false);
@@ -375,6 +437,18 @@ function Dashboard() {
             )}
             Sync YouTube Videos
           </Button>
+          <Button asChild size="sm" variant="outline" className="gap-2">
+            <Link to="/admin/settings">
+              <Settings className="h-4 w-4" />
+              Site Identity & Logo
+            </Link>
+          </Button>
+          <Button asChild size="sm" variant="outline" className="gap-2 border-destructive/40 text-destructive hover:bg-destructive/10">
+            <Link to="/">
+              <LogOut className="h-4 w-4" />
+              Exit Admin
+            </Link>
+          </Button>
           <Button asChild size="sm" className="gap-2 bg-primary">
             <Link to="/admin/analytics">
               <BarChart3 className="h-4 w-4" />
@@ -411,6 +485,8 @@ function Dashboard() {
           );
         })}
       </div>
+
+      <SiteIdentityQuickCard />
 
       <TopBannerManager />
 

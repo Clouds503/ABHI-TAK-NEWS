@@ -8,6 +8,42 @@ export type Database = {
   };
   public: {
     Tables: {
+      site_settings: {
+        Row: {
+          description: string | null;
+          icon_url: string;
+          id: string;
+          logo_url: string;
+          site_title: string;
+          site_title_hi: string;
+          tagline: string | null;
+          tagline_hi: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          description?: string | null;
+          icon_url?: string;
+          id?: string;
+          logo_url?: string;
+          site_title?: string;
+          site_title_hi?: string;
+          tagline?: string | null;
+          tagline_hi?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          description?: string | null;
+          icon_url?: string;
+          id?: string;
+          logo_url?: string;
+          site_title?: string;
+          site_title_hi?: string;
+          tagline?: string | null;
+          tagline_hi?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       article_likes: {
         Row: {
           article_id: string;

@@ -20,6 +20,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { img } from "@/lib/media";
 import { townsQuery } from "@/lib/queries";
+import { uploadMedia } from "@/lib/upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -193,26 +194,20 @@ function AdsAdmin() {
       return;
     }
     setUploading(true);
-    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const path = `${user.id}/campaign-${crypto.randomUUID()}-${safeName}`;
-    const { error } = await supabase.storage
-      .from("media")
-      .upload(path, file, { contentType: file.type, cacheControl: "31536000" });
-    if (error) {
-      toast.error(error.message);
+    try {
+      const url = await uploadMedia(file, "campaigns");
+      setForm((current) => ({
+        ...current,
+        media_type: file.type.startsWith("video/") ? "video" : "image",
+        image_url: file.type.startsWith("video/") ? current.image_url : url,
+        video_url: file.type.startsWith("video/") ? url : current.video_url,
+      }));
+      toast.success("Media uploaded successfully!");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Could not upload media");
+    } finally {
       setUploading(false);
-      return;
     }
-    const { data: signed, error: signedError } = await supabase.storage
-      .from("media")
-      .createSignedUrl(path, 60 * 60 * 24 * 365 * 5);
-    if (signedError || !signed?.signedUrl) {
-      toast.error(signedError?.message ?? "Could not prepare media");
-      setUploading(false);
-      return;
-    }
-    setForm((current) => ({
-      ...current,
       media_type: isVideo ? "video" : "image",
       image_url: isVideo ? signed.signedUrl : signed.signedUrl,
       video_url: isVideo ? signed.signedUrl : "",

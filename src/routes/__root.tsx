@@ -19,6 +19,40 @@ import { AppShell, Logo } from "@/components/AppShell";
 import { LanguageGate } from "@/components/LanguageGate";
 import { Toaster } from "@/components/ui/sonner";
 import { AndroidBackButtonHandler } from "@/components/AndroidBackButtonHandler";
+import { useSiteSettings } from "@/lib/site-settings";
+
+function SiteBrandingSync() {
+  const { settings } = useSiteSettings();
+
+  useEffect(() => {
+    if (typeof document === "undefined" || !settings) return;
+
+    if (settings.icon_url) {
+      const iconUrl = settings.icon_url;
+      let iconLink = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
+      if (!iconLink) {
+        iconLink = document.createElement("link");
+        iconLink.rel = "icon";
+        document.head.appendChild(iconLink);
+      }
+      if (iconLink.href !== iconUrl) {
+        iconLink.href = iconUrl;
+      }
+
+      let appleLink = document.querySelector<HTMLLinkElement>("link[rel='apple-touch-icon']");
+      if (!appleLink) {
+        appleLink = document.createElement("link");
+        appleLink.rel = "apple-touch-icon";
+        document.head.appendChild(appleLink);
+      }
+      if (appleLink.href !== iconUrl) {
+        appleLink.href = iconUrl;
+      }
+    }
+  }, [settings?.icon_url]);
+
+  return null;
+}
 
 function NotFoundComponent() {
   return (
@@ -158,6 +192,7 @@ function RootComponent() {
     path.startsWith("/admin") || path.startsWith("/auth") || path.startsWith("/onboarding");
   return (
     <QueryClientProvider client={queryClient}>
+      <SiteBrandingSync />
       <LanguageProvider>
         <AuthProvider>
           <AuthGate>

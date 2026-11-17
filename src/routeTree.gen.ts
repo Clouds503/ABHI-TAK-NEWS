@@ -38,6 +38,7 @@ import { Route as AuthenticatedAdminCitiesRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAdminEventsRouteImport } from './routes/_authenticated/admin.events'
 import { Route as AuthenticatedAdminModerationRouteImport } from './routes/_authenticated/admin.moderation'
 import { Route as AuthenticatedAdminReelsRouteImport } from './routes/_authenticated/admin.reels'
+import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
 import { Route as AuthenticatedAdminTownsRouteImport } from './routes/_authenticated/admin.towns'
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
 import { Route as AuthenticatedAdminVillagesRouteImport } from './routes/_authenticated/admin.villages'
@@ -195,6 +196,12 @@ const AuthenticatedAdminReelsRoute = AuthenticatedAdminReelsRouteImport.update({
   path: '/reels',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminSettingsRoute =
+  AuthenticatedAdminSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminTownsRoute = AuthenticatedAdminTownsRouteImport.update({
   id: '/towns',
   path: '/towns',
@@ -255,6 +262,7 @@ export interface FileRoutesByFullPath {
   '/admin/events': typeof AuthenticatedAdminEventsRoute
   '/admin/moderation': typeof AuthenticatedAdminModerationRoute
   '/admin/reels': typeof AuthenticatedAdminReelsRoute
+  '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/towns': typeof AuthenticatedAdminTownsRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/villages': typeof AuthenticatedAdminVillagesRoute
@@ -290,6 +298,7 @@ export interface FileRoutesByTo {
   '/admin/events': typeof AuthenticatedAdminEventsRoute
   '/admin/moderation': typeof AuthenticatedAdminModerationRoute
   '/admin/reels': typeof AuthenticatedAdminReelsRoute
+  '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/towns': typeof AuthenticatedAdminTownsRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/villages': typeof AuthenticatedAdminVillagesRoute
@@ -328,6 +337,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/events': typeof AuthenticatedAdminEventsRoute
   '/_authenticated/admin/moderation': typeof AuthenticatedAdminModerationRoute
   '/_authenticated/admin/reels': typeof AuthenticatedAdminReelsRoute
+  '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/admin/towns': typeof AuthenticatedAdminTownsRoute
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
   '/_authenticated/admin/villages': typeof AuthenticatedAdminVillagesRoute
@@ -366,6 +376,7 @@ export interface FileRouteTypes {
     | '/admin/events'
     | '/admin/moderation'
     | '/admin/reels'
+    | '/admin/settings'
     | '/admin/towns'
     | '/admin/users'
     | '/admin/villages'
@@ -401,6 +412,7 @@ export interface FileRouteTypes {
     | '/admin/events'
     | '/admin/moderation'
     | '/admin/reels'
+    | '/admin/settings'
     | '/admin/towns'
     | '/admin/users'
     | '/admin/villages'
@@ -438,6 +450,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/events'
     | '/_authenticated/admin/moderation'
     | '/_authenticated/admin/reels'
+    | '/_authenticated/admin/settings'
     | '/_authenticated/admin/towns'
     | '/_authenticated/admin/users'
     | '/_authenticated/admin/villages'
@@ -674,6 +687,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminReelsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/settings': {
+      id: '/_authenticated/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/towns': {
       id: '/_authenticated/admin/towns'
       path: '/towns'
@@ -728,6 +748,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminEventsRoute: typeof AuthenticatedAdminEventsRoute
   AuthenticatedAdminModerationRoute: typeof AuthenticatedAdminModerationRoute
   AuthenticatedAdminReelsRoute: typeof AuthenticatedAdminReelsRoute
+  AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedAdminTownsRoute: typeof AuthenticatedAdminTownsRoute
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
   AuthenticatedAdminVillagesRoute: typeof AuthenticatedAdminVillagesRoute
@@ -743,6 +764,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminEventsRoute: AuthenticatedAdminEventsRoute,
   AuthenticatedAdminModerationRoute: AuthenticatedAdminModerationRoute,
   AuthenticatedAdminReelsRoute: AuthenticatedAdminReelsRoute,
+  AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
   AuthenticatedAdminTownsRoute: AuthenticatedAdminTownsRoute,
   AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
   AuthenticatedAdminVillagesRoute: AuthenticatedAdminVillagesRoute,
@@ -793,3 +815,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

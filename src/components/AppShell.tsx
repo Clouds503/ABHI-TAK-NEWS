@@ -49,16 +49,26 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useSiteSettings } from "@/lib/site-settings";
 
-export function Logo({ className }: { className?: string }) {
+export function Logo({ className, alt }: { className?: string; alt?: string }) {
+  const { settings } = useSiteSettings();
+  const logoUrl = settings?.logo_url || "/pwa-192.png";
+  const siteTitle = settings?.site_title || "Abhi Tak";
+
   return (
     <img
-      src="/pwa-192.png"
-      alt="Abhi Tak"
+      src={logoUrl}
+      alt={alt || siteTitle}
       width={48}
       height={48}
       decoding="sync"
       fetchPriority="high"
+      onError={(e) => {
+        if (e.currentTarget.src !== "/pwa-192.png") {
+          e.currentTarget.src = "/pwa-192.png";
+        }
+      }}
       className={cn("rounded-[6px] object-contain", className)}
     />
   );
@@ -67,6 +77,7 @@ export function Logo({ className }: { className?: string }) {
 function Header({ onMenu }: { onMenu: () => void }) {
   const { lang, pick } = useI18n();
   const { user } = useAuth();
+  const { settings } = useSiteSettings();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const [searchOpen, setSearchOpen] = useState(false);
   const [term, setTerm] = useState("");
@@ -154,7 +165,7 @@ function Header({ onMenu }: { onMenu: () => void }) {
           <Logo className="h-9 w-9 shrink-0" />
           <div className="min-w-0 leading-none">
             <div className="truncate font-serif text-lg font-bold">
-              {lang === "en" ? "Abhi Tak" : "अभी तक"}
+              {lang === "en" ? (settings?.site_title || "Abhi Tak") : (settings?.site_title_hi || "अभी तक")}
             </div>
             <div className="mt-0.5 flex items-center gap-1 text-[11px] uppercase tracking-wider text-muted-foreground">
               <MapPin className="h-3 w-3 text-primary" />{" "}
@@ -395,6 +406,7 @@ function BottomNav() {
 function SideMenu({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { t, pick, lang, setLang } = useI18n();
   const { user, isStaff } = useAuth();
+  const { settings } = useSiteSettings();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const { data: towns } = useQuery(townsQuery);
   const { data: categories } = useQuery(categoriesQuery);
@@ -412,7 +424,7 @@ function SideMenu({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boo
           <Logo className="h-12 w-12" />
           <div className="min-w-0">
             <div className="font-serif text-xl font-bold">
-              {lang === "en" ? "Abhi Tak" : "अभी तक"}
+              {lang === "en" ? (settings?.site_title || "Abhi Tak") : (settings?.site_title_hi || "अभी तक")}
             </div>
             <div className="truncate text-xs text-muted-foreground">
               {user ? user.email : lang === "en" ? "Your news network" : "आपका समाचार नेटवर्क"}
@@ -423,7 +435,7 @@ function SideMenu({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boo
         {!user && (
           <div className="mx-4 my-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
             <p className="text-sm font-semibold text-foreground">
-              {lang === "en" ? "Welcome to Abhi Tak" : "अभी तक में आपका स्वागत है"}
+              {lang === "en" ? `Welcome to ${settings?.site_title || "Abhi Tak"}` : `${settings?.site_title_hi || "अभी तक"} में आपका स्वागत है`}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
               {lang === "en"
@@ -591,7 +603,7 @@ function SideMenu({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boo
           )}
         </div>
         <div className="px-5 pb-8 pt-2 text-[11px] text-muted-foreground">
-          © Abhi Tak · District Bijnor, U.P.
+          © {settings?.site_title || "Abhi Tak"} · District Bijnor, U.P.
         </div>
       </SheetContent>
     </Sheet>
@@ -658,6 +670,7 @@ function DesktopDate() {
 function DesktopHeader() {
   const { lang, setLang, t, pick } = useI18n();
   const { user, isStaff } = useAuth();
+  const { settings } = useSiteSettings();
   const navigate = useNavigate();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const { data: towns } = useQuery(townsQuery);
@@ -845,16 +858,21 @@ function DesktopHeader() {
                 <div className="flex items-center gap-3">
                   <Logo className="h-12 w-12 drop-shadow-sm transition-transform group-hover:scale-105" />
                   <span className="font-serif text-4xl xl:text-5xl font-black tracking-tight text-foreground">
-                    {lang === "en" ? "ABHI TAK" : "अभी तक"}
+                    {lang === "en"
+                      ? (settings?.site_title?.toUpperCase() || "ABHI TAK")
+                      : (settings?.site_title_hi || "अभी तक")}
                   </span>
                 </div>
                 <div className="mt-1 font-serif text-xs font-bold uppercase tracking-[0.25em] text-primary">
-                  {lang === "en" ? "Truth · Timely · Foremost" : "सच, समय पर, सबसे पहले"}
+                  {lang === "en"
+                    ? (settings?.tagline || "Truth · Timely · Foremost")
+                    : (settings?.tagline_hi || "सच, समय पर, सबसे पहले")}
                 </div>
                 <div className="text-[11px] text-muted-foreground tracking-wide mt-0.5">
-                  {lang === "en"
-                    ? "District Bijnor's Premier Digital Broadsheet & News Network"
-                    : "जनपद बिजनौर का अग्रणी डिजिटल ब्रॉडशीट व समाचार नेटवर्क"}
+                  {settings?.description ||
+                    (lang === "en"
+                      ? "District Bijnor's Premier Digital Broadsheet & News Network"
+                      : "जनपद बिजनौर का अग्रणी डिजिटल ब्रॉडशीट व समाचार नेटवर्क")}
                 </div>
               </Link>
             </div>
@@ -1128,6 +1146,7 @@ function DesktopHeader() {
 
 function DesktopFooter() {
   const { lang, t, pick } = useI18n();
+  const { settings } = useSiteSettings();
   const { data: towns } = useQuery(townsQuery);
   const { data: categories } = useQuery(categoriesQuery);
 
@@ -1141,10 +1160,14 @@ function DesktopFooter() {
               <Logo className="h-10 w-10 shrink-0" />
               <div>
                 <div className="font-serif text-2xl font-bold tracking-tight text-white">
-                  {lang === "en" ? "Abhi Tak News" : "अभी तक"}
+                  {lang === "en"
+                    ? (settings?.site_title ? `${settings.site_title} News` : "Abhi Tak News")
+                    : (settings?.site_title_hi || "अभी तक")}
                 </div>
                 <div className="text-xs text-primary font-serif font-semibold tracking-widest">
-                  {lang === "en" ? "Truth · Timely · Foremost" : "सच, समय पर, सबसे पहले"}
+                  {lang === "en"
+                    ? (settings?.tagline || "Truth · Timely · Foremost")
+                    : (settings?.tagline_hi || "सच, समय पर, सबसे पहले")}
                 </div>
               </div>
             </div>
@@ -1256,7 +1279,7 @@ function DesktopFooter() {
         {/* Bottom Bar: Copyright & Attribution */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-ink-foreground/60 gap-4">
           <div suppressHydrationWarning>
-            © {new Date().getFullYear()} Abhi Tak News Network · All Rights Reserved.
+            © {new Date().getFullYear()} {settings?.site_title || "Abhi Tak"} News Network · All Rights Reserved.
           </div>
           <div className="font-serif">सत्यमेव जयते · जनपद बिजनौर (उ.प्र.)</div>
         </div>
