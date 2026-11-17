@@ -38,7 +38,7 @@ import { useRealtimeVideos } from "@/lib/useRealtimeVideos";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Abhi Tak — बिजनौर की हर ख़बर, अभी तक" },
+      { title: "Abhitak — हर ख़बर, अभी तक" },
       {
         name: "description",
         content:
