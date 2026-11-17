@@ -666,7 +666,7 @@ function Home() {
                   </h2>
                   <span className="text-xs text-muted-foreground">
                     {lang === "en"
-                      ? "All major towns of District Bijnor"
+                      ? "All major cities and towns"
                       : "जनपद बिजनौर के सभी प्रमुख 7 कस्बों की ख़बरें"}
                   </span>
                 </div>
