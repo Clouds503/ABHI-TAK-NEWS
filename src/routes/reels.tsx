@@ -140,7 +140,7 @@ function ReelSlide({
   const fetchMetrics = useServerFn(getReelMetricsServerFn);
   const recordViewServer = useServerFn(recordReelViewServerFn);
 
-  const { data: scrapedMedia } = useQuery({
+  const { data: scrapedMedia, isLoading: isLoadingMedia } = useQuery({
     queryKey: ["instagram-reel-media", reel.shortcode],
     queryFn: () => resolveMedia({ data: { shortcode: reel.shortcode } }),
     staleTime: 5 * 60_000,
@@ -210,29 +210,71 @@ function ReelSlide({
     if (!muted) setNeedsSound(false);
   }, [muted]);
 
+  // Pause playback when tab is backgrounded / hidden to prevent audio bleeding
+  useEffect(() => {
+    const handleVisibility = () => {
+      const v = videoRef.current;
+      if (!v) return;
+      if (document.hidden) {
+        v.pause();
+      } else if (active && !paused && !videoFailed && rawSrc) {
+        v.play().catch(() => {});
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [active, paused, videoFailed, rawSrc]);
+
+  // Video playback controller with strict cancellation and cleanup on active change
   useEffect(() => {
     const v = videoRef.current;
-    if (!v || videoFailed) return;
-    if (!active) {
+    if (!v) return;
+
+    if (!active || videoFailed || !rawSrc) {
       v.pause();
       return;
     }
+
+    let isCancelled = false;
+
     v.currentTime = 0;
-    v.muted = false;
-    v.play()
-      .then(() => {
-        setPaused(false);
-        setMuted(false);
-      })
-      .catch(() => {
-        v.muted = true;
-        setMuted(true);
-        setNeedsSound(true);
-        v.play()
-          .then(() => setPaused(false))
-          .catch(() => setPaused(true));
-      });
-  }, [active, videoFailed]);
+    v.muted = muted;
+
+    const playPromise = v.play();
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          if (isCancelled) {
+            v.pause();
+            return;
+          }
+          setPaused(false);
+          setNeedsSound(false);
+        })
+        .catch(() => {
+          if (isCancelled) return;
+          v.muted = true;
+          setMuted(true);
+          setNeedsSound(true);
+          v.play()
+            .then(() => {
+              if (isCancelled) {
+                v.pause();
+                return;
+              }
+              setPaused(false);
+            })
+            .catch(() => {
+              if (!isCancelled) setPaused(true);
+            });
+        });
+    }
+
+    return () => {
+      isCancelled = true;
+      v.pause();
+    };
+  }, [active, videoFailed, rawSrc]);
 
   const togglePlay = () => {
     const v = videoRef.current;
