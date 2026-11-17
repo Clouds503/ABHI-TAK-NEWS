@@ -505,7 +505,7 @@ function ArticlePage() {
                   <span className="font-bold text-foreground">
                     {a.author_name || (lang === "en" ? "Bureau Reporter" : "ब्यूरो संवाददाता")}
                   </span>
-                  <span className="text-muted-foreground">· जनपद बिजनौर</span>
+                  <span className="text-muted-foreground">· {lang === "en" ? "Bureau" : "ब्यूरो"}</span>
                 </div>
                 <div className="text-muted-foreground font-medium">
                   {a.published_at &&

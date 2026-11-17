@@ -370,7 +370,7 @@ function JkaHome() {
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span className="flex items-center gap-1 font-medium truncate max-w-[60%]">
                     <MapPin className="h-3 w-3 text-primary shrink-0" />
-                    {[p.area, townName(p.town_id)].filter(Boolean).join(", ") || "बिजनौर"}
+                    {[p.area, townName(p.town_id)].filter(Boolean).join(", ") || "स्थानीय क्षेत्र"}
                   </span>
                   <span suppressHydrationWarning className="shrink-0">
                     {timeAgo(p.created_at, lang)}

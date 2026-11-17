@@ -239,7 +239,7 @@ function NewsArchivePage() {
           <p className="mt-0.5 text-xs text-muted-foreground">
             {lang === "en"
               ? "Explore news across all categories, towns, and dates."
-              : "बिजनौर की सभी श्रेणियों, कस्बों और दिनांक की ख़बरें।"}
+              : "सभी श्रेणियों, कस्बों और दिनांक की ताज़ा ख़बरें।"}
           </p>
 
           {/* Search Bar with Integrated Filter Button */}

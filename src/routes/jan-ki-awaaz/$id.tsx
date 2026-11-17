@@ -246,7 +246,7 @@ function IssuePage() {
                     if (typeof window !== "undefined") {
                       window.open(
                         `https://api.whatsapp.com/send?text=${encodeURIComponent(
-                          `*जन की आवाज़ — बिजनौर*\n\n${p.title}\n\nविस्तृत जानकारी देखें: ${window.location.href}`,
+                          `*जन की आवाज़*\n\n${p.title}\n\nविस्तृत जानकारी देखें: ${window.location.href}`,
                         )}`,
                         "_blank",
                       );

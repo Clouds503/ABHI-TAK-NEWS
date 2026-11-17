@@ -120,7 +120,7 @@ function TownPage() {
             <div>
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-primary">
                 <MapPin className="h-3.5 w-3.5" />
-                <span>{t("districtNews")} · जनपद बिजनौर</span>
+                <span>{t("districtNews")}</span>
               </div>
               <h1 className="mt-1 font-serif text-3xl xl:text-4xl font-extrabold text-foreground">
                 {town ? pick(town.name_hi, town.name_en) : slug} की ख़बरें

@@ -110,14 +110,14 @@ export const VERIFIED_ABHITAK_REELS: InstagramReelItem[] = [
   },
   {
     shortcode: "Dfuqmr8PcTz",
-    caption: "अभी तक न्यूज़ बिजनौर एवं मुरादाबाद मंडल की ताज़ा खबरें।",
+    caption: "अभी तक डिजिटल न्यूज़ एवं मुरादाबाद मंडल की ताज़ा खबरें।",
     initialViews: 47900,
     initialLikes: 512,
     postedAt: "2026-11-14T19:00:00Z",
   },
   {
     shortcode: "Dft0LC-vht1",
-    caption: "बिजनौर जिले की महत्वपूर्ण सुर्खियां और ग्राउंड रिपोर्ट।",
+    caption: "क्षेत्र की महत्वपूर्ण सुर्खियां और ग्राउंड रिपोर्ट।",
     initialViews: 9645,
     initialLikes: 204,
     postedAt: "2026-11-14T15:00:00Z",
@@ -139,7 +139,7 @@ export const VERIFIED_ABHITAK_REELS: InstagramReelItem[] = [
   },
   {
     shortcode: "DVaoJ02j1by",
-    caption: "धामपुर और बिजनौर क्षेत्र की खास ग्राउंड रिपोर्ट। 6.5 मिलियन व्यूज।",
+    caption: "धामपुर क्षेत्र की खास ग्राउंड रिपोर्ट। 6.5 मिलियन व्यूज।",
     initialViews: 6500000,
     initialLikes: 89000,
     isPinned: true,
