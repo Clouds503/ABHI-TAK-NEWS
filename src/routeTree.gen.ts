@@ -42,6 +42,7 @@ import { Route as AuthenticatedAdminTownsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
 import { Route as AuthenticatedAdminVillagesRouteImport } from './routes/_authenticated/admin.villages'
 import { Route as ApiPublicCampaignEventRouteImport } from './routes/api/public/campaign-event'
+import { Route as ApiPublicSyncInstagramRouteImport } from './routes/api/public/sync-instagram'
 import { Route as ApiPublicSyncYoutubeRouteImport } from './routes/api/public/sync-youtube'
 
 const IndexRoute = IndexRouteImport.update({
@@ -215,6 +216,11 @@ const ApiPublicCampaignEventRoute = ApiPublicCampaignEventRouteImport.update({
   path: '/api/public/campaign-event',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSyncInstagramRoute = ApiPublicSyncInstagramRouteImport.update({
+  id: '/api/public/sync-instagram',
+  path: '/api/public/sync-instagram',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSyncYoutubeRoute = ApiPublicSyncYoutubeRouteImport.update({
   id: '/api/public/sync-youtube',
   path: '/api/public/sync-youtube',
@@ -253,6 +259,7 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/villages': typeof AuthenticatedAdminVillagesRoute
   '/api/public/campaign-event': typeof ApiPublicCampaignEventRoute
+  '/api/public/sync-instagram': typeof ApiPublicSyncInstagramRoute
   '/api/public/sync-youtube': typeof ApiPublicSyncYoutubeRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
 }
@@ -287,6 +294,7 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/villages': typeof AuthenticatedAdminVillagesRoute
   '/api/public/campaign-event': typeof ApiPublicCampaignEventRoute
+  '/api/public/sync-instagram': typeof ApiPublicSyncInstagramRoute
   '/api/public/sync-youtube': typeof ApiPublicSyncYoutubeRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
 }
@@ -324,6 +332,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
   '/_authenticated/admin/villages': typeof AuthenticatedAdminVillagesRoute
   '/api/public/campaign-event': typeof ApiPublicCampaignEventRoute
+  '/api/public/sync-instagram': typeof ApiPublicSyncInstagramRoute
   '/api/public/sync-youtube': typeof ApiPublicSyncYoutubeRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
@@ -361,6 +370,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/villages'
     | '/api/public/campaign-event'
+    | '/api/public/sync-instagram'
     | '/api/public/sync-youtube'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
@@ -395,6 +405,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/villages'
     | '/api/public/campaign-event'
+    | '/api/public/sync-instagram'
     | '/api/public/sync-youtube'
     | '/admin'
   id:
@@ -431,6 +442,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/users'
     | '/_authenticated/admin/villages'
     | '/api/public/campaign-event'
+    | '/api/public/sync-instagram'
     | '/api/public/sync-youtube'
     | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
@@ -453,6 +465,7 @@ export interface RootRouteChildren {
   JanKiAwaazIndexRoute: typeof JanKiAwaazIndexRoute
   NewsIndexRoute: typeof NewsIndexRoute
   ApiPublicCampaignEventRoute: typeof ApiPublicCampaignEventRoute
+  ApiPublicSyncInstagramRoute: typeof ApiPublicSyncInstagramRoute
   ApiPublicSyncYoutubeRoute: typeof ApiPublicSyncYoutubeRoute
 }
 
@@ -689,6 +702,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCampaignEventRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sync-instagram': {
+      id: '/api/public/sync-instagram'
+      path: '/api/public/sync-instagram'
+      fullPath: '/api/public/sync-instagram'
+      preLoaderRoute: typeof ApiPublicSyncInstagramRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/sync-youtube': {
       id: '/api/public/sync-youtube'
       path: '/api/public/sync-youtube'
@@ -767,8 +787,19 @@ const rootRouteChildren: RootRouteChildren = {
   JanKiAwaazIndexRoute: JanKiAwaazIndexRoute,
   NewsIndexRoute: NewsIndexRoute,
   ApiPublicCampaignEventRoute: ApiPublicCampaignEventRoute,
+  ApiPublicSyncInstagramRoute: ApiPublicSyncInstagramRoute,
   ApiPublicSyncYoutubeRoute: ApiPublicSyncYoutubeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
