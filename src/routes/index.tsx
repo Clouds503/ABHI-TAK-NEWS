@@ -606,8 +606,8 @@ function Home() {
                     </Link>
                     <div className="mt-2.5 text-xs font-semibold text-foreground line-clamp-1">
                       {lang === "en"
-                        ? "Live Telecast from District Bijnor"
-                        : "जनपद बिजनौर से सीधा प्रसारण"}
+                        ? "Live News Telecast"
+                        : "सीधा लाइव प्रसारण"}
                     </div>
                   </div>
 
@@ -627,8 +627,8 @@ function Home() {
                     </div>
                     <p className="text-xs text-muted-foreground leading-relaxed">
                       {lang === "en"
-                        ? "Read today's full digital newspaper edition for District Bijnor."
-                        : "जनपद बिजनौर का आज का सम्पूर्ण डिजिटल ई-पेपर संस्करण देखें।"}
+                        ? "Read today's full digital newspaper edition."
+                        : "आज का सम्पूर्ण डिजिटल ई-पेपर संस्करण देखें।"}
                     </p>
                   </div>
 
