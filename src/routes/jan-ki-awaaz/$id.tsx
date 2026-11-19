@@ -97,7 +97,7 @@ function IssuePage() {
           </div>
           <h1 className="mt-2 text-[26px] font-bold leading-snug">{p.title}</h1>
           <div className="mt-2 text-[13px] text-muted-foreground">
-            {[p.area, tw && pick(tw.name_hi, tw.name_en)].filter(Boolean).join(", ")} ·{" "}
+            {[p.area, (p as any).district || (tw && pick(tw.name_hi, tw.name_en))].filter(Boolean).join(", ")} ·{" "}
             {t("reportedBy")}: {p.reporter_name ?? t("anonymous")}
           </div>
         </div>
@@ -180,7 +180,7 @@ function IssuePage() {
               <StatusPill status={p.status!} />
               <span className="flex items-center gap-1 text-xs text-muted-foreground">
                 <MapPin className="h-3.5 w-3.5 text-primary" />
-                {[p.area, tw && pick(tw.name_hi, tw.name_en)].filter(Boolean).join(", ")}
+                {[p.area, (p as any).district || (tw && pick(tw.name_hi, tw.name_en))].filter(Boolean).join(", ")}
               </span>
             </div>
 

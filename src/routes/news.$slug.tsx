@@ -18,6 +18,7 @@ import { useAuth } from "@/lib/auth";
 import { img } from "@/lib/media";
 import { supabase } from "@/integrations/supabase/client";
 import { ArticleRow, Meta, Empty, AdSlot } from "@/components/news";
+import { ArticleGalleryView } from "@/components/ArticleGalleryView";
 import { Button } from "@/components/ui/button";
 import { cn, cleanArticleBody } from "@/lib/utils";
 import { useDoubleTap } from "@/lib/useDoubleTap";
@@ -328,11 +329,36 @@ function ArticlePage() {
           </div>
         )}
 
+        {/* Embedded Story Video Player (Mobile) */}
+        {a.video_url && (
+          <div className="mt-4 px-4">
+            <div className="overflow-hidden rounded-xl border border-border/80 bg-black shadow-sm">
+              <video
+                src={a.video_url}
+                controls
+                playsInline
+                preload="metadata"
+                className="aspect-video w-full"
+              />
+            </div>
+          </div>
+        )}
+
         <div
           {...doubleTapGesture}
           className="space-y-5 px-4 py-6 text-[18px] leading-[1.8] prose prose-p:my-2 prose-a:text-primary max-w-none dark:prose-invert cursor-pointer select-text"
           dangerouslySetInnerHTML={{ __html: body }}
         />
+
+        {/* Multi-image photo gallery with captions */}
+        {a.gallery && (a.gallery as any[]).length > 0 && (
+          <div className="px-4">
+            <ArticleGalleryView items={a.gallery as any} variant="mobile" />
+          </div>
+        )}
+
+        {/* Mobile Article Inline Ad / Promotion */}
+        <AdSlot placement="article_inline" device="mobile" />
 
         {otherRelated.length > 0 && (
           <div className="border-t pt-4">
@@ -534,6 +560,19 @@ function ArticlePage() {
               </div>
             )}
 
+            {/* Embedded Story Video Player (Desktop) */}
+            {a.video_url && (
+              <div className="overflow-hidden rounded-2xl border border-border/80 bg-black shadow-sm">
+                <video
+                  src={a.video_url}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  className="aspect-video w-full"
+                />
+              </div>
+            )}
+
             {/* Editorial Prose Body */}
             <div
               {...doubleTapGesture}
@@ -543,6 +582,16 @@ function ArticlePage() {
               )}
               dangerouslySetInnerHTML={{ __html: body }}
             />
+
+            {/* Editorial Multi-image Photo Gallery with Captions */}
+            {a.gallery && (a.gallery as any[]).length > 0 && (
+              <ArticleGalleryView items={a.gallery as any} variant="desktop" />
+            )}
+
+            {/* Desktop Article Inline Ad / Promotion */}
+            <div className="pt-4">
+              <AdSlot placement="article_inline" device="desktop" />
+            </div>
           </div>
 
           {/* Col 3 (4/12 cols): Sticky Editorial Sidebar */}
@@ -611,8 +660,9 @@ function ArticlePage() {
               </Button>
             </div>
 
-            {/* Sidebar Ad */}
-            <AdSlot placement="home_inline" />
+            {/* Sidebar Ads */}
+            <AdSlot placement="sidebar_ad" device="desktop" />
+            <AdSlot placement="home_inline" device="desktop" />
           </aside>
         </div>
 

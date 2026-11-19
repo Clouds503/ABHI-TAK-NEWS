@@ -51,14 +51,32 @@ function Onboarding() {
     if (profile || user)
       setForm((f) => ({
         ...f,
-        full_name: f.full_name || profile?.full_name || "",
+        full_name:
+          f.full_name ||
+          profile?.full_name ||
+          (user?.user_metadata?.full_name as string) ||
+          (user?.user_metadata?.name as string) ||
+          "",
         phone: f.phone || profile?.phone || "",
         email: f.email || profile?.email || user?.email || "",
       }));
   }, [profile, user]);
   useEffect(() => {
-    if (!loading && !user) navigate({ to: "/auth", replace: true });
-    else if (!loading && user && !needsOnboarding) navigate({ to: "/", replace: true });
+    if (!loading && !user) {
+      supabase.auth.getSession().then(({ data }) => {
+        if (!data.session) {
+          navigate({ to: "/auth", replace: true });
+        }
+      });
+    } else if (!loading && user && !needsOnboarding) {
+      const destination =
+        sessionStorage.getItem("abhitak.post_onboarding_redirect") ||
+        sessionStorage.getItem("abhitak.redirect") ||
+        "/";
+      sessionStorage.removeItem("abhitak.post_onboarding_redirect");
+      sessionStorage.removeItem("abhitak.redirect");
+      navigate({ to: destination, replace: true });
+    }
   }, [loading, user, needsOnboarding, navigate]);
 
   const submit = async (e: React.FormEvent) => {
@@ -81,6 +99,13 @@ function Onboarding() {
     toast.success("स्वागत है! Welcome to Abhitak");
     setLang(p.data.preferred_language);
     await refreshProfile();
+    const destination =
+      sessionStorage.getItem("abhitak.post_onboarding_redirect") ||
+      sessionStorage.getItem("abhitak.redirect") ||
+      "/";
+    sessionStorage.removeItem("abhitak.post_onboarding_redirect");
+    sessionStorage.removeItem("abhitak.redirect");
+    navigate({ to: destination, replace: true });
   };
 
   const set =

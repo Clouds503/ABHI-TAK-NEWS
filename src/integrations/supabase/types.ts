@@ -150,6 +150,7 @@ export type Database = {
           link_url: string | null;
           media_type: string;
           placement: string;
+          device_visibility?: string | null;
           starts_at: string | null;
           title: string;
           town_id: string | null;
@@ -168,6 +169,7 @@ export type Database = {
           link_url?: string | null;
           media_type?: string;
           placement?: string;
+          device_visibility?: string | null;
           starts_at?: string | null;
           title: string;
           town_id?: string | null;
@@ -186,6 +188,7 @@ export type Database = {
           link_url?: string | null;
           media_type?: string;
           placement?: string;
+          device_visibility?: string | null;
           starts_at?: string | null;
           title?: string;
           town_id?: string | null;
@@ -208,8 +211,11 @@ export type Database = {
           body_en: string | null;
           body_hi: string | null;
           category_id: string | null;
+          city: string | null;
           city_id: string | null;
           cover_url: string | null;
+          district: string | null;
+          gallery: Json | null;
           created_at: string;
           id: string;
           is_breaking: boolean;
@@ -224,7 +230,9 @@ export type Database = {
           town_id: string | null;
           updated_at: string;
           views: number;
+          village: string | null;
           village_id: string | null;
+          video_url: string | null;
         };
         Insert: {
           author_id?: string | null;
@@ -232,8 +240,11 @@ export type Database = {
           body_en?: string | null;
           body_hi?: string | null;
           category_id?: string | null;
+          city?: string | null;
           city_id?: string | null;
           cover_url?: string | null;
+          district?: string | null;
+          gallery?: Json | null;
           created_at?: string;
           id?: string;
           is_breaking?: boolean;
@@ -248,7 +259,9 @@ export type Database = {
           town_id?: string | null;
           updated_at?: string;
           views?: number;
+          village?: string | null;
           village_id?: string | null;
+          video_url?: string | null;
         };
         Update: {
           author_id?: string | null;
@@ -256,8 +269,11 @@ export type Database = {
           body_en?: string | null;
           body_hi?: string | null;
           category_id?: string | null;
+          city?: string | null;
           city_id?: string | null;
           cover_url?: string | null;
+          district?: string | null;
+          gallery?: Json | null;
           created_at?: string;
           id?: string;
           is_breaking?: boolean;
@@ -272,7 +288,9 @@ export type Database = {
           town_id?: string | null;
           updated_at?: string;
           views?: number;
+          village?: string | null;
           village_id?: string | null;
+          video_url?: string | null;
         };
         Relationships: [
           {
@@ -512,6 +530,7 @@ export type Database = {
           category: string;
           created_at: string;
           description: string;
+          district: string | null;
           id: string;
           is_anonymous: boolean;
           is_featured: boolean;
@@ -532,6 +551,7 @@ export type Database = {
           category: string;
           created_at?: string;
           description: string;
+          district?: string | null;
           id?: string;
           is_anonymous?: boolean;
           is_featured?: boolean;
@@ -552,6 +572,7 @@ export type Database = {
           category?: string;
           created_at?: string;
           description?: string;
+          district?: string | null;
           id?: string;
           is_anonymous?: boolean;
           is_featured?: boolean;
@@ -914,6 +935,7 @@ export type Database = {
           category: string | null;
           created_at: string | null;
           description: string | null;
+          district: string | null;
           id: string | null;
           is_featured: boolean | null;
           photo_url: string | null;
@@ -929,6 +951,7 @@ export type Database = {
           category?: string | null;
           created_at?: string | null;
           description?: string | null;
+          district?: string | null;
           id?: string | null;
           is_featured?: boolean | null;
           photo_url?: string | null;
@@ -944,6 +967,7 @@ export type Database = {
           category?: string | null;
           created_at?: string | null;
           description?: string | null;
+          district?: string | null;
           id?: string | null;
           is_featured?: boolean | null;
           photo_url?: string | null;

@@ -102,6 +102,11 @@ export const articlesQuery = (
     staleTime: 2 * 60_000,
   });
 
+export type GalleryItem = {
+  url: string;
+  caption?: string;
+};
+
 export type ArticleCard = {
   id: string;
   slug: string;
@@ -110,31 +115,57 @@ export type ArticleCard = {
   summary_hi: string | null;
   summary_en: string | null;
   cover_url: string | null;
+  video_url?: string | null;
+  gallery?: GalleryItem[] | null;
   is_breaking: boolean;
   is_featured: boolean;
   published_at: string | null;
   author_name: string | null;
+  district?: string | null;
+  city?: string | null;
+  village?: string | null;
   town: { slug: string; name_hi: string; name_en: string } | null;
   category: { slug: string; name_hi: string; name_en: string } | null;
+};
+
+export type ArticleDetail = ArticleCard & {
+  body_hi: string | null;
+  body_en: string | null;
+  category_id: string | null;
+  district?: string | null;
+  city?: string | null;
+  village?: string | null;
+  video_url?: string | null;
+  gallery?: GalleryItem[] | null;
 };
 
 export const articleQuery = (slug: string) =>
   queryOptions({
     queryKey: ["article", slug],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from("articles")
-        .select(`${ARTICLE_COLS}, body_hi, body_en, category_id`)
+        .select(`${ARTICLE_COLS}, body_hi, body_en, category_id, gallery, video_url`)
         .eq("slug", slug)
         .maybeSingle();
-      if (error) throw error;
-      return data as unknown as
-        | (ArticleCard & {
-            body_hi: string | null;
-            body_en: string | null;
-            category_id: string | null;
-          })
-        | null;
+      if (error) {
+        // Fallback if gallery or video_url columns not yet present in remote db
+        let fb = await supabase
+          .from("articles")
+          .select(`${ARTICLE_COLS}, body_hi, body_en, category_id, gallery`)
+          .eq("slug", slug)
+          .maybeSingle();
+        if (fb.error) {
+          fb = await supabase
+            .from("articles")
+            .select(`${ARTICLE_COLS}, body_hi, body_en, category_id`)
+            .eq("slug", slug)
+            .maybeSingle();
+        }
+        if (fb.error) throw error;
+        data = fb.data as any;
+      }
+      return data as unknown as ArticleDetail | null;
     },
   });
 
@@ -173,17 +204,55 @@ export const adsQuery = (placement: string) =>
     queryKey: ["ads", placement],
     queryFn: async () => {
       const now = new Date().toISOString();
+      const placementVariants = [
+        placement,
+        `${placement}_all`,
+        `${placement}_mobile`,
+        `${placement}_desktop`,
+      ];
       const { data, error } = await supabase
         .from("advertisements")
-        .select("id,title,advertiser,image_url,link_url,campaign_type,media_type,video_url")
-        .eq("placement", placement)
+        .select("id,title,advertiser,image_url,link_url,campaign_type,media_type,video_url,placement,device_visibility")
+        .in("placement", placementVariants)
         .eq("is_active", true)
         .or(`starts_at.is.null,starts_at.lte.${now}`)
         .or(`ends_at.is.null,ends_at.gt.${now}`)
         .order("created_at", { ascending: false })
-        .limit(3);
-      if (error) throw error;
-      return data;
+        .limit(10);
+
+      if (error) {
+        if (error.message.includes("device_visibility")) {
+          const { data: fbData, error: fbError } = await supabase
+            .from("advertisements")
+            .select("id,title,advertiser,image_url,link_url,campaign_type,media_type,video_url,placement")
+            .in("placement", placementVariants)
+            .eq("is_active", true)
+            .or(`starts_at.is.null,starts_at.lte.${now}`)
+            .or(`ends_at.is.null,ends_at.gt.${now}`)
+            .order("created_at", { ascending: false })
+            .limit(10);
+          if (fbError) throw fbError;
+          return (fbData ?? []).map((row) => ({
+            ...row,
+            device_visibility: (row.placement.endsWith("_desktop")
+              ? "desktop"
+              : row.placement.endsWith("_mobile")
+                ? "mobile"
+                : "all") as "all" | "mobile" | "desktop",
+          }));
+        }
+        throw error;
+      }
+
+      return (data ?? []).map((row) => ({
+        ...row,
+        device_visibility: (row.device_visibility ||
+          (row.placement.endsWith("_desktop")
+            ? "desktop"
+            : row.placement.endsWith("_mobile")
+              ? "mobile"
+              : "all")) as "all" | "mobile" | "desktop",
+      }));
     },
     staleTime: 5 * 60_000,
   });
@@ -197,14 +266,28 @@ export const jkaPublicQuery = (
       let q = supabase
         .from("jka_public")
         .select(
-          "id,reporter_name,category,town_id,area,title,description,photo_url,video_url,is_featured,status,created_at,updated_at",
+          "id,reporter_name,category,town_id,area,district,title,description,photo_url,video_url,is_featured,status,created_at,updated_at",
         )
         .order("created_at", { ascending: false })
         .limit(opts.limit ?? 50);
       if (opts.town) q = q.eq("town_id", opts.town);
       if (opts.category) q = q.eq("category", opts.category);
-      const { data, error } = await q;
-      if (error) throw error;
+      let { data, error } = await q;
+      if (error) {
+        // Fallback without district if remote view not yet updated
+        let fb = supabase
+          .from("jka_public")
+          .select(
+            "id,reporter_name,category,town_id,area,title,description,photo_url,video_url,is_featured,status,created_at,updated_at",
+          )
+          .order("created_at", { ascending: false })
+          .limit(opts.limit ?? 50);
+        if (opts.town) fb = fb.eq("town_id", opts.town);
+        if (opts.category) fb = fb.eq("category", opts.category);
+        const fbRes = await fb;
+        if (fbRes.error) throw error;
+        data = fbRes.data;
+      }
       return data;
     },
     staleTime: 2 * 60_000,

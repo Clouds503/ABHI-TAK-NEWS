@@ -139,7 +139,12 @@ function Home() {
   const { data: videos } = useQuery(videosQuery);
   const { data: issues } = useQuery(jkaPublicQuery({ limit: 6 }));
   const { data: topBanners } = useQuery(adsQuery("home_top"));
-  const topBanner = topBanners?.[0];
+  const mobileTopBanner = topBanners?.find(
+    (b) => !b?.device_visibility || b.device_visibility === "all" || b.device_visibility === "mobile",
+  ) ?? topBanners?.[0];
+  const desktopTopBanner = topBanners?.find(
+    (b) => !b?.device_visibility || b.device_visibility === "all" || b.device_visibility === "desktop",
+  ) ?? topBanners?.[0];
 
   const articles = isFiltered ? filteredArticles : standardArticles;
   const isLoading = isFiltered ? filteredLoading : standardLoading;
@@ -256,7 +261,7 @@ function Home() {
               {isLoading ? (
                 <Skeleton className="aspect-[16/9] w-full rounded-none" />
               ) : (
-                <TopHomeBanner banner={topBanner} fallbackImage={homeBanner} />
+                <TopHomeBanner banner={mobileTopBanner} fallbackImage={homeBanner} />
               )}
 
               {/* District Radar */}
@@ -426,6 +431,17 @@ function Home() {
             </div>
           ) : (
             <>
+              {/* Desktop Top Home Banner (Hero Slot) */}
+              {desktopTopBanner && (
+                <div className="pt-6 pb-2">
+                  <TopHomeBanner
+                    banner={desktopTopBanner}
+                    fallbackImage={homeBanner}
+                    className="aspect-[3/1] max-h-[380px] rounded-2xl border shadow-xs"
+                  />
+                </div>
+              )}
+
               {/* 1. Above-The-Fold 3-Column Newspaper Broadsheet (12 cols) */}
               <div className="grid grid-cols-12 gap-8 py-8 border-b">
                 {/* Left Column (3/12 cols): ताज़ा बुलेटिन (Top Briefs) */}
@@ -652,8 +668,9 @@ function Home() {
                     </Button>
                   </div>
 
-                  {/* Desktop Inline Ad */}
-                  <AdSlot placement="home_inline" />
+                  {/* Desktop Sidebar & Inline Ads */}
+                  <AdSlot placement="sidebar_ad" device="desktop" />
+                  <AdSlot placement="home_inline" device="desktop" />
                 </div>
               </div>
 

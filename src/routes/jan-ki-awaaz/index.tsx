@@ -7,7 +7,7 @@ import { useI18n, timeAgo, JKA_CATEGORIES } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { img } from "@/lib/media";
-import { Empty, StatusPill } from "@/components/news";
+import { Empty, StatusPill, AdSlot } from "@/components/news";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -55,6 +55,10 @@ function JkaHome() {
   const townName = (id: string | null) => {
     const tw = towns?.find((x) => x.id === id);
     return tw ? pick(tw.name_hi, tw.name_en) : "";
+  };
+  const locationLabel = (p: { area?: string | null; district?: string | null; town_id?: string | null }) => {
+    const districtOrTown = p.district || townName(p.town_id ?? null);
+    return [p.area, districtOrTown].filter(Boolean).join(", ");
   };
   const chip = (on: boolean) =>
     cn(
@@ -174,8 +178,7 @@ function JkaHome() {
                 </div>
                 <h3 className="mt-1.5 text-[17px] font-bold leading-snug">{p.title}</h3>
                 <div suppressHydrationWarning className="mt-2 text-[12px] text-muted-foreground">
-                  {[p.area, townName(p.town_id)].filter(Boolean).join(", ")} ·{" "}
-                  {p.reporter_name ?? t("anonymous")} · {timeAgo(p.created_at, lang)}
+                  {locationLabel(p)} · {p.reporter_name ?? t("anonymous")} · {timeAgo(p.created_at, lang)}
                 </div>
               </Link>
             </li>
@@ -244,7 +247,7 @@ function JkaHome() {
           {/* Town Pills */}
           <div className="flex items-center gap-2 border-t pt-3">
             <span className="shrink-0 text-xs font-bold uppercase tracking-wider text-muted-foreground mr-2">
-              {lang === "hi" ? "तहसील / कस्बा:" : "Town / Tehsil:"}
+              {lang === "hi" ? "ज़िला / क्षेत्र:" : "District / Area:"}
             </span>
             <div className="flex flex-wrap gap-2">
               <button onClick={() => setTown(undefined)} className={chip(!town)}>
@@ -283,7 +286,7 @@ function JkaHome() {
                   </span>
                   <StatusPill status={featured[0].status!} />
                   <span className="text-xs text-muted-foreground">
-                    {[featured[0].area, townName(featured[0].town_id)].filter(Boolean).join(", ")}
+                    {locationLabel(featured[0])}
                   </span>
                 </div>
                 <h2 className="mt-3 font-serif text-2xl font-bold leading-snug">
@@ -313,6 +316,9 @@ function JkaHome() {
             </div>
           </div>
         )}
+
+        {/* Civic Feed Sponsorship Banner */}
+        <AdSlot placement="jan_ki_awaaz" className="my-6 mx-0" />
 
         {/* Empty State */}
         {!isLoading && !data?.length && (
@@ -370,7 +376,7 @@ function JkaHome() {
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span className="flex items-center gap-1 font-medium truncate max-w-[60%]">
                     <MapPin className="h-3 w-3 text-primary shrink-0" />
-                    {[p.area, townName(p.town_id)].filter(Boolean).join(", ") || "स्थानीय क्षेत्र"}
+                    {locationLabel(p) || (lang === "hi" ? "स्थानीय क्षेत्र" : "Local Area")}
                   </span>
                   <span suppressHydrationWarning className="shrink-0">
                     {timeAgo(p.created_at, lang)}

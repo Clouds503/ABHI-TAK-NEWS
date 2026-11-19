@@ -23,18 +23,32 @@ export const Route = createFileRoute("/_authenticated/report")({
   component: ReportPage,
 });
 
-const schema = z.object({
-  name: z.string().trim().min(2, "Name required").max(100),
-  phone: z
-    .string()
-    .trim()
-    .regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit mobile number"),
-  category: z.string().min(1, "Choose a category"),
-  town_id: z.string().uuid("Choose a town"),
-  area: z.string().trim().max(120).optional(),
-  title: z.string().trim().min(5, "Title is too short").max(150),
-  description: z.string().trim().min(20, "Please describe the issue (min 20 characters)").max(3000),
-});
+const schema = z
+  .object({
+    name: z.string().trim().min(2, "Name required").max(100),
+    phone: z
+      .string()
+      .trim()
+      .regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit mobile number"),
+    category: z.string().min(1, "Choose a category"),
+    custom_category: z.string().trim().max(100).optional(),
+    district: z.string().trim().min(2, "Please enter your district").max(100),
+    area: z.string().trim().max(120).optional(),
+    title: z.string().trim().min(5, "Title is too short").max(150),
+    description: z.string().trim().min(20, "Please describe the issue (min 20 characters)").max(3000),
+  })
+  .refine(
+    (data) => {
+      if (data.category === "other" && !data.custom_category?.trim()) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "Please specify the other category",
+      path: ["custom_category"],
+    },
+  );
 
 async function upload(_userId: string, file: File) {
   return uploadMedia(file, "reports");
@@ -49,7 +63,8 @@ function ReportPage() {
     name: "",
     phone: "",
     category: "",
-    town_id: "",
+    custom_category: "",
+    district: "",
     area: "",
     title: "",
     description: "",
@@ -64,19 +79,22 @@ function ReportPage() {
   useEffect(() => {
     supabase
       .from("profiles")
-      .select("full_name, phone, town_id")
+      .select("full_name, phone, town_id, town:towns(name_hi, name_en)")
       .eq("id", user.id)
       .maybeSingle()
       .then(({ data }) => {
-        if (data)
+        if (data) {
+          const tw = data.town as { name_hi?: string; name_en?: string } | null;
+          const initialDistrict = tw ? (lang === "en" ? tw.name_en : tw.name_hi) || "" : "";
           setF((p) => ({
             ...p,
             name: data.full_name ?? "",
             phone: data.phone ?? "",
-            town_id: data.town_id ?? "",
+            district: p.district || initialDistrict,
           }));
+        }
       });
-  }, [user.id]);
+  }, [user.id, lang]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,35 +114,65 @@ function ReportPage() {
     }
     setBusy(true);
     try {
-      await supabase
-        .from("profiles")
-        .update({
-          full_name: parsed.data.name,
-          phone: parsed.data.phone,
-          town_id: parsed.data.town_id,
-        })
-        .eq("id", user.id);
+      const matchedTown = towns?.find(
+        (tw) =>
+          tw.name_en.toLowerCase() === parsed.data.district.toLowerCase() ||
+          tw.name_hi.trim() === parsed.data.district.trim(),
+      );
+
+      const profileUpdate: { full_name: string; phone: string; town_id?: string | null } = {
+        full_name: parsed.data.name,
+        phone: parsed.data.phone,
+      };
+      if (matchedTown) {
+        profileUpdate.town_id = matchedTown.id;
+      }
+      await supabase.from("profiles").update(profileUpdate).eq("id", user.id);
+
+      const finalCategory =
+        parsed.data.category === "other" && parsed.data.custom_category?.trim()
+          ? parsed.data.custom_category.trim()
+          : parsed.data.category;
+
       const photo_url = photo ? await upload(user.id, photo) : null;
       const video_url = video ? await upload(user.id, video) : null;
-      const { data, error } = await supabase
+
+      const postPayload: any = {
+        user_id: user.id,
+        reporter_name: parsed.data.name,
+        category: finalCategory,
+        district: parsed.data.district,
+        town_id: matchedTown?.id || null,
+        area: parsed.data.area || null,
+        title: parsed.data.title,
+        description: parsed.data.description,
+        photo_url,
+        video_url,
+        latitude: coords?.lat ?? null,
+        longitude: coords?.lng ?? null,
+        is_anonymous: anon,
+      };
+
+      let { data, error } = await supabase
         .from("jan_ki_awaaz_posts")
-        .insert({
-          user_id: user.id,
-          reporter_name: parsed.data.name,
-          category: parsed.data.category,
-          town_id: parsed.data.town_id,
-          area: parsed.data.area || null,
-          title: parsed.data.title,
-          description: parsed.data.description,
-          photo_url,
-          video_url,
-          latitude: coords?.lat ?? null,
-          longitude: coords?.lng ?? null,
-          is_anonymous: anon,
-        })
+        .insert(postPayload)
         .select("id")
         .single();
-      if (error) throw error;
+
+      if (error) {
+        // Fallback if district column is not yet present on remote DB
+        const fallbackArea = [parsed.data.district, parsed.data.area].filter(Boolean).join(" - ");
+        delete postPayload.district;
+        postPayload.area = fallbackArea || null;
+        const fallbackRes = await supabase
+          .from("jan_ki_awaaz_posts")
+          .insert(postPayload)
+          .select("id")
+          .single();
+        if (fallbackRes.error) throw error;
+        data = fallbackRes.data;
+      }
+
       toast.success(
         lang === "en" ? "Issue submitted for review" : "आपकी समस्या समीक्षा के लिए भेज दी गई",
       );
@@ -189,33 +237,62 @@ function ReportPage() {
               key={c.slug}
               onClick={() => setF({ ...f, category: c.slug })}
               className={cn(
-                "h-11 rounded-sm border text-[13px] font-medium",
+                "h-11 rounded-sm border text-[13px] font-medium transition-colors",
                 f.category === c.slug
-                  ? "border-primary bg-accent text-accent-foreground"
-                  : "bg-card",
+                  ? "border-primary bg-primary text-primary-foreground font-semibold shadow-xs"
+                  : "bg-card hover:bg-muted/50",
               )}
             >
               {lang === "en" ? c.en : c.hi}
             </button>
           ))}
         </div>
+
+        {/* If user selects category "other", show text field */}
+        {f.category === "other" && (
+          <div className="mt-3 animate-in fade-in slide-in-from-top-1 duration-200">
+            <Label className="text-xs font-semibold text-muted-foreground">
+              {lang === "en" ? "Specify Category *" : "अन्य श्रेणी का विवरण लिखें *"}
+            </Label>
+            <Input
+              className="mt-1 h-12"
+              placeholder={
+                lang === "en"
+                  ? "e.g. Stray animals, Pollution, Drainage, Encroachment..."
+                  : "जैसे: छुट्टा पशु, पर्यावरण प्रदूषण, नाली समस्या, अवैध कब्ज़ा..."
+              }
+              value={f.custom_category}
+              onChange={set("custom_category")}
+              autoFocus
+            />
+          </div>
+        )}
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
-          <Label>{t("town")} *</Label>
-          <select className={selectCls} value={f.town_id} onChange={set("town_id")}>
-            <option value="">—</option>
-            {towns?.map((tw) => (
-              <option key={tw.id} value={tw.id}>
-                {pick(tw.name_hi, tw.name_en)}
-              </option>
-            ))}
-          </select>
+          <Label>{lang === "en" ? "District" : "ज़िला (District)"} *</Label>
+          <Input
+            className="mt-1.5 h-12"
+            placeholder={
+              lang === "en"
+                ? "Enter district (e.g. Shamli, Muzaffarnagar)"
+                : "अपना ज़िला दर्ज करें (जैसे शामली, मुज़फ्फरनगर)"
+            }
+            value={f.district}
+            onChange={set("district")}
+          />
         </div>
         <div>
           <Label>{t("area")}</Label>
-          <Input className="mt-1.5 h-12" value={f.area} onChange={set("area")} />
+          <Input
+            className="mt-1.5 h-12"
+            placeholder={
+              lang === "en" ? "Village, Mohalla, Ward or Landmark" : "गांव, कस्बा, मोहल्ला या वार्ड"
+            }
+            value={f.area}
+            onChange={set("area")}
+          />
         </div>
       </div>
 

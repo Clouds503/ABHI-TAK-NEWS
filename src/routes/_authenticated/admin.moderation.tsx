@@ -145,7 +145,7 @@ function Moderation() {
               </div>
               <div className="mt-1 font-semibold">{p.title}</div>
               <div className="text-xs text-muted-foreground">
-                {p.town?.name_en} · {new Date(p.created_at).toLocaleString("en-IN")}
+                {[p.district || p.town?.name_en, p.area].filter(Boolean).join(", ")} · {new Date(p.created_at).toLocaleString("en-IN")}
               </div>
             </button>
           ))}

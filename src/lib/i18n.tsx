@@ -48,6 +48,7 @@ const dict = {
   all: { hi: "सभी", en: "All" },
   category: { hi: "श्रेणी", en: "Category" },
   town: { hi: "कस्बा", en: "Town" },
+  district: { hi: "ज़िला", en: "District" },
   area: { hi: "गांव / क्षेत्र", en: "Village / Area" },
   title: { hi: "शीर्षक", en: "Title" },
   description: { hi: "विवरण", en: "Description" },

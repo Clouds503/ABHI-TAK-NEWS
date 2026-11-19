@@ -33,7 +33,9 @@ export function Meta({ a, light }: { a: ArticleCard; light?: boolean }) {
           {pick(a.category.name_hi, a.category.name_en)}
         </span>
       )}
-      {a.town && <span>· {pick(a.town.name_hi, a.town.name_en)}</span>}
+      {(a.district || a.town) && (
+        <span>· {a.district || pick(a.town?.name_hi, a.town?.name_en)}</span>
+      )}
       <span suppressHydrationWarning>· {timeAgo(a.published_at, lang)}</span>
     </div>
   );
@@ -43,20 +45,23 @@ export function Meta({ a, light }: { a: ArticleCard; light?: boolean }) {
 export function TopHomeBanner({
   banner,
   fallbackImage,
+  className,
 }: {
   banner?: {
-    id: string;
+    id?: string;
     image_url: string;
     link_url?: string | null;
     title?: string | null;
+    device_visibility?: string | null;
   } | null;
   fallbackImage?: string;
+  className?: string;
 }) {
   const imageUrl = banner ? (img(banner.image_url) ?? banner.image_url) : (fallbackImage ?? homeBanner);
   if (!imageUrl) return null;
 
   const content = (
-    <div className="relative aspect-[16/9] w-full select-none overflow-hidden bg-muted">
+    <div className={cn("relative aspect-[16/9] w-full select-none overflow-hidden bg-muted", className)}>
       <img
         src={imageUrl}
         alt={banner?.title || "Abhitak Banner"}
@@ -331,10 +336,29 @@ export function Ticker({ items }: { items: ArticleCard[] }) {
   );
 }
 
-export function AdSlot({ placement }: { placement: string }) {
+export function AdSlot({
+  placement,
+  className,
+  device,
+}: {
+  placement: string;
+  className?: string;
+  device?: "mobile" | "desktop" | "all";
+}) {
   const { t } = useI18n();
   const { data } = useQuery(adsQuery(placement));
-  const ad = data?.[0];
+
+  // Match ad according to device target if specified, otherwise pick first eligible ad
+  const ad = device
+    ? data?.find((item) =>
+        device === "mobile"
+          ? item.device_visibility === "mobile" || item.device_visibility === "all"
+          : device === "desktop"
+            ? item.device_visibility === "desktop" || item.device_visibility === "all"
+            : true,
+      ) ?? data?.[0]
+    : data?.[0];
+
   const adRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -363,6 +387,7 @@ export function AdSlot({ placement }: { placement: string }) {
   }, [ad?.id]);
 
   if (!ad) return null;
+
   const recordClick = () => {
     void fetch(getCampaignEventEndpoint(), {
       method: "POST",
@@ -371,17 +396,29 @@ export function AdSlot({ placement }: { placement: string }) {
       keepalive: true,
     });
   };
+
+  // Determine responsive visibility based on ad.device_visibility unless explicitly targeted via prop
+  const responsiveClass =
+    device === undefined
+      ? ad.device_visibility === "mobile"
+        ? "lg:hidden"
+        : ad.device_visibility === "desktop"
+          ? "hidden lg:block"
+          : ""
+      : "";
+
   return (
-    <div ref={adRef} className="mx-4 my-6">
-      <div className="mb-1 text-[10px] uppercase tracking-widest text-muted-foreground">
-        {t("advertisement")}
+    <div ref={adRef} className={cn("mx-4 my-6", responsiveClass, className)}>
+      <div className="mb-1 text-[10px] uppercase tracking-widest text-muted-foreground flex items-center justify-between">
+        <span>{ad.campaign_type === "promotion" ? "Promotion" : t("advertisement")}</span>
+        {ad.advertiser && <span className="text-[9px] text-muted-foreground/75">{ad.advertiser}</span>}
       </div>
       <a
         href={ad.link_url ?? "#"}
         target="_blank"
         rel="noopener sponsored"
         onClick={recordClick}
-        className="relative block overflow-hidden rounded-lg border bg-ink"
+        className="relative block overflow-hidden rounded-xl border bg-ink shadow-xs hover:opacity-95 transition-opacity"
       >
         {ad.media_type === "video" && ad.video_url ? (
           <video
@@ -409,7 +446,7 @@ export function AdSlot({ placement }: { placement: string }) {
           <div className="text-[11px] uppercase tracking-widest text-ink-foreground/70">
             {ad.campaign_type === "promotion" ? "Promotion" : ad.advertiser}
           </div>
-          <div className="mt-1 max-w-[70%] text-lg font-bold leading-tight">{ad.title}</div>
+          <div className="mt-1 max-w-[75%] text-lg font-bold leading-tight drop-shadow-xs">{ad.title}</div>
         </div>
       </a>
     </div>

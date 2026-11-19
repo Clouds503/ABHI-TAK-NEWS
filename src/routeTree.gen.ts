@@ -13,12 +13,15 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as EditorRouteImport } from './routes/editor'
 import { Route as EpaperRouteImport } from './routes/epaper'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as LiveRouteImport } from './routes/live'
+import { Route as ModeratorRouteImport } from './routes/moderator'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReelsRouteImport } from './routes/reels'
+import { Route as ReporterRouteImport } from './routes/reporter'
 import { Route as VideosRouteImport } from './routes/videos'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedMyIssuesRouteImport } from './routes/_authenticated/my-issues'
@@ -35,13 +38,17 @@ import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminArticlesRouteImport } from './routes/_authenticated/admin.articles'
 import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_authenticated/admin.categories'
 import { Route as AuthenticatedAdminCitiesRouteImport } from './routes/_authenticated/admin.cities'
+import { Route as AuthenticatedAdminEditorRouteImport } from './routes/_authenticated/admin.editor'
 import { Route as AuthenticatedAdminEventsRouteImport } from './routes/_authenticated/admin.events'
 import { Route as AuthenticatedAdminModerationRouteImport } from './routes/_authenticated/admin.moderation'
+import { Route as AuthenticatedAdminModeratorRouteImport } from './routes/_authenticated/admin.moderator'
 import { Route as AuthenticatedAdminReelsRouteImport } from './routes/_authenticated/admin.reels'
+import { Route as AuthenticatedAdminReporterRouteImport } from './routes/_authenticated/admin.reporter'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
 import { Route as AuthenticatedAdminTownsRouteImport } from './routes/_authenticated/admin.towns'
 import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
 import { Route as AuthenticatedAdminVillagesRouteImport } from './routes/_authenticated/admin.villages'
+import { Route as ApiPublicAutoConfirmUserRouteImport } from './routes/api/public/auto-confirm-user'
 import { Route as ApiPublicCampaignEventRouteImport } from './routes/api/public/campaign-event'
 import { Route as ApiPublicSyncInstagramRouteImport } from './routes/api/public/sync-instagram'
 import { Route as ApiPublicSyncYoutubeRouteImport } from './routes/api/public/sync-youtube'
@@ -66,6 +73,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EditorRoute = EditorRouteImport.update({
+  id: '/editor',
+  path: '/editor',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EpaperRoute = EpaperRouteImport.update({
   id: '/epaper',
   path: '/epaper',
@@ -81,6 +93,11 @@ const LiveRoute = LiveRouteImport.update({
   path: '/live',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ModeratorRoute = ModeratorRouteImport.update({
+  id: '/moderator',
+  path: '/moderator',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -94,6 +111,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const ReelsRoute = ReelsRouteImport.update({
   id: '/reels',
   path: '/reels',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReporterRoute = ReporterRouteImport.update({
+  id: '/reporter',
+  path: '/reporter',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VideosRoute = VideosRouteImport.update({
@@ -180,6 +202,12 @@ const AuthenticatedAdminCitiesRoute =
     path: '/cities',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminEditorRoute =
+  AuthenticatedAdminEditorRouteImport.update({
+    id: '/editor',
+    path: '/editor',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminEventsRoute =
   AuthenticatedAdminEventsRouteImport.update({
     id: '/events',
@@ -192,11 +220,23 @@ const AuthenticatedAdminModerationRoute =
     path: '/moderation',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminModeratorRoute =
+  AuthenticatedAdminModeratorRouteImport.update({
+    id: '/moderator',
+    path: '/moderator',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminReelsRoute = AuthenticatedAdminReelsRouteImport.update({
   id: '/reels',
   path: '/reels',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminReporterRoute =
+  AuthenticatedAdminReporterRouteImport.update({
+    id: '/reporter',
+    path: '/reporter',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminSettingsRoute =
   AuthenticatedAdminSettingsRouteImport.update({
     id: '/settings',
@@ -218,6 +258,12 @@ const AuthenticatedAdminVillagesRoute =
     id: '/villages',
     path: '/villages',
     getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const ApiPublicAutoConfirmUserRoute =
+  ApiPublicAutoConfirmUserRouteImport.update({
+    id: '/api/public/auto-confirm-user',
+    path: '/api/public/auto-confirm-user',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicCampaignEventRoute = ApiPublicCampaignEventRouteImport.update({
   id: '/api/public/campaign-event',
@@ -244,12 +290,15 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/editor': typeof EditorRoute
   '/epaper': typeof EpaperRoute
   '/events': typeof EventsRoute
   '/live': typeof LiveRoute
+  '/moderator': typeof ModeratorRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
   '/reels': typeof ReelsRoute
+  '/reporter': typeof ReporterRoute
   '/videos': typeof VideosRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/my-issues': typeof AuthenticatedMyIssuesRoute
@@ -265,13 +314,17 @@ export interface FileRoutesByFullPath {
   '/admin/articles': typeof AuthenticatedAdminArticlesRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/cities': typeof AuthenticatedAdminCitiesRoute
+  '/admin/editor': typeof AuthenticatedAdminEditorRoute
   '/admin/events': typeof AuthenticatedAdminEventsRoute
   '/admin/moderation': typeof AuthenticatedAdminModerationRoute
+  '/admin/moderator': typeof AuthenticatedAdminModeratorRoute
   '/admin/reels': typeof AuthenticatedAdminReelsRoute
+  '/admin/reporter': typeof AuthenticatedAdminReporterRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/towns': typeof AuthenticatedAdminTownsRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/villages': typeof AuthenticatedAdminVillagesRoute
+  '/api/public/auto-confirm-user': typeof ApiPublicAutoConfirmUserRoute
   '/api/public/campaign-event': typeof ApiPublicCampaignEventRoute
   '/api/public/sync-instagram': typeof ApiPublicSyncInstagramRoute
   '/api/public/sync-youtube': typeof ApiPublicSyncYoutubeRoute
@@ -282,12 +335,15 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/editor': typeof EditorRoute
   '/epaper': typeof EpaperRoute
   '/events': typeof EventsRoute
   '/live': typeof LiveRoute
+  '/moderator': typeof ModeratorRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
   '/reels': typeof ReelsRoute
+  '/reporter': typeof ReporterRoute
   '/videos': typeof VideosRoute
   '/my-issues': typeof AuthenticatedMyIssuesRoute
   '/report': typeof AuthenticatedReportRoute
@@ -302,13 +358,17 @@ export interface FileRoutesByTo {
   '/admin/articles': typeof AuthenticatedAdminArticlesRoute
   '/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/admin/cities': typeof AuthenticatedAdminCitiesRoute
+  '/admin/editor': typeof AuthenticatedAdminEditorRoute
   '/admin/events': typeof AuthenticatedAdminEventsRoute
   '/admin/moderation': typeof AuthenticatedAdminModerationRoute
+  '/admin/moderator': typeof AuthenticatedAdminModeratorRoute
   '/admin/reels': typeof AuthenticatedAdminReelsRoute
+  '/admin/reporter': typeof AuthenticatedAdminReporterRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/towns': typeof AuthenticatedAdminTownsRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/villages': typeof AuthenticatedAdminVillagesRoute
+  '/api/public/auto-confirm-user': typeof ApiPublicAutoConfirmUserRoute
   '/api/public/campaign-event': typeof ApiPublicCampaignEventRoute
   '/api/public/sync-instagram': typeof ApiPublicSyncInstagramRoute
   '/api/public/sync-youtube': typeof ApiPublicSyncYoutubeRoute
@@ -321,12 +381,15 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/editor': typeof EditorRoute
   '/epaper': typeof EpaperRoute
   '/events': typeof EventsRoute
   '/live': typeof LiveRoute
+  '/moderator': typeof ModeratorRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
   '/reels': typeof ReelsRoute
+  '/reporter': typeof ReporterRoute
   '/videos': typeof VideosRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/my-issues': typeof AuthenticatedMyIssuesRoute
@@ -342,13 +405,17 @@ export interface FileRoutesById {
   '/_authenticated/admin/articles': typeof AuthenticatedAdminArticlesRoute
   '/_authenticated/admin/categories': typeof AuthenticatedAdminCategoriesRoute
   '/_authenticated/admin/cities': typeof AuthenticatedAdminCitiesRoute
+  '/_authenticated/admin/editor': typeof AuthenticatedAdminEditorRoute
   '/_authenticated/admin/events': typeof AuthenticatedAdminEventsRoute
   '/_authenticated/admin/moderation': typeof AuthenticatedAdminModerationRoute
+  '/_authenticated/admin/moderator': typeof AuthenticatedAdminModeratorRoute
   '/_authenticated/admin/reels': typeof AuthenticatedAdminReelsRoute
+  '/_authenticated/admin/reporter': typeof AuthenticatedAdminReporterRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/admin/towns': typeof AuthenticatedAdminTownsRoute
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
   '/_authenticated/admin/villages': typeof AuthenticatedAdminVillagesRoute
+  '/api/public/auto-confirm-user': typeof ApiPublicAutoConfirmUserRoute
   '/api/public/campaign-event': typeof ApiPublicCampaignEventRoute
   '/api/public/sync-instagram': typeof ApiPublicSyncInstagramRoute
   '/api/public/sync-youtube': typeof ApiPublicSyncYoutubeRoute
@@ -361,12 +428,15 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/auth'
+    | '/editor'
     | '/epaper'
     | '/events'
     | '/live'
+    | '/moderator'
     | '/onboarding'
     | '/privacy'
     | '/reels'
+    | '/reporter'
     | '/videos'
     | '/admin'
     | '/my-issues'
@@ -382,13 +452,17 @@ export interface FileRouteTypes {
     | '/admin/articles'
     | '/admin/categories'
     | '/admin/cities'
+    | '/admin/editor'
     | '/admin/events'
     | '/admin/moderation'
+    | '/admin/moderator'
     | '/admin/reels'
+    | '/admin/reporter'
     | '/admin/settings'
     | '/admin/towns'
     | '/admin/users'
     | '/admin/villages'
+    | '/api/public/auto-confirm-user'
     | '/api/public/campaign-event'
     | '/api/public/sync-instagram'
     | '/api/public/sync-youtube'
@@ -399,12 +473,15 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/auth'
+    | '/editor'
     | '/epaper'
     | '/events'
     | '/live'
+    | '/moderator'
     | '/onboarding'
     | '/privacy'
     | '/reels'
+    | '/reporter'
     | '/videos'
     | '/my-issues'
     | '/report'
@@ -419,13 +496,17 @@ export interface FileRouteTypes {
     | '/admin/articles'
     | '/admin/categories'
     | '/admin/cities'
+    | '/admin/editor'
     | '/admin/events'
     | '/admin/moderation'
+    | '/admin/moderator'
     | '/admin/reels'
+    | '/admin/reporter'
     | '/admin/settings'
     | '/admin/towns'
     | '/admin/users'
     | '/admin/villages'
+    | '/api/public/auto-confirm-user'
     | '/api/public/campaign-event'
     | '/api/public/sync-instagram'
     | '/api/public/sync-youtube'
@@ -437,12 +518,15 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/about'
     | '/auth'
+    | '/editor'
     | '/epaper'
     | '/events'
     | '/live'
+    | '/moderator'
     | '/onboarding'
     | '/privacy'
     | '/reels'
+    | '/reporter'
     | '/videos'
     | '/_authenticated/admin'
     | '/_authenticated/my-issues'
@@ -458,13 +542,17 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/articles'
     | '/_authenticated/admin/categories'
     | '/_authenticated/admin/cities'
+    | '/_authenticated/admin/editor'
     | '/_authenticated/admin/events'
     | '/_authenticated/admin/moderation'
+    | '/_authenticated/admin/moderator'
     | '/_authenticated/admin/reels'
+    | '/_authenticated/admin/reporter'
     | '/_authenticated/admin/settings'
     | '/_authenticated/admin/towns'
     | '/_authenticated/admin/users'
     | '/_authenticated/admin/villages'
+    | '/api/public/auto-confirm-user'
     | '/api/public/campaign-event'
     | '/api/public/sync-instagram'
     | '/api/public/sync-youtube'
@@ -477,18 +565,22 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
+  EditorRoute: typeof EditorRoute
   EpaperRoute: typeof EpaperRoute
   EventsRoute: typeof EventsRoute
   LiveRoute: typeof LiveRoute
+  ModeratorRoute: typeof ModeratorRoute
   OnboardingRoute: typeof OnboardingRoute
   PrivacyRoute: typeof PrivacyRoute
   ReelsRoute: typeof ReelsRoute
+  ReporterRoute: typeof ReporterRoute
   VideosRoute: typeof VideosRoute
   JanKiAwaazIdRoute: typeof JanKiAwaazIdRoute
   NewsSlugRoute: typeof NewsSlugRoute
   TownSlugRoute: typeof TownSlugRoute
   JanKiAwaazIndexRoute: typeof JanKiAwaazIndexRoute
   NewsIndexRoute: typeof NewsIndexRoute
+  ApiPublicAutoConfirmUserRoute: typeof ApiPublicAutoConfirmUserRoute
   ApiPublicCampaignEventRoute: typeof ApiPublicCampaignEventRoute
   ApiPublicSyncInstagramRoute: typeof ApiPublicSyncInstagramRoute
   ApiPublicSyncYoutubeRoute: typeof ApiPublicSyncYoutubeRoute
@@ -525,6 +617,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/editor': {
+      id: '/editor'
+      path: '/editor'
+      fullPath: '/editor'
+      preLoaderRoute: typeof EditorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/epaper': {
       id: '/epaper'
       path: '/epaper'
@@ -546,6 +645,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LiveRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/moderator': {
+      id: '/moderator'
+      path: '/moderator'
+      fullPath: '/moderator'
+      preLoaderRoute: typeof ModeratorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/onboarding': {
       id: '/onboarding'
       path: '/onboarding'
@@ -565,6 +671,13 @@ declare module '@tanstack/react-router' {
       path: '/reels'
       fullPath: '/reels'
       preLoaderRoute: typeof ReelsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reporter': {
+      id: '/reporter'
+      path: '/reporter'
+      fullPath: '/reporter'
+      preLoaderRoute: typeof ReporterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/videos': {
@@ -679,6 +792,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminCitiesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/editor': {
+      id: '/_authenticated/admin/editor'
+      path: '/editor'
+      fullPath: '/admin/editor'
+      preLoaderRoute: typeof AuthenticatedAdminEditorRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/events': {
       id: '/_authenticated/admin/events'
       path: '/events'
@@ -693,11 +813,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminModerationRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/moderator': {
+      id: '/_authenticated/admin/moderator'
+      path: '/moderator'
+      fullPath: '/admin/moderator'
+      preLoaderRoute: typeof AuthenticatedAdminModeratorRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/reels': {
       id: '/_authenticated/admin/reels'
       path: '/reels'
       fullPath: '/admin/reels'
       preLoaderRoute: typeof AuthenticatedAdminReelsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/reporter': {
+      id: '/_authenticated/admin/reporter'
+      path: '/reporter'
+      fullPath: '/admin/reporter'
+      preLoaderRoute: typeof AuthenticatedAdminReporterRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/settings': {
@@ -727,6 +861,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/villages'
       preLoaderRoute: typeof AuthenticatedAdminVillagesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/api/public/auto-confirm-user': {
+      id: '/api/public/auto-confirm-user'
+      path: '/api/public/auto-confirm-user'
+      fullPath: '/api/public/auto-confirm-user'
+      preLoaderRoute: typeof ApiPublicAutoConfirmUserRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/campaign-event': {
       id: '/api/public/campaign-event'
@@ -765,9 +906,12 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminArticlesRoute: typeof AuthenticatedAdminArticlesRoute
   AuthenticatedAdminCategoriesRoute: typeof AuthenticatedAdminCategoriesRoute
   AuthenticatedAdminCitiesRoute: typeof AuthenticatedAdminCitiesRoute
+  AuthenticatedAdminEditorRoute: typeof AuthenticatedAdminEditorRoute
   AuthenticatedAdminEventsRoute: typeof AuthenticatedAdminEventsRoute
   AuthenticatedAdminModerationRoute: typeof AuthenticatedAdminModerationRoute
+  AuthenticatedAdminModeratorRoute: typeof AuthenticatedAdminModeratorRoute
   AuthenticatedAdminReelsRoute: typeof AuthenticatedAdminReelsRoute
+  AuthenticatedAdminReporterRoute: typeof AuthenticatedAdminReporterRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedAdminTownsRoute: typeof AuthenticatedAdminTownsRoute
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
@@ -781,9 +925,12 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminArticlesRoute: AuthenticatedAdminArticlesRoute,
   AuthenticatedAdminCategoriesRoute: AuthenticatedAdminCategoriesRoute,
   AuthenticatedAdminCitiesRoute: AuthenticatedAdminCitiesRoute,
+  AuthenticatedAdminEditorRoute: AuthenticatedAdminEditorRoute,
   AuthenticatedAdminEventsRoute: AuthenticatedAdminEventsRoute,
   AuthenticatedAdminModerationRoute: AuthenticatedAdminModerationRoute,
+  AuthenticatedAdminModeratorRoute: AuthenticatedAdminModeratorRoute,
   AuthenticatedAdminReelsRoute: AuthenticatedAdminReelsRoute,
+  AuthenticatedAdminReporterRoute: AuthenticatedAdminReporterRoute,
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
   AuthenticatedAdminTownsRoute: AuthenticatedAdminTownsRoute,
   AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
@@ -816,18 +963,22 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
+  EditorRoute: EditorRoute,
   EpaperRoute: EpaperRoute,
   EventsRoute: EventsRoute,
   LiveRoute: LiveRoute,
+  ModeratorRoute: ModeratorRoute,
   OnboardingRoute: OnboardingRoute,
   PrivacyRoute: PrivacyRoute,
   ReelsRoute: ReelsRoute,
+  ReporterRoute: ReporterRoute,
   VideosRoute: VideosRoute,
   JanKiAwaazIdRoute: JanKiAwaazIdRoute,
   NewsSlugRoute: NewsSlugRoute,
   TownSlugRoute: TownSlugRoute,
   JanKiAwaazIndexRoute: JanKiAwaazIndexRoute,
   NewsIndexRoute: NewsIndexRoute,
+  ApiPublicAutoConfirmUserRoute: ApiPublicAutoConfirmUserRoute,
   ApiPublicCampaignEventRoute: ApiPublicCampaignEventRoute,
   ApiPublicSyncInstagramRoute: ApiPublicSyncInstagramRoute,
   ApiPublicSyncYoutubeRoute: ApiPublicSyncYoutubeRoute,

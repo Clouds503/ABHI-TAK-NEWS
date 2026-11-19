@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState, useRef, useEffect } from "react";
@@ -14,8 +14,12 @@ import {
   Settings,
   Sparkles,
   LogOut,
+  PenTool,
+  Mic,
+  Megaphone,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -354,7 +358,21 @@ function SiteIdentityQuickCard() {
 
 function Dashboard() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
+  const { user, isAdmin, isEditor, isModerator, isReporter, loading } = useAuth();
   const [syncingYt, setSyncingYt] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !isAdmin) {
+      if (isEditor) {
+        navigate({ to: "/admin/editor", replace: true });
+      } else if (isModerator) {
+        navigate({ to: "/admin/moderator", replace: true });
+      } else if (isReporter) {
+        navigate({ to: "/admin/reporter", replace: true });
+      }
+    }
+  }, [loading, isAdmin, isEditor, isModerator, isReporter, navigate]);
 
   const { data } = useQuery({
     queryKey: ["admin-stats"],
@@ -458,7 +476,91 @@ function Dashboard() {
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {/* Role Desks & Dedicated Workspaces */}
+      <div className="mt-6">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            Role Desks & Dedicated Workspaces
+          </h2>
+          <span className="text-[11px] text-muted-foreground">Tailored workflow panels for staff</span>
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <Link
+            to="/admin/editor"
+            className="group rounded-xl border bg-card p-4 transition-all hover:border-amber-400 hover:shadow-xs flex flex-col justify-between"
+          >
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                  <PenTool className="h-4 w-4" />
+                </span>
+                <span className="text-xs font-semibold text-amber-600 group-hover:translate-x-0.5 transition-transform">
+                  Open Desk →
+                </span>
+              </div>
+              <div className="mt-3 font-bold text-foreground">Editorial Desk</div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Review reporter drafts, approve breaking stories, schedule & manage reels
+              </p>
+            </div>
+            <div className="mt-3 pt-2 border-t text-[11px] font-medium text-amber-600/80">
+              For Editors & Lead Journalists
+            </div>
+          </Link>
+
+          <Link
+            to="/admin/moderator"
+            className="group rounded-xl border bg-card p-4 transition-all hover:border-emerald-400 hover:shadow-xs flex flex-col justify-between"
+          >
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                  <Megaphone className="h-4 w-4" />
+                </span>
+                <span className="text-xs font-semibold text-emerald-600 group-hover:translate-x-0.5 transition-transform">
+                  Open Desk →
+                </span>
+              </div>
+              <div className="mt-3 font-bold text-foreground">Moderation Desk</div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Jan Ki Awaaz complaints, verify community issues & forward to departments
+              </p>
+            </div>
+            <div className="mt-3 pt-2 border-t text-[11px] font-medium text-emerald-600/80">
+              For Community & Civic Moderators
+            </div>
+          </Link>
+
+          <Link
+            to="/admin/reporter"
+            className="group rounded-xl border bg-card p-4 transition-all hover:border-cyan-400 hover:shadow-xs flex flex-col justify-between"
+          >
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-cyan-500/15 text-cyan-600 dark:text-cyan-400">
+                  <Mic className="h-4 w-4" />
+                </span>
+                <span className="text-xs font-semibold text-cyan-600 group-hover:translate-x-0.5 transition-transform">
+                  Open Desk →
+                </span>
+              </div>
+              <div className="mt-3 font-bold text-foreground">Reporter Desk</div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                File ground stories, upload scene photos & track editorial review status
+              </p>
+            </div>
+            <div className="mt-3 pt-2 border-t text-[11px] font-medium text-cyan-600/80">
+              For Ground & Regional Reporters
+            </div>
+          </Link>
+        </div>
+      </div>
+
+      <div className="mt-6">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
+          Newsroom Overview & Quick Metrics
+        </h2>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {cards.map((c) => {
           const inner = (
             <div
@@ -484,6 +586,7 @@ function Dashboard() {
             <div key={c.label}>{inner}</div>
           );
         })}
+        </div>
       </div>
 
       <SiteIdentityQuickCard />

@@ -12,6 +12,12 @@ type AuthCtx = {
   user: User | null;
   roles: string[];
   isStaff: boolean;
+  isAdmin: boolean;
+  isSuperAdmin: boolean;
+  isEditor: boolean;
+  isModerator: boolean;
+  isReporter: boolean;
+  primaryRole: string;
   loading: boolean;
   profile: Profile | null;
   needsOnboarding: boolean;
@@ -21,6 +27,12 @@ const Ctx = createContext<AuthCtx>({
   user: null,
   roles: [],
   isStaff: false,
+  isAdmin: false,
+  isSuperAdmin: false,
+  isEditor: false,
+  isModerator: false,
+  isReporter: false,
+  primaryRole: "user",
   loading: true,
   profile: null,
   needsOnboarding: false,
@@ -58,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     };
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      setTimeout(() => load(session?.user ?? null), 0);
+      load(session?.user ?? null);
     });
     supabase.auth.getSession().then(({ data }) => load(data.session?.user ?? null));
 
@@ -75,12 +87,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshProfile = useCallback(async () => {
     if (user) await fetchProfile(user.id);
   }, [user, fetchProfile]);
-  const isStaff = roles.some((r) => ["super_admin", "admin", "editor", "moderator"].includes(r));
+  const isSuperAdmin = roles.includes("super_admin");
+  const isAdmin = isSuperAdmin || roles.includes("admin");
+  const isEditor = isAdmin || roles.includes("editor");
+  const isModerator = isAdmin || roles.includes("moderator");
+  const isReporter = isAdmin || isEditor || roles.includes("reporter");
+  const isStaff = roles.some((r) =>
+    ["super_admin", "admin", "editor", "moderator", "reporter"].includes(r),
+  );
+
+  const primaryRole = isSuperAdmin
+    ? "super_admin"
+    : roles.includes("admin")
+    ? "admin"
+    : roles.includes("editor")
+    ? "editor"
+    : roles.includes("moderator")
+    ? "moderator"
+    : roles.includes("reporter")
+    ? "reporter"
+    : "user";
+
   const needsOnboarding =
     !!user && !!profile && (!profile.full_name || !profile.phone);
   return (
     <Ctx.Provider
-      value={{ user, roles, isStaff, loading, profile, needsOnboarding, refreshProfile }}
+      value={{
+        user,
+        roles,
+        isStaff,
+        isAdmin,
+        isSuperAdmin,
+        isEditor,
+        isModerator,
+        isReporter,
+        primaryRole,
+        loading,
+        profile,
+        needsOnboarding,
+        refreshProfile,
+      }}
     >
       {children}
     </Ctx.Provider>

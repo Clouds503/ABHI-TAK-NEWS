@@ -29,6 +29,8 @@ import {
   SlidersHorizontal,
   ChevronDown,
   User,
+  PenTool,
+  Mic,
 } from "lucide-react";
 
 export const CONTACT_PHONE = "+91-8445829007";
@@ -405,7 +407,7 @@ function BottomNav() {
 
 function SideMenu({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { t, pick, lang, setLang } = useI18n();
-  const { user, isStaff } = useAuth();
+  const { user, isStaff, isAdmin, isEditor, isModerator, isReporter } = useAuth();
   const { settings } = useSiteSettings();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const { data: towns } = useQuery(townsQuery);
@@ -507,10 +509,28 @@ function SideMenu({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boo
             <FileText className="h-4 w-4" />
             {t("myIssues")}
           </Link>
-          {isStaff && (
-            <Link to="/admin" onClick={close} className={cn(row, "text-primary")}>
+          {isAdmin && (
+            <Link to="/admin" onClick={close} className={cn(row, "text-primary font-semibold")}>
               <Shield className="h-4 w-4" />
               {t("admin")}
+            </Link>
+          )}
+          {isEditor && (
+            <Link to="/admin/editor" onClick={close} className={cn(row, "text-amber-600 dark:text-amber-400 font-semibold")}>
+              <PenTool className="h-4 w-4" />
+              {lang === "en" ? "Editorial Desk" : "संपादकीय डेस्क"}
+            </Link>
+          )}
+          {isModerator && (
+            <Link to="/admin/moderator" onClick={close} className={cn(row, "text-emerald-600 dark:text-emerald-400 font-semibold")}>
+              <Megaphone className="h-4 w-4" />
+              {lang === "en" ? "Moderation Desk" : "मॉडरेशन डेस्क"}
+            </Link>
+          )}
+          {isReporter && (
+            <Link to="/admin/reporter" onClick={close} className={cn(row, "text-cyan-600 dark:text-cyan-400 font-semibold")}>
+              <Mic className="h-4 w-4" />
+              {lang === "en" ? "Reporter Desk" : "रिपोर्टर डेस्क"}
             </Link>
           )}
         </div>
@@ -650,7 +670,7 @@ function DesktopDate() {
 
 function DesktopHeader() {
   const { lang, setLang, t, pick } = useI18n();
-  const { user, isStaff } = useAuth();
+  const { user, isStaff, isAdmin, isEditor, isModerator, isReporter } = useAuth();
   const { settings } = useSiteSettings();
   const navigate = useNavigate();
   const path = useRouterState({ select: (s) => s.location.pathname });
@@ -979,7 +999,7 @@ function DesktopHeader() {
                         <span>{t("myIssues")}</span>
                       </Link>
                     </DropdownMenuItem>
-                    {isStaff && (
+                    {isAdmin && (
                       <DropdownMenuItem asChild>
                         <Link
                           to="/admin"
@@ -987,6 +1007,39 @@ function DesktopHeader() {
                         >
                           <Shield className="h-3.5 w-3.5" />
                           <span>{t("admin")}</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    {isEditor && (
+                      <DropdownMenuItem asChild>
+                        <Link
+                          to="/admin/editor"
+                          className="flex items-center gap-2 cursor-pointer font-semibold text-amber-600 dark:text-amber-400"
+                        >
+                          <PenTool className="h-3.5 w-3.5" />
+                          <span>{lang === "en" ? "Editorial Desk" : "संपादकीय डेस्क"}</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    {isModerator && (
+                      <DropdownMenuItem asChild>
+                        <Link
+                          to="/admin/moderator"
+                          className="flex items-center gap-2 cursor-pointer font-semibold text-emerald-600 dark:text-emerald-400"
+                        >
+                          <Megaphone className="h-3.5 w-3.5" />
+                          <span>{lang === "en" ? "Moderation Desk" : "मॉडरेशन डेस्क"}</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    {isReporter && (
+                      <DropdownMenuItem asChild>
+                        <Link
+                          to="/admin/reporter"
+                          className="flex items-center gap-2 cursor-pointer font-semibold text-cyan-600 dark:text-cyan-400"
+                        >
+                          <Mic className="h-3.5 w-3.5" />
+                          <span>{lang === "en" ? "Reporter Desk" : "रिपोर्टर डेस्क"}</span>
                         </Link>
                       </DropdownMenuItem>
                     )}
