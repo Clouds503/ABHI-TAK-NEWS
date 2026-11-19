@@ -40,6 +40,7 @@ import { Route as AuthenticatedAdminCategoriesRouteImport } from './routes/_auth
 import { Route as AuthenticatedAdminCitiesRouteImport } from './routes/_authenticated/admin.cities'
 import { Route as AuthenticatedAdminEditorRouteImport } from './routes/_authenticated/admin.editor'
 import { Route as AuthenticatedAdminEventsRouteImport } from './routes/_authenticated/admin.events'
+import { Route as AuthenticatedAdminExportRouteImport } from './routes/_authenticated/admin.export'
 import { Route as AuthenticatedAdminModerationRouteImport } from './routes/_authenticated/admin.moderation'
 import { Route as AuthenticatedAdminModeratorRouteImport } from './routes/_authenticated/admin.moderator'
 import { Route as AuthenticatedAdminReelsRouteImport } from './routes/_authenticated/admin.reels'
@@ -214,6 +215,12 @@ const AuthenticatedAdminEventsRoute =
     path: '/events',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminExportRoute =
+  AuthenticatedAdminExportRouteImport.update({
+    id: '/export',
+    path: '/export',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminModerationRoute =
   AuthenticatedAdminModerationRouteImport.update({
     id: '/moderation',
@@ -316,6 +323,7 @@ export interface FileRoutesByFullPath {
   '/admin/cities': typeof AuthenticatedAdminCitiesRoute
   '/admin/editor': typeof AuthenticatedAdminEditorRoute
   '/admin/events': typeof AuthenticatedAdminEventsRoute
+  '/admin/export': typeof AuthenticatedAdminExportRoute
   '/admin/moderation': typeof AuthenticatedAdminModerationRoute
   '/admin/moderator': typeof AuthenticatedAdminModeratorRoute
   '/admin/reels': typeof AuthenticatedAdminReelsRoute
@@ -360,6 +368,7 @@ export interface FileRoutesByTo {
   '/admin/cities': typeof AuthenticatedAdminCitiesRoute
   '/admin/editor': typeof AuthenticatedAdminEditorRoute
   '/admin/events': typeof AuthenticatedAdminEventsRoute
+  '/admin/export': typeof AuthenticatedAdminExportRoute
   '/admin/moderation': typeof AuthenticatedAdminModerationRoute
   '/admin/moderator': typeof AuthenticatedAdminModeratorRoute
   '/admin/reels': typeof AuthenticatedAdminReelsRoute
@@ -407,6 +416,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/cities': typeof AuthenticatedAdminCitiesRoute
   '/_authenticated/admin/editor': typeof AuthenticatedAdminEditorRoute
   '/_authenticated/admin/events': typeof AuthenticatedAdminEventsRoute
+  '/_authenticated/admin/export': typeof AuthenticatedAdminExportRoute
   '/_authenticated/admin/moderation': typeof AuthenticatedAdminModerationRoute
   '/_authenticated/admin/moderator': typeof AuthenticatedAdminModeratorRoute
   '/_authenticated/admin/reels': typeof AuthenticatedAdminReelsRoute
@@ -454,6 +464,7 @@ export interface FileRouteTypes {
     | '/admin/cities'
     | '/admin/editor'
     | '/admin/events'
+    | '/admin/export'
     | '/admin/moderation'
     | '/admin/moderator'
     | '/admin/reels'
@@ -498,6 +509,7 @@ export interface FileRouteTypes {
     | '/admin/cities'
     | '/admin/editor'
     | '/admin/events'
+    | '/admin/export'
     | '/admin/moderation'
     | '/admin/moderator'
     | '/admin/reels'
@@ -544,6 +556,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/cities'
     | '/_authenticated/admin/editor'
     | '/_authenticated/admin/events'
+    | '/_authenticated/admin/export'
     | '/_authenticated/admin/moderation'
     | '/_authenticated/admin/moderator'
     | '/_authenticated/admin/reels'
@@ -806,6 +819,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminEventsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/export': {
+      id: '/_authenticated/admin/export'
+      path: '/export'
+      fullPath: '/admin/export'
+      preLoaderRoute: typeof AuthenticatedAdminExportRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/moderation': {
       id: '/_authenticated/admin/moderation'
       path: '/moderation'
@@ -908,6 +928,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminCitiesRoute: typeof AuthenticatedAdminCitiesRoute
   AuthenticatedAdminEditorRoute: typeof AuthenticatedAdminEditorRoute
   AuthenticatedAdminEventsRoute: typeof AuthenticatedAdminEventsRoute
+  AuthenticatedAdminExportRoute: typeof AuthenticatedAdminExportRoute
   AuthenticatedAdminModerationRoute: typeof AuthenticatedAdminModerationRoute
   AuthenticatedAdminModeratorRoute: typeof AuthenticatedAdminModeratorRoute
   AuthenticatedAdminReelsRoute: typeof AuthenticatedAdminReelsRoute
@@ -927,6 +948,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminCitiesRoute: AuthenticatedAdminCitiesRoute,
   AuthenticatedAdminEditorRoute: AuthenticatedAdminEditorRoute,
   AuthenticatedAdminEventsRoute: AuthenticatedAdminEventsRoute,
+  AuthenticatedAdminExportRoute: AuthenticatedAdminExportRoute,
   AuthenticatedAdminModerationRoute: AuthenticatedAdminModerationRoute,
   AuthenticatedAdminModeratorRoute: AuthenticatedAdminModeratorRoute,
   AuthenticatedAdminReelsRoute: AuthenticatedAdminReelsRoute,

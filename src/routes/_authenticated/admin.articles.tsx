@@ -3,9 +3,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Trash2 } from "lucide-react";
+import { Trash2, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { exportToCsv, sanitizeExportFilename } from "@/lib/export-data";
 import { categoriesQuery, townsQuery, citiesQuery, villagesQuery } from "@/lib/queries";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -368,6 +369,39 @@ function Articles() {
             }}
           >
             Sync WP
+          </Button>
+          <Button
+            variant="outline"
+            className="gap-1.5"
+            onClick={() => {
+              if (!data || data.length === 0) {
+                toast.error("No articles available to export");
+                return;
+              }
+              exportToCsv(
+                sanitizeExportFilename("news_articles", "csv"),
+                data,
+                [
+                  { key: "id", label: "Article ID" },
+                  { key: "title_hi", label: "Title (Hindi)" },
+                  { key: "title_en", label: "Title (English)" },
+                  { key: "slug", label: "Slug" },
+                  { key: "status", label: "Status" },
+                  { key: "views", label: "Views" },
+                  { key: "district", label: "District" },
+                  { key: "city", label: "City" },
+                  { key: "village", label: "Village" },
+                  { key: "is_breaking", label: "Breaking", transform: (v) => (v ? "Yes" : "No") },
+                  { key: "is_featured", label: "Featured", transform: (v) => (v ? "Yes" : "No") },
+                  { key: "published_at", label: "Published Date" },
+                  { key: "created_at", label: "Created Date" },
+                ]
+              );
+              toast.success(`Exported ${data.length} articles to CSV!`);
+            }}
+          >
+            <Download className="h-4 w-4" />
+            <span>Export CSV</span>
           </Button>
           <Button onClick={() => edit()}>+ New story</Button>
         </div>

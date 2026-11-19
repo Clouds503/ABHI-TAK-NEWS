@@ -17,6 +17,7 @@ import {
   PenTool,
   Mic,
   Megaphone,
+  Download,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -465,6 +466,12 @@ function Dashboard() {
             <Link to="/">
               <LogOut className="h-4 w-4" />
               Exit Admin
+            </Link>
+          </Button>
+          <Button asChild size="sm" variant="outline" className="gap-2">
+            <Link to="/admin/export">
+              <Download className="h-4 w-4" />
+              Export Data
             </Link>
           </Button>
           <Button asChild size="sm" className="gap-2 bg-primary">

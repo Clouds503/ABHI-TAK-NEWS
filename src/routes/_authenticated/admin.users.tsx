@@ -23,10 +23,12 @@ import {
   Users,
   Calendar,
   X,
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { exportToCsv, sanitizeExportFilename } from "@/lib/export-data";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -410,6 +412,38 @@ function UsersAdmin() {
           <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-1.5">
             <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
             Refresh
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (!filteredUsers || filteredUsers.length === 0) {
+                toast.error("No users found to export");
+                return;
+              }
+              exportToCsv(
+                sanitizeExportFilename(`user_accounts_${activeTab}`, "csv"),
+                filteredUsers,
+                [
+                  { key: "id", label: "User ID" },
+                  { key: "full_name", label: "Full Name" },
+                  { key: "email", label: "Email" },
+                  { key: "phone", label: "Phone" },
+                  {
+                    key: "roles",
+                    label: "Assigned Roles",
+                    transform: (roles) => (Array.isArray(roles) ? roles.join(", ") : ""),
+                  },
+                  { key: "town.name_en", label: "Location" },
+                  { key: "created_at", label: "Registered At" },
+                ]
+              );
+              toast.success(`Exported ${filteredUsers.length} user accounts to CSV!`);
+            }}
+            className="gap-1.5"
+          >
+            <Download className="h-4 w-4" />
+            <span>Export CSV</span>
           </Button>
           <Button onClick={handleOpenCreate} className="gap-2 shadow-sm">
             <UserPlus className="h-4 w-4" />

@@ -13,6 +13,7 @@ import {
   Building2,
   FolderTree,
   BarChart3,
+  Download,
   Settings,
   LogOut,
   PenTool,
@@ -88,6 +89,7 @@ function AdminLayout() {
   const adminItems = isAdmin
     ? [
         { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+        { to: "/admin/export", label: "Export Data", icon: Download },
         { to: "/admin/settings", label: "Site Identity & Logo", icon: Settings },
         { to: "/admin/users", label: "Users & Staff Roles", icon: Users },
         { to: "/admin/ads", label: "Ads & Promotions", icon: BadgeIndianRupee },

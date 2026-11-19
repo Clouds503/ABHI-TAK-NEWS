@@ -2,12 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import { img } from "@/lib/media";
 import { StatusPill } from "@/components/news";
 import { Button } from "@/components/ui/button";
+import { exportToCsv, sanitizeExportFilename } from "@/lib/export-data";
 import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog,
@@ -111,7 +113,40 @@ function Moderation() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Jan Ki Awaaz moderation</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold">Jan Ki Awaaz moderation</h1>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5"
+          onClick={() => {
+            if (!data || data.length === 0) {
+              toast.error("No reports found to export");
+              return;
+            }
+            exportToCsv(
+              sanitizeExportFilename(`jan_ki_awaaz_${filter}`, "csv"),
+              data,
+              [
+                { key: "id", label: "Report ID" },
+                { key: "title", label: "Title" },
+                { key: "category", label: "Category" },
+                { key: "status", label: "Status" },
+                { key: "district", label: "District" },
+                { key: "city", label: "City" },
+                { key: "village", label: "Village" },
+                { key: "upvotes", label: "Upvotes" },
+                { key: "description", label: "Description" },
+                { key: "created_at", label: "Reported Date" },
+              ]
+            );
+            toast.success(`Exported ${data.length} civic reports to CSV!`);
+          }}
+        >
+          <Download className="h-4 w-4" />
+          <span>Export {filter !== "all" ? `(${filter})` : ""} CSV</span>
+        </Button>
+      </div>
       <div className="no-scrollbar mt-4 flex gap-2 overflow-x-auto">
         {FILTERS.map((f) => (
           <button

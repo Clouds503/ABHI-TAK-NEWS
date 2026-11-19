@@ -25,6 +25,7 @@ import {
   Power,
   Filter,
   CheckCircle2,
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -33,6 +34,7 @@ import { useAuth } from "@/lib/auth";
 import { img } from "@/lib/media";
 import { townsQuery } from "@/lib/queries";
 import { uploadMedia } from "@/lib/upload";
+import { exportToCsv, sanitizeExportFilename } from "@/lib/export-data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -511,9 +513,51 @@ function AdsAdmin() {
             Control placement, scheduling, and device visibility (Mobile vs Desktop) across Abhitak.
           </p>
         </div>
-        <Button onClick={() => edit()} className="shadow-xs">
-          <Plus className="mr-1.5 h-4 w-4" /> New campaign
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => {
+              if (!filtered || filtered.length === 0) {
+                toast.error("No campaigns found to export");
+                return;
+              }
+              exportToCsv(
+                sanitizeExportFilename("ad_campaigns", "csv"),
+                filtered,
+                [
+                  { key: "id", label: "Campaign ID" },
+                  { key: "title", label: "Campaign Title" },
+                  { key: "advertiser", label: "Advertiser" },
+                  { key: "placement", label: "Placement" },
+                  { key: "device_visibility", label: "Device Visibility" },
+                  { key: "is_active", label: "Status", transform: (v) => (v ? "Active" : "Paused") },
+                  { key: "impression_count", label: "Impressions" },
+                  { key: "click_count", label: "Clicks" },
+                  {
+                    key: "ctr",
+                    label: "CTR (%)",
+                    transform: (_, row) => {
+                      const imp = row.impression_count || 0;
+                      const clk = row.click_count || 0;
+                      return imp > 0 ? ((clk / imp) * 100).toFixed(2) + "%" : "0.00%";
+                    },
+                  },
+                  { key: "link_url", label: "Link URL" },
+                  { key: "starts_at", label: "Start Date" },
+                  { key: "ends_at", label: "End Date" },
+                  { key: "created_at", label: "Created Date" },
+                ]
+              );
+              toast.success(`Exported ${filtered.length} ad campaigns to CSV!`);
+            }}
+            className="shadow-xs gap-1.5"
+          >
+            <Download className="h-4 w-4" /> Export CSV
+          </Button>
+          <Button onClick={() => edit()} className="shadow-xs">
+            <Plus className="mr-1.5 h-4 w-4" /> New campaign
+          </Button>
+        </div>
       </div>
 
       {/* KPI Stats Cards */}
