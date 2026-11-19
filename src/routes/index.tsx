@@ -34,6 +34,7 @@ import {
 } from "@/components/FilterDrawer";
 import { cn } from "@/lib/utils";
 import { useRealtimeVideos } from "@/lib/useRealtimeVideos";
+import { useRealtimeReels } from "@/lib/useRealtimeReels";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -110,6 +111,7 @@ function DesktopArticleCard({ a }: { a: ArticleCard }) {
 function Home() {
   const { t, pick, lang } = useI18n();
   useRealtimeVideos();
+  useRealtimeReels();
 
   const [filters, setFilters] = useState<FilterState>({ datePreset: "all" });
   const activeCount = getActiveFilterCount(filters);

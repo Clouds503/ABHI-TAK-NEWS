@@ -65,12 +65,15 @@ function Videos() {
   const qc = useQueryClient();
   const isDesktop = useIsDesktop();
 
-  // Enable real-time websocket subscription for video changes
-  const { isConnected: isRealtimeConnected } = useRealtimeVideos();
+  // Enable real-time websocket subscription and auto-sync for video changes
+  const {
+    isConnected: isRealtimeConnected,
+    isSyncing: isAutoSyncing,
+    triggerManualSync,
+  } = useRealtimeVideos({ autoSync: true });
 
   const { data: rawVideos, isLoading } = useQuery(videosQuery);
   const fetchLive = useServerFn(getLiveStatus);
-  const syncServerVideos = useServerFn(syncYouTubeVideosServerFn);
 
   // Check if channel is actively broadcasting live
   const live = useQuery({
@@ -79,37 +82,20 @@ function Videos() {
     refetchInterval: 60 * 1000,
   });
 
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [manualSyncing, setManualSyncing] = useState(false);
+  const isSyncing = manualSyncing || isAutoSyncing;
   const [activeId, setActiveId] = useState<string | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
 
-  // Trigger background sync if database has few/stale videos
-  useEffect(() => {
-    if (!isLoading && (!rawVideos || rawVideos.length <= 3)) {
-      setIsSyncing(true);
-      syncServerVideos()
-        .then(() => {
-          void qc.invalidateQueries({ queryKey: ["videos"] });
-        })
-        .catch((err) => {
-          console.warn("[videos] Background initial sync note:", err);
-        })
-        .finally(() => {
-          setIsSyncing(false);
-        });
-    }
-  }, [isLoading, rawVideos, qc, syncServerVideos]);
-
   const handleManualRefresh = async () => {
     if (isSyncing) return;
-    setIsSyncing(true);
+    setManualSyncing(true);
     try {
-      await syncServerVideos();
-      await qc.invalidateQueries({ queryKey: ["videos"] });
+      await triggerManualSync();
     } catch (err) {
       console.error("[videos] Manual sync error:", err);
     } finally {
-      setIsSyncing(false);
+      setManualSyncing(false);
     }
   };
 

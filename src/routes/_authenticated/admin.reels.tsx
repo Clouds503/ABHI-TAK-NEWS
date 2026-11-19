@@ -8,9 +8,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { UploadNote } from "@/components/UploadNote";
-import { syncInstagramReelsServerFn } from "@/lib/instagram.functions";
+import { syncInstagramReelsServerFn, getInstagramReelMedia } from "@/lib/instagram.functions";
 import { formatMetricCount } from "@/routes/reels";
 import { uploadMedia } from "@/lib/upload";
+import { useRealtimeReels } from "@/lib/useRealtimeReels";
 
 export const Route = createFileRoute("/_authenticated/admin/reels")({
   head: () => ({
@@ -30,6 +31,10 @@ function parseShortcode(input: string) {
 function AdminReels() {
   const qc = useQueryClient();
   const syncServerReels = useServerFn(syncInstagramReelsServerFn);
+  const resolveMedia = useServerFn(getInstagramReelMedia);
+  const { isConnected: isRealtimeConnected, triggerManualSync } = useRealtimeReels({
+    autoSync: false,
+  });
 
   const [link, setLink] = useState("");
   const [caption, setCaption] = useState("");
@@ -94,21 +99,35 @@ function AdminReels() {
       toast.error("Paste a valid Instagram reel link");
       return;
     }
+    const t = toast.loading("Adding reel and checking direct stream…");
+    let resolvedVideo = videoUrl.trim() || null;
+    if (!resolvedVideo) {
+      try {
+        const media = await resolveMedia({ data: { shortcode: code } });
+        if (media?.videoUrl) {
+          resolvedVideo = media.videoUrl;
+        }
+      } catch (err) {
+        console.warn("Could not auto-resolve direct mp4, will use iframe fallback:", err);
+      }
+    }
+
     const { error } = await supabase.from("reels").insert({
       shortcode: code,
       caption: caption.trim().slice(0, 500) || null,
-      video_url: videoUrl.trim() || null,
+      video_url: resolvedVideo,
     });
     if (error) {
       toast.error(
         error.message.includes("duplicate") ? "This reel is already added" : error.message,
+        { id: t },
       );
       return;
     }
     setLink("");
     setCaption("");
     setVideoUrl("");
-    toast.success("Reel added");
+    toast.success("Reel added successfully!", { id: t });
     refresh();
   };
 
@@ -166,7 +185,15 @@ function AdminReels() {
     <div className="max-w-3xl space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Reels Management</h1>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-2xl font-bold">Reels Management</h1>
+            {isRealtimeConnected && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Live Sync Active
+              </span>
+            )}
+          </div>
           <p className="mt-1 text-sm text-muted-foreground">
             Manage Instagram reels from <strong>@abhitaknews</strong>. Reels auto-sync directly and play in the app with likes and view tracking.
           </p>

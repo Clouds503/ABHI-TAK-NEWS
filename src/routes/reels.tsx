@@ -28,6 +28,7 @@ import {
   recordReelViewServerFn,
   getReelMetricsServerFn,
 } from "@/lib/instagram.functions";
+import { useRealtimeReels } from "@/lib/useRealtimeReels";
 import { Button } from "@/components/ui/button";
 import { useDoubleTap } from "@/lib/useDoubleTap";
 import { HeartPop } from "@/components/HeartPop";
@@ -702,8 +703,14 @@ function ReelsPage() {
   const { lang } = useI18n();
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const syncInstagramReels = useServerFn(syncInstagramReelsServerFn);
   const isDesktop = useIsDesktop();
+
+  // Enable real-time websocket subscription and auto-sync for reels
+  const {
+    isConnected: isRealtimeConnected,
+    isSyncing: isAutoSyncing,
+    triggerManualSync,
+  } = useRealtimeReels({ autoSync: true });
 
   const { data: reels, isLoading } = useQuery({
     queryKey: ["reels"],
@@ -719,44 +726,23 @@ function ReelsPage() {
   });
 
   const [active, setActive] = useState(0);
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [manualSyncing, setManualSyncing] = useState(false);
+  const isSyncing = manualSyncing || isAutoSyncing;
   const refs = useRef<(HTMLDivElement | null)[]>([]);
-
-  // Auto-fetch new reels if database has no reels or on initial visit
-  useEffect(() => {
-    if (!isLoading && (!reels || reels.length === 0)) {
-      setIsSyncing(true);
-      syncInstagramReels()
-        .then(() => {
-          void qc.invalidateQueries({ queryKey: ["reels"] });
-        })
-        .catch((err) => {
-          console.warn("[reels] Auto-fetch error:", err);
-        })
-        .finally(() => {
-          setIsSyncing(false);
-        });
-    }
-  }, [isLoading, reels, qc, syncInstagramReels]);
 
   const handleManualRefresh = async () => {
     if (isSyncing) return;
-    setIsSyncing(true);
+    setManualSyncing(true);
     try {
-      const res = await syncInstagramReels();
-      await qc.invalidateQueries({ queryKey: ["reels"] });
-      if (res?.success) {
-        toast.success(
-          lang === "en"
-            ? `Reels updated (${res.added} new added)`
-            : `रील्स अपडेट हुईं (${res.added} नई जोड़ी गईं)`,
-        );
-      }
+      await triggerManualSync();
+      toast.success(
+        lang === "en" ? "Reels feed synced and up to date" : "रील्स फ़ीड रीयल-टाइम अपडेट हो गई",
+      );
     } catch (err) {
       console.error("[reels] Refresh error:", err);
       toast.error(lang === "en" ? "Failed to refresh reels" : "रील्स रीफ्रेश करने में विफल");
     } finally {
-      setIsSyncing(false);
+      setManualSyncing(false);
     }
   };
 

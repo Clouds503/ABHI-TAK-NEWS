@@ -27,6 +27,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { syncYouTubeVideosServerFn } from "@/lib/youtube.functions";
 import { useRealtimeVideos } from "@/lib/useRealtimeVideos";
+import { useRealtimeReels } from "@/lib/useRealtimeReels";
 import { img, homeBanner } from "@/lib/media";
 import { useSiteSettings } from "@/lib/site-settings";
 import { uploadMedia } from "@/lib/upload";
@@ -401,6 +402,7 @@ function Dashboard() {
 
   const syncServerVideos = useServerFn(syncYouTubeVideosServerFn);
   useRealtimeVideos();
+  useRealtimeReels();
 
   const handleSyncYouTube = async () => {
     setSyncingYt(true);
