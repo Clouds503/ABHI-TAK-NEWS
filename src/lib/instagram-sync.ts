@@ -7,8 +7,11 @@ export type InstagramReelItem = {
   shortcode: string;
   caption: string | null;
   videoUrl?: string | null;
+  video_url?: string | null;
   thumbnailUrl?: string | null;
+  thumbnail_url?: string | null;
   postedAt?: string | null;
+  posted_at?: string | null;
   initialViews?: number;
   initialLikes?: number;
   isPinned?: boolean;
@@ -137,6 +140,7 @@ export const VERIFIED_ABHITAK_REELS: InstagramReelItem[] = [
     initialViews: 10000000,
     initialLikes: 145000,
     isPinned: true,
+    postedAt: "2026-11-13T10:00:00Z",
   },
   {
     shortcode: "DVaoJ02j1by",
@@ -145,6 +149,7 @@ export const VERIFIED_ABHITAK_REELS: InstagramReelItem[] = [
     initialViews: 6500000,
     initialLikes: 89000,
     isPinned: true,
+    postedAt: "2026-11-12T10:00:00Z",
   },
   {
     shortcode: "DVlGMqlDwPA",
@@ -153,6 +158,7 @@ export const VERIFIED_ABHITAK_REELS: InstagramReelItem[] = [
     initialViews: 3400000,
     initialLikes: 46000,
     isPinned: true,
+    postedAt: "2026-11-11T10:00:00Z",
   },
 ];
 
@@ -296,7 +302,14 @@ export async function syncInstagramReelsToDatabase(
     if (customItems?.length) {
       for (const item of customItems) {
         if (item.shortcode) {
-          combinedMap.set(item.shortcode, { ...combinedMap.get(item.shortcode), ...item });
+          const prev = combinedMap.get(item.shortcode);
+          combinedMap.set(item.shortcode, {
+            ...prev,
+            ...item,
+            thumbnailUrl: item.thumbnailUrl ?? item.thumbnail_url ?? prev?.thumbnailUrl,
+            videoUrl: item.videoUrl ?? item.video_url ?? prev?.videoUrl,
+            postedAt: item.postedAt ?? item.posted_at ?? prev?.postedAt,
+          });
         }
       }
     }
@@ -306,44 +319,67 @@ export async function syncInstagramReelsToDatabase(
       return { success: true, count: 0, added: 0, updated: 0, message: "No reels to sync" };
     }
 
-    // 3. Fetch existing reels from database to count additions vs updates
+    // 3. Fetch existing reels from database to count additions vs updates and preserve fields
     const { data: existingRows, error: fetchErr } = await supabase
       .from("reels")
-      .select("id, shortcode, video_url");
+      .select("id, shortcode, video_url, posted_at, thumbnail_url");
 
     if (fetchErr) {
       console.warn("[InstagramSync] Fetch existing rows notice:", fetchErr);
     }
 
-    const existingShortcodes = new Set((existingRows || []).map((r) => r.shortcode));
+    const existingMap = new Map((existingRows || []).map((r) => [r.shortcode, r]));
     let addedCount = 0;
     let updatedCount = 0;
 
     // 4. Upsert each reel into database
     for (let i = 0; i < allItems.length; i++) {
       const item = allItems[i]!;
-      const isNew = !existingShortcodes.has(item.shortcode);
+      const existing = existingMap.get(item.shortcode);
+      const isNew = !existing;
       const sortOrder = (allItems.length - i) * 10;
 
       let itemCaption = item.caption?.trim().slice(0, 500) ?? null;
-      if (!itemCaption) {
+      let itemThumbnail =
+        item.thumbnailUrl?.trim() ??
+        item.thumbnail_url?.trim() ??
+        existing?.thumbnail_url ??
+        null;
+
+      if (!itemCaption || !itemThumbnail) {
         try {
           const info = await fetchInstagramEmbedInfo(item.shortcode);
-          if (info.caption) itemCaption = info.caption.slice(0, 500);
+          if (!itemCaption && info.caption) itemCaption = info.caption.slice(0, 500);
+          if (!itemThumbnail && info.posterUrl) itemThumbnail = info.posterUrl;
         } catch {
           // non-fatal
         }
       }
+
+      const postedAt =
+        item.postedAt?.trim() ||
+        item.posted_at?.trim() ||
+        existing?.posted_at ||
+        new Date().toISOString();
 
       const payload: Record<string, unknown> = {
         shortcode: item.shortcode,
         caption: itemCaption,
         sort_order: sortOrder,
         is_active: true,
+        posted_at: postedAt,
       };
 
-      if (item.videoUrl) {
-        payload["video_url"] = item.videoUrl;
+      if (itemThumbnail) {
+        payload["thumbnail_url"] = itemThumbnail;
+      }
+
+      const videoUrl =
+        item.videoUrl?.trim() ??
+        item.video_url?.trim() ??
+        existing?.video_url;
+      if (videoUrl) {
+        payload["video_url"] = videoUrl;
       }
 
       const { error: upsertErr } = await supabase.from("reels").upsert(payload, {

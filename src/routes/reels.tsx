@@ -57,6 +57,8 @@ type Reel = {
   shortcode: string;
   caption: string | null;
   video_url: string | null;
+  posted_at?: string | null;
+  created_at?: string;
   views?: number | null;
   likes_count?: number | null;
 };
@@ -712,14 +714,14 @@ function ReelsPage() {
     triggerManualSync,
   } = useRealtimeReels({ autoSync: true });
 
-  const { data: reels, isLoading } = useQuery({
+  const { data: reels, isLoading } = useQuery<Reel[]>({
     queryKey: ["reels"],
     queryFn: async () => {
       const { data } = await supabase
         .from("reels")
-        .select("id, shortcode, caption, video_url")
+        .select("id, shortcode, caption, video_url, posted_at, created_at")
         .eq("is_active", true)
-        .order("sort_order", { ascending: false })
+        .order("posted_at", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false });
       return (data ?? []) as Reel[];
     },
@@ -729,6 +731,46 @@ function ReelsPage() {
   const [manualSyncing, setManualSyncing] = useState(false);
   const isSyncing = manualSyncing || isAutoSyncing;
   const refs = useRef<(HTMLDivElement | null)[]>([]);
+  const activeReelIdRef = useRef<string | null>(null);
+  const prevReelsRef = useRef<Reel[] | null>(null);
+
+  // Sync active index when reels change (e.g. from real-time WebSocket or background refetch)
+  useEffect(() => {
+    if (!reels || reels.length === 0) return;
+
+    if (!prevReelsRef.current) {
+      prevReelsRef.current = reels;
+      if (!activeReelIdRef.current && reels[active]) {
+        activeReelIdRef.current = reels[active].id;
+      }
+      return;
+    }
+
+    if (prevReelsRef.current !== reels) {
+      const currentActiveId = activeReelIdRef.current;
+      if (currentActiveId) {
+        const foundIndex = reels.findIndex((r) => r.id === currentActiveId);
+        if (foundIndex !== -1 && foundIndex !== active) {
+          // Keep currently playing reel active when new reels are prepended
+          setActive(foundIndex);
+          if (!isDesktop) {
+            requestAnimationFrame(() => {
+              refs.current[foundIndex]?.scrollIntoView({
+                behavior: "instant" as ScrollBehavior,
+                block: "start",
+              });
+            });
+          }
+        } else if (foundIndex === -1) {
+          // Active reel was removed, clamp to valid range
+          const fallback = Math.min(active, reels.length - 1);
+          setActive(fallback);
+          activeReelIdRef.current = reels[fallback]?.id ?? null;
+        }
+      }
+      prevReelsRef.current = reels;
+    }
+  }, [reels, active, isDesktop]);
 
   const handleManualRefresh = async () => {
     if (isSyncing) return;
@@ -750,7 +792,15 @@ function ReelsPage() {
     const obs = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
-          if (e.isIntersecting) setActive(Number((e.target as HTMLElement).dataset["i"]));
+          if (e.isIntersecting) {
+            const idx = Number((e.target as HTMLElement).dataset["i"]);
+            if (!Number.isNaN(idx)) {
+              setActive(idx);
+              if (reels?.[idx]) {
+                activeReelIdRef.current = reels[idx].id;
+              }
+            }
+          }
         });
       },
       { threshold: 0.6 },
@@ -761,19 +811,27 @@ function ReelsPage() {
 
   // Keyboard navigation for desktop (ArrowUp / ArrowDown)
   useEffect(() => {
-    if (!reels?.length) return;
+    if (!reels || reels.length === 0) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "ArrowDown" || e.key === "PageDown") {
         e.preventDefault();
-        setActive((prev) => Math.min(reels.length - 1, prev + 1));
+        setActive((prev) => {
+          const next = Math.min(reels.length - 1, prev + 1);
+          activeReelIdRef.current = reels[next]?.id ?? null;
+          return next;
+        });
       } else if (e.key === "ArrowUp" || e.key === "PageUp") {
         e.preventDefault();
-        setActive((prev) => Math.max(0, prev - 1));
+        setActive((prev) => {
+          const next = Math.max(0, prev - 1);
+          activeReelIdRef.current = reels[next]?.id ?? null;
+          return next;
+        });
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [reels?.length]);
+  }, [reels]);
 
   const goBack = () => {
     if (window.history.length > 1) {
@@ -784,10 +842,10 @@ function ReelsPage() {
   };
 
   const h = "h-[100dvh]";
-  if (isLoading && !reels?.length)
+  if (isLoading && (!reels || reels.length === 0))
     return <div className={`${h} grid place-items-center text-muted-foreground bg-black`}>…</div>;
 
-  if (!reels?.length)
+  if (!reels || reels.length === 0)
     return (
       <div className={`${h} grid place-items-center p-6 text-center bg-black text-white`}>
         <div className="space-y-4">
@@ -908,8 +966,20 @@ function ReelsPage() {
             active={isDesktop}
             lang={lang}
             desktopControls={{
-              onPrev: () => setActive((i) => Math.max(0, i - 1)),
-              onNext: () => setActive((i) => Math.min(reels.length - 1, i + 1)),
+              onPrev: () => {
+                setActive((i) => {
+                  const next = Math.max(0, i - 1);
+                  activeReelIdRef.current = reels[next]?.id ?? null;
+                  return next;
+                });
+              },
+              onNext: () => {
+                setActive((i) => {
+                  const next = Math.min(reels.length - 1, i + 1);
+                  activeReelIdRef.current = reels[next]?.id ?? null;
+                  return next;
+                });
+              },
               canPrev: active > 0,
               canNext: active < reels.length - 1,
               currentIndex: active + 1,
