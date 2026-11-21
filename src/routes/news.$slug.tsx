@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { articleQuery, articlesQuery } from "@/lib/queries";
 import { useI18n, timeAgo } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
-import { img } from "@/lib/media";
+import { img, getShareImageUrl } from "@/lib/media";
 import { supabase } from "@/integrations/supabase/client";
 import { ArticleRow, Meta, Empty, AdSlot } from "@/components/news";
 import { ArticleGalleryView } from "@/components/ArticleGalleryView";
@@ -28,18 +28,73 @@ import { trackArticleView, trackEngagement } from "@/lib/analytics";
 
 export const Route = createFileRoute("/news/$slug")({
   loader: ({ context, params }) => context.queryClient.ensureQueryData(articleQuery(params.slug)),
-  head: ({ loaderData }) => {
+  head: ({ loaderData, params }) => {
     if (!loaderData)
       return { meta: [{ title: "Abhitak" }, { name: "robots", content: "noindex" }] };
     const title = `${loaderData.title_hi} — Abhitak`;
     const desc = loaderData.summary_hi ?? loaderData.title_en ?? "";
+    const cover =
+      loaderData.cover_url ||
+      (loaderData.gallery && loaderData.gallery.length > 0 ? loaderData.gallery[0]?.url : null);
+    const imageUrl = getShareImageUrl(cover);
+    const articleUrl = `https://abhitak.in/news/${loaderData.slug || params.slug}`;
+
     return {
       meta: [
         { title },
         { name: "description", content: desc },
+        // Open Graph / WhatsApp / Facebook
+        { property: "og:site_name", content: "Abhitak News" },
+        { property: "og:type", content: "article" },
         { property: "og:title", content: title },
         { property: "og:description", content: desc },
-        { property: "og:type", content: "article" },
+        { property: "og:url", content: articleUrl },
+        { property: "og:image", content: imageUrl },
+        { property: "og:image:secure_url", content: imageUrl },
+        { property: "og:image:alt", content: loaderData.title_hi || "Abhitak News" },
+        { property: "og:image:width", content: "1200" },
+        { property: "og:image:height", content: "675" },
+        ...(loaderData.published_at
+          ? [{ property: "article:published_time", content: loaderData.published_at }]
+          : []),
+        ...(loaderData.author_name
+          ? [{ property: "article:author", content: loaderData.author_name }]
+          : []),
+        // Twitter / X Card
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: desc },
+        { name: "twitter:image", content: imageUrl },
+        { name: "twitter:image:alt", content: loaderData.title_hi || "Abhitak News" },
+        // JSON-LD NewsArticle structured data
+        {
+          "script:ld+json": {
+            "@context": "https://schema.org",
+            "@type": "NewsArticle",
+            headline: loaderData.title_hi,
+            image: [imageUrl],
+            datePublished: loaderData.published_at || undefined,
+            description: desc,
+            author: [
+              {
+                "@type": "Person",
+                name: loaderData.author_name || "Abhitak News",
+              },
+            ],
+            publisher: {
+              "@type": "Organization",
+              name: "Abhitak News",
+              logo: {
+                "@type": "ImageObject",
+                url: "https://abhitak.in/pwa-512.png",
+              },
+            },
+            mainEntityOfPage: {
+              "@type": "WebPage",
+              "@id": articleUrl,
+            },
+          },
+        },
       ],
     };
   },
@@ -155,8 +210,24 @@ function ArticlePage() {
 
   if (!a) return <Empty text={t("noContent")} />;
 
+  const getShareUrl = () => {
+    if (typeof window !== "undefined") {
+      const origin = window.location.origin;
+      if (
+        !origin ||
+        origin.includes("localhost") ||
+        origin.includes("capacitor://") ||
+        origin.includes("127.0.0.1")
+      ) {
+        return `https://abhitak.in/news/${a.slug}`;
+      }
+      return `${origin}/news/${a.slug}`;
+    }
+    return `https://abhitak.in/news/${a.slug}`;
+  };
+
   const share = async () => {
-    const url = window.location.href;
+    const url = getShareUrl();
     if (navigator.share)
       await navigator.share({ title: pick(a.title_hi, a.title_en), url }).catch(() => {});
     else {
@@ -180,7 +251,7 @@ function ArticlePage() {
   };
 
   const copyArticleLink = async () => {
-    const url = window.location.href;
+    const url = getShareUrl();
     await navigator.clipboard.writeText(url);
     toast.success(lang === "en" ? "Link copied" : "लिंक कॉपी हो गया");
     void trackEngagement("share", "article", a.id);
@@ -188,7 +259,7 @@ function ArticlePage() {
 
   const shareWhatsApp = () => {
     if (!a) return;
-    const url = window.location.href;
+    const url = getShareUrl();
     const text = encodeURIComponent(`${pick(a.title_hi, a.title_en)}\n${url}`);
     window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
     void trackEngagement("share", "article", a.id);
@@ -196,7 +267,7 @@ function ArticlePage() {
 
   const shareTwitter = () => {
     if (!a) return;
-    const url = window.location.href;
+    const url = getShareUrl();
     const title = pick(a.title_hi, a.title_en) ?? "";
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`,

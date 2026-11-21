@@ -118,8 +118,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "Abhitak: local news, live TV, video and Jan Ki Awaaz for Uttar Pradesh.",
       },
+      { property: "og:site_name", content: "Abhitak News" },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: "https://abhitak.in/pwa-512.png" },
+      { property: "og:image:secure_url", content: "https://abhitak.in/pwa-512.png" },
+      { property: "og:image:width", content: "512" },
+      { property: "og:image:height", content: "512" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://abhitak.in/pwa-512.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

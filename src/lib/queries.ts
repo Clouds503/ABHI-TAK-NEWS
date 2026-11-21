@@ -165,6 +165,24 @@ export const articleQuery = (slug: string) =>
         if (fb.error) throw error;
         data = fb.data as any;
       }
+      if (!data) {
+        let altSlug = slug;
+        try {
+          altSlug = slug.includes("%") ? decodeURIComponent(slug) : encodeURIComponent(slug);
+        } catch {
+          // ignore malformed URI
+        }
+        if (altSlug !== slug) {
+          const altRes = await supabase
+            .from("articles")
+            .select(`${ARTICLE_COLS}, body_hi, body_en, category_id, gallery, video_url`)
+            .eq("slug", altSlug)
+            .maybeSingle();
+          if (altRes.data) {
+            data = altRes.data as any;
+          }
+        }
+      }
       return data as unknown as ArticleDetail | null;
     },
   });
