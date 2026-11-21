@@ -3,12 +3,32 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Trash2, Eye, EyeOff, Upload, Film, RefreshCw, Instagram, ExternalLink } from "lucide-react";
+import {
+  Trash2,
+  Eye,
+  EyeOff,
+  Upload,
+  Film,
+  RefreshCw,
+  Instagram,
+  ExternalLink,
+  Sparkles,
+  Loader2,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { UploadNote } from "@/components/UploadNote";
-import { syncInstagramReelsServerFn, getInstagramReelMedia } from "@/lib/instagram.functions";
+import {
+  syncInstagramReelsServerFn,
+  getInstagramReelMedia,
+  saveReelServerFn,
+  bulkSaveReelsServerFn,
+  toggleReelActiveServerFn,
+  deleteReelServerFn,
+  attachReelVideoServerFn,
+  fetchReelInfoServerFn,
+} from "@/lib/instagram.functions";
 import { formatMetricCount } from "@/routes/reels";
 import { uploadMedia } from "@/lib/upload";
 import { useRealtimeReels } from "@/lib/useRealtimeReels";
@@ -32,7 +52,14 @@ function AdminReels() {
   const qc = useQueryClient();
   const syncServerReels = useServerFn(syncInstagramReelsServerFn);
   const resolveMedia = useServerFn(getInstagramReelMedia);
-  const { isConnected: isRealtimeConnected, triggerManualSync } = useRealtimeReels({
+  const saveReel = useServerFn(saveReelServerFn);
+  const bulkSaveReels = useServerFn(bulkSaveReelsServerFn);
+  const toggleActive = useServerFn(toggleReelActiveServerFn);
+  const deleteReel = useServerFn(deleteReelServerFn);
+  const attachVideo = useServerFn(attachReelVideoServerFn);
+  const fetchInfo = useServerFn(fetchReelInfoServerFn);
+
+  const { isConnected: isRealtimeConnected } = useRealtimeReels({
     autoSync: false,
   });
 
@@ -41,6 +68,7 @@ function AdminReels() {
   const [videoUrl, setVideoUrl] = useState("");
   const [bulk, setBulk] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isFetchingInfo, setIsFetchingInfo] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-reels"],
@@ -92,14 +120,33 @@ function AdminReels() {
     }
   };
 
+  const handleLinkChange = async (val: string) => {
+    setLink(val);
+    const code = parseShortcode(val);
+    if (code && !caption.trim() && !isFetchingInfo) {
+      setIsFetchingInfo(true);
+      try {
+        const info = await fetchInfo({ data: { shortcode: code } });
+        if (info?.caption) {
+          setCaption(info.caption);
+          toast.success("Instagram caption auto-fetched!", { duration: 2500 });
+        }
+      } catch {
+        // Embed caption fetch error is non-fatal
+      } finally {
+        setIsFetchingInfo(false);
+      }
+    }
+  };
+
   const add = async (e: React.FormEvent) => {
     e.preventDefault();
     const code = parseShortcode(link);
     if (!code) {
-      toast.error("Paste a valid Instagram reel link");
+      toast.error("Paste a valid Instagram reel link or shortcode");
       return;
     }
-    const t = toast.loading("Adding reel and checking direct stream…");
+    const t = toast.loading("Saving reel to database…");
     let resolvedVideo = videoUrl.trim() || null;
     if (!resolvedVideo) {
       try {
@@ -112,22 +159,23 @@ function AdminReels() {
       }
     }
 
-    const { error } = await supabase.from("reels").insert({
-      shortcode: code,
-      caption: caption.trim().slice(0, 500) || null,
-      video_url: resolvedVideo,
+    const res = await saveReel({
+      data: {
+        shortcode: code,
+        caption: caption.trim() || null,
+        videoUrl: resolvedVideo,
+      },
     });
-    if (error) {
-      toast.error(
-        error.message.includes("duplicate") ? "This reel is already added" : error.message,
-        { id: t },
-      );
+
+    if (!res.success) {
+      toast.error(res.error || "Failed to save reel", { id: t });
       return;
     }
+
     setLink("");
     setCaption("");
     setVideoUrl("");
-    toast.success("Reel added successfully!", { id: t });
+    toast.success("Reel synced and added successfully!", { id: t });
     refresh();
   };
 
@@ -139,7 +187,7 @@ function AdminReels() {
       .split(/\s+/)
       .filter(Boolean)
       .forEach((piece) => {
-        const c = piece.includes("instagram.com") ? parseShortcode(piece) : null;
+        const c = parseShortcode(piece);
         if (c && !codes.includes(c)) codes.push(c);
         else if (!c) bad.push(piece);
       });
@@ -147,17 +195,18 @@ function AdminReels() {
       toast.error("No valid reel links found");
       return;
     }
-    const { error } = await supabase.from("reels").upsert(
-      codes.map((shortcode) => ({ shortcode })),
-      { onConflict: "shortcode", ignoreDuplicates: true },
-    );
-    if (error) {
-      toast.error(error.message);
+    const t = toast.loading(`Syncing ${codes.length} reel(s) from Instagram…`);
+    const res = await bulkSaveReels({ data: { shortcodes: codes } });
+
+    if (!res.success) {
+      toast.error(res.error || "Failed to bulk save reels", { id: t });
       return;
     }
+
     setBulk("");
     toast.success(
-      `${codes.length} reel${codes.length > 1 ? "s" : ""} added${bad.length ? `, ${bad.length} invalid skipped` : ""}`,
+      `${res.count ?? codes.length} reel${codes.length > 1 ? "s" : ""} saved successfully${bad.length ? `, ${bad.length} invalid skipped` : ""}`,
+      { id: t },
     );
     refresh();
   };
@@ -167,13 +216,14 @@ function AdminReels() {
       toast.error("Choose a video file");
       return;
     }
-    const t = toast.loading("Uploading video…");
+    const t = toast.loading("Uploading video to storage…");
     try {
       const url = await uploadMedia(file, "reels");
-      await supabase
-        .from("reels")
-        .update({ video_url: url })
-        .eq("id", id);
+      const res = await attachVideo({ data: { id, videoUrl: url } });
+      if (!res.success) {
+        toast.error(res.error || "Failed to attach video to reel", { id: t });
+        return;
+      }
       toast.success("Video attached — it will play directly in the app", { id: t });
       refresh();
     } catch (err: unknown) {
@@ -218,24 +268,41 @@ function AdminReels() {
 
       {/* Manual Add Form */}
       <form onSubmit={add} className="space-y-3 rounded-lg border bg-card p-4">
-        <h2 className="text-sm font-semibold">Add Individual Reel</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold">Add Individual Reel</h2>
+          {isFetchingInfo && (
+            <span className="flex items-center gap-1.5 text-xs text-rose-500 animate-pulse">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Fetching caption from Instagram…
+            </span>
+          )}
+        </div>
         <Input
-          placeholder="https://www.instagram.com/reel/… or shortcode"
+          placeholder="https://www.instagram.com/reel/DVlGMqlDwPA/ or shortcode"
           value={link}
-          onChange={(e) => setLink(e.target.value)}
+          onChange={(e) => void handleLinkChange(e.target.value)}
         />
         <Input
           placeholder="Direct MP4 video URL (optional)"
           value={videoUrl}
           onChange={(e) => setVideoUrl(e.target.value)}
         />
-        <Input
-          placeholder="Caption (optional)"
-          value={caption}
-          onChange={(e) => setCaption(e.target.value)}
-          maxLength={500}
-        />
-        <Button type="submit">Add Reel</Button>
+        <div className="relative">
+          <Input
+            placeholder="Caption (auto-fetched from Instagram if left empty)"
+            value={caption}
+            onChange={(e) => setCaption(e.target.value)}
+            maxLength={500}
+          />
+          {caption && (
+            <span className="absolute right-2.5 top-2.5 text-[10px] text-muted-foreground">
+              {caption.length}/500
+            </span>
+          )}
+        </div>
+        <Button type="submit" className="gap-2">
+          <Sparkles className="h-4 w-4" /> Add Reel
+        </Button>
       </form>
 
       {/* Bulk Add Form */}
@@ -244,7 +311,7 @@ function AdminReels() {
         <textarea
           className="min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           placeholder={
-            "Paste multiple reel links or shortcodes separated by lines or spaces:\nhttps://www.instagram.com/reel/Df1x0IDvKBB/\nhttps://www.instagram.com/reel/Df1fxf6PllL/"
+            "Paste multiple reel links or shortcodes separated by lines or spaces:\nhttps://www.instagram.com/reel/DVlGMqlDwPA/\nhttps://www.instagram.com/reel/DVaoJ02j1by/\nhttps://www.instagram.com/reel/DQg2kYaj-JF/"
           }
           value={bulk}
           onChange={(e) => setBulk(e.target.value)}
@@ -342,8 +409,15 @@ function AdminReels() {
                       aria-label={r.is_active ? "Hide reel" : "Show reel"}
                       title={r.is_active ? "Visible in app" : "Hidden in app"}
                       onClick={async () => {
-                        await supabase.from("reels").update({ is_active: !r.is_active }).eq("id", r.id);
-                        refresh();
+                        const res = await toggleActive({
+                          data: { id: r.id, isActive: !r.is_active },
+                        });
+                        if (res.success) {
+                          toast.success(r.is_active ? "Reel hidden" : "Reel made visible");
+                          refresh();
+                        } else {
+                          toast.error(res.error || "Failed to update reel status");
+                        }
                       }}
                     >
                       {r.is_active ? (
@@ -359,8 +433,13 @@ function AdminReels() {
                       aria-label="Delete"
                       onClick={async () => {
                         if (confirm(`Delete reel ${r.shortcode}?`)) {
-                          await supabase.from("reels").delete().eq("id", r.id);
-                          refresh();
+                          const res = await deleteReel({ data: { id: r.id } });
+                          if (res.success) {
+                            toast.success("Reel deleted");
+                            refresh();
+                          } else {
+                            toast.error(res.error || "Failed to delete reel");
+                          }
                         }
                       }}
                     >

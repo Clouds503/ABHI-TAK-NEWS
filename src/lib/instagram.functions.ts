@@ -93,6 +93,204 @@ export const syncInstagramReelsServerFn = createServerFn({ method: "POST" }).han
 });
 
 /**
+ * Server function to fetch caption and thumbnail from Instagram embed without login.
+ */
+export const fetchReelInfoServerFn = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z.object({
+      shortcode: z.string().min(3).max(60),
+    }).parse(input)
+  )
+  .handler(async ({ data }) => {
+    try {
+      const { fetchInstagramEmbedInfo } = await import("@/lib/instagram-sync");
+      return await fetchInstagramEmbedInfo(data.shortcode);
+    } catch {
+      return { caption: null, posterUrl: null };
+    }
+  });
+
+/**
+ * Server function to add/update a single reel using supabaseAdmin (bypasses client RLS).
+ */
+export const saveReelServerFn = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z.object({
+      shortcode: z.string().min(3).max(60),
+      caption: z.string().optional().nullable(),
+      videoUrl: z.string().optional().nullable(),
+    }).parse(input)
+  )
+  .handler(async ({ data }) => {
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { fetchInstagramEmbedInfo } = await import("@/lib/instagram-sync");
+
+      let caption = data.caption?.trim() || null;
+      const videoUrl = data.videoUrl?.trim() || null;
+
+      // Auto-fetch caption from Instagram if not provided
+      if (!caption) {
+        const info = await fetchInstagramEmbedInfo(data.shortcode);
+        if (info.caption) {
+          caption = info.caption;
+        }
+      }
+
+      const payload: Record<string, unknown> = {
+        shortcode: data.shortcode,
+        caption: caption ? caption.slice(0, 500) : null,
+        is_active: true,
+      };
+
+      if (videoUrl) {
+        payload["video_url"] = videoUrl;
+      }
+
+      const { data: inserted, error } = await supabaseAdmin
+        .from("reels")
+        .upsert(payload, { onConflict: "shortcode" })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return { success: true, reel: inserted };
+    } catch (err: unknown) {
+      console.error("[saveReelServerFn] Error:", err);
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : "Failed to save reel",
+      };
+    }
+  });
+
+/**
+ * Server function to add multiple reels using supabaseAdmin (bypasses client RLS).
+ */
+export const bulkSaveReelsServerFn = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z.object({
+      shortcodes: z.array(z.string().min(3).max(60)),
+    }).parse(input)
+  )
+  .handler(async ({ data }) => {
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { fetchInstagramEmbedInfo } = await import("@/lib/instagram-sync");
+
+      let added = 0;
+      for (const code of data.shortcodes) {
+        let caption: string | null = null;
+        try {
+          const info = await fetchInstagramEmbedInfo(code);
+          if (info.caption) caption = info.caption;
+        } catch {}
+
+        const { error } = await supabaseAdmin.from("reels").upsert(
+          {
+            shortcode: code,
+            caption: caption ? caption.slice(0, 500) : null,
+            is_active: true,
+          },
+          { onConflict: "shortcode" },
+        );
+        if (!error) added++;
+      }
+
+      return { success: true, count: added };
+    } catch (err: unknown) {
+      console.error("[bulkSaveReelsServerFn] Error:", err);
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : "Failed to bulk save reels",
+      };
+    }
+  });
+
+/**
+ * Server function to toggle reel active state using supabaseAdmin.
+ */
+export const toggleReelActiveServerFn = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z.object({
+      id: z.string().uuid(),
+      isActive: z.boolean(),
+    }).parse(input)
+  )
+  .handler(async ({ data }) => {
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { error } = await supabaseAdmin
+        .from("reels")
+        .update({ is_active: data.isActive })
+        .eq("id", data.id);
+
+      if (error) throw error;
+      return { success: true };
+    } catch (err: unknown) {
+      console.error("[toggleReelActiveServerFn] Error:", err);
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : "Failed to toggle reel status",
+      };
+    }
+  });
+
+/**
+ * Server function to attach uploaded video URL to a reel using supabaseAdmin.
+ */
+export const attachReelVideoServerFn = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z.object({
+      id: z.string().uuid(),
+      videoUrl: z.string(),
+    }).parse(input)
+  )
+  .handler(async ({ data }) => {
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { error } = await supabaseAdmin
+        .from("reels")
+        .update({ video_url: data.videoUrl })
+        .eq("id", data.id);
+
+      if (error) throw error;
+      return { success: true };
+    } catch (err: unknown) {
+      console.error("[attachReelVideoServerFn] Error:", err);
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : "Failed to attach video",
+      };
+    }
+  });
+
+/**
+ * Server function to delete a reel using supabaseAdmin.
+ */
+export const deleteReelServerFn = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z.object({
+      id: z.string().uuid(),
+    }).parse(input)
+  )
+  .handler(async ({ data }) => {
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { error } = await supabaseAdmin.from("reels").delete().eq("id", data.id);
+
+      if (error) throw error;
+      return { success: true };
+    } catch (err: unknown) {
+      console.error("[deleteReelServerFn] Error:", err);
+      return {
+        success: false,
+        error: err instanceof Error ? err.message : "Failed to delete reel",
+      };
+    }
+  });
+
+/**
  * Server function to record a reel view atomic and race-condition-free.
  */
 export const recordReelViewServerFn = createServerFn({ method: "POST" })

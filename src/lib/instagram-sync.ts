@@ -132,21 +132,24 @@ export const VERIFIED_ABHITAK_REELS: InstagramReelItem[] = [
   // Top Pinned Channel Reels
   {
     shortcode: "DQg2kYaj-JF",
-    caption: "अभी तक न्यूज़ की सबसे लोकप्रिय रील — 10 मिलियन से अधिक व्यूज।",
+    caption:
+      "बिजनौर के थाना नांगल क्षेत्र के ग्राम अभिपुर में रातो रात कुछ लोगों ने एक किसान के खेत में अवैध रूप से मजार का निर्माण कर दिया। निर्माण को पुराना दिखाने के लिए उस पर चूने का लेप भी किया गया।",
     initialViews: 10000000,
     initialLikes: 145000,
     isPinned: true,
   },
   {
     shortcode: "DVaoJ02j1by",
-    caption: "धामपुर क्षेत्र की खास ग्राउंड रिपोर्ट। 6.5 मिलियन व्यूज।",
+    caption:
+      "मथुरा में होलिका दहन के दौरान अद्भुत परंपरा देखने को मिली। संजू पंडा नामक व्यक्ति धधकती होलिका की करीब 25 फीट ऊंची लपटों के बीच से दौड़कर निकल गया और उसे खरोंच तक नहीं आई।",
     initialViews: 6500000,
     initialLikes: 89000,
     isPinned: true,
   },
   {
     shortcode: "DVlGMqlDwPA",
-    caption: "मुरादाबाद मंडल की एक्सक्लूसिव कवरेज — 3.4 मिलियन व्यूज।",
+    caption:
+      "केंद्र सरकार ने घरेलू एलपीजी गैस सिलेंडर के दाम में 60 रुपए की बढ़ोतरी कर दी है। अब एलपीजी का 14.2 किलो का सिलेंडर 913 रुपए में मिलेगा, जो पहले 853 रुपए था। वहीं 19 किलो के कॉमर्शियल सिलेंडर के दाम में 115 रुपए का इजाफा हुआ है।",
     initialViews: 3400000,
     initialLikes: 46000,
     isPinned: true,
@@ -165,6 +168,65 @@ export function extractInstagramShortcode(input: string): string | null {
   if (match) return match[1];
   if (/^[A-Za-z0-9_-]{5,40}$/.test(trimmed)) return trimmed;
   return null;
+}
+
+/**
+ * Fetches public caption and thumbnail info from Instagram's embed endpoint.
+ * Works reliably without any login or tokens.
+ */
+export async function fetchInstagramEmbedInfo(shortcode: string): Promise<{
+  caption: string | null;
+  posterUrl: string | null;
+}> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 6000);
+    const res = await fetch(`https://www.instagram.com/reel/${shortcode}/embed/captioned/`, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+        Accept: "text/html",
+      },
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return { caption: null, posterUrl: null };
+
+    const html = await res.text();
+    let caption: string | null = null;
+    let posterUrl: string | null = null;
+
+    const captionMatch = html.match(/<div class="Caption"[^>]*>([\s\S]*?)<\/div>/i);
+    if (captionMatch) {
+      let raw = captionMatch[1];
+      // Strip username header link
+      raw = raw.replace(/<a class="CaptionUsername"[^>]*>[\s\S]*?<\/a>/gi, "");
+      // Strip comments link section
+      raw = raw.replace(/<div class="CaptionComments"[\s\S]*$/gi, "");
+      // Convert breaks to spaces and strip HTML tags
+      caption = raw
+        .replace(/<br\s*\/?>/gi, " ")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/&amp;/g, "&")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&nbsp;/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+      if (caption.startsWith("abhitaknews ")) {
+        caption = caption.slice("abhitaknews ".length).trim();
+      }
+    }
+
+    const posterMatch = html.match(/class="EmbeddedMediaImage"[^>]*src="([^"]+)"/);
+    if (posterMatch) {
+      posterUrl = posterMatch[1].replace(/&amp;/g, "&");
+    }
+
+    return { caption, posterUrl };
+  } catch {
+    return { caption: null, posterUrl: null };
+  }
 }
 
 /**
@@ -263,9 +325,19 @@ export async function syncInstagramReelsToDatabase(
       const isNew = !existingShortcodes.has(item.shortcode);
       const sortOrder = (allItems.length - i) * 10;
 
+      let itemCaption = item.caption?.trim().slice(0, 500) ?? null;
+      if (!itemCaption) {
+        try {
+          const info = await fetchInstagramEmbedInfo(item.shortcode);
+          if (info.caption) itemCaption = info.caption.slice(0, 500);
+        } catch {
+          // non-fatal
+        }
+      }
+
       const payload: Record<string, unknown> = {
         shortcode: item.shortcode,
-        caption: item.caption?.trim().slice(0, 500) ?? null,
+        caption: itemCaption,
         sort_order: sortOrder,
         is_active: true,
       };
