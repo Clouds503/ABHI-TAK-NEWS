@@ -417,7 +417,7 @@ function ArticlePage() {
 
         <div
           {...doubleTapGesture}
-          className="space-y-5 px-4 py-6 text-[18px] leading-[1.8] prose prose-p:my-2 prose-a:text-primary max-w-none dark:prose-invert cursor-pointer select-text"
+          className="space-y-4 px-4 py-6 text-[18px] leading-[1.8] prose article-body max-w-none dark:prose-invert cursor-pointer select-text"
           dangerouslySetInnerHTML={{ __html: body }}
         />
 
@@ -648,7 +648,7 @@ function ArticlePage() {
             <div
               {...doubleTapGesture}
               className={cn(
-                "py-4 leading-[1.85] font-normal prose prose-neutral dark:prose-invert max-w-none prose-p:my-4 prose-a:text-primary prose-a:font-semibold select-text",
+                "py-4 leading-[1.85] font-normal prose article-body dark:prose-invert max-w-none select-text",
                 fontSize === "large" ? "text-[21px] leading-[1.95]" : "text-[19px] leading-[1.85]",
               )}
               dangerouslySetInnerHTML={{ __html: body }}

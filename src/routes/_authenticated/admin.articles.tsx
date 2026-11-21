@@ -26,6 +26,7 @@ import {
 import { UploadNote } from "@/components/UploadNote";
 import { uploadMedia } from "@/lib/upload";
 import { ArticleGalleryEditor, type GalleryItem } from "@/components/ArticleGalleryEditor";
+import { ArticleBodyEditor } from "@/components/ArticleBodyEditor";
 import type { Database } from "@/integrations/supabase/types";
 
 type Article = Database["public"]["Tables"]["articles"]["Row"];
@@ -556,12 +557,20 @@ function Articles() {
               <Textarea className="mt-1" value={f.summary_en} onChange={set("summary_en")} />
             </div>
             <div>
-              <Label>Body (Hindi)</Label>
-              <Textarea className="mt-1 min-h-40" value={f.body_hi} onChange={set("body_hi")} />
+              <ArticleBodyEditor
+                label="Body (Hindi)"
+                value={f.body_hi}
+                onChange={(val) => setF((p) => ({ ...p, body_hi: val }))}
+                placeholder="यहाँ खबर का मुख्य भाग लिखें... (हेडिंग के लिए ## लगाएं या ऊपर H2 बटन दबाएं)"
+              />
             </div>
             <div>
-              <Label>Body (English)</Label>
-              <Textarea className="mt-1 min-h-40" value={f.body_en} onChange={set("body_en")} />
+              <ArticleBodyEditor
+                label="Body (English)"
+                value={f.body_en}
+                onChange={(val) => setF((p) => ({ ...p, body_en: val }))}
+                placeholder="Write article body in English... (use ## for headings)"
+              />
             </div>
             <div>
               <Label>Cover image</Label>

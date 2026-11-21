@@ -32,6 +32,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { UploadNote } from "@/components/UploadNote";
 import { uploadMedia } from "@/lib/upload";
 import { ArticleGalleryEditor, type GalleryItem } from "@/components/ArticleGalleryEditor";
+import { ArticleBodyEditor } from "@/components/ArticleBodyEditor";
 import type { Database } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/_authenticated/admin/reporter")({
@@ -698,12 +699,12 @@ function ReporterPanel() {
             </div>
 
             <div>
-              <Label className="text-xs">Full Ground Report Body (Hindi) *</Label>
-              <Textarea
-                className="mt-1 min-h-36 text-xs"
-                placeholder="Detailed ground coverage: what happened, quotes from locals or officials, current situation on scene..."
+              <ArticleBodyEditor
+                label="Full Ground Report Body (Hindi) *"
                 value={form.body_hi}
-                onChange={(e) => setForm((p) => ({ ...p, body_hi: e.target.value }))}
+                onChange={(val) => setForm((p) => ({ ...p, body_hi: val }))}
+                placeholder="विस्तृत ग्राउंड रिपोर्ट लिखें या पेस्ट करें... (हेडिंग के लिए ## लगाएं या ऊपर H2 बटन दबाएं)"
+                minHeight="min-h-40"
               />
             </div>
 
