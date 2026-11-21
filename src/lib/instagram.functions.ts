@@ -119,6 +119,11 @@ export const saveReelServerFn = createServerFn({ method: "POST" })
       shortcode: z.string().min(3).max(60),
       caption: z.string().optional().nullable(),
       videoUrl: z.string().optional().nullable(),
+      thumbnailUrl: z.string().optional().nullable(),
+      postedAt: z.string().optional().nullable(),
+      video_url: z.string().optional().nullable(),
+      thumbnail_url: z.string().optional().nullable(),
+      posted_at: z.string().optional().nullable(),
     }).parse(input)
   )
   .handler(async ({ data }) => {
@@ -127,24 +132,53 @@ export const saveReelServerFn = createServerFn({ method: "POST" })
       const { fetchInstagramEmbedInfo } = await import("@/lib/instagram-sync");
 
       let caption = data.caption?.trim() || null;
-      const videoUrl = data.videoUrl?.trim() || null;
+      let thumbnailUrl = (data.thumbnailUrl || data.thumbnail_url)?.trim() || null;
+      const videoUrl = (data.videoUrl || data.video_url)?.trim() || null;
+      let postedAt = (data.postedAt || data.posted_at)?.trim() || null;
 
-      // Auto-fetch caption from Instagram if not provided
-      if (!caption) {
-        const info = await fetchInstagramEmbedInfo(data.shortcode);
-        if (info.caption) {
-          caption = info.caption;
+      const { data: existing } = await supabaseAdmin
+        .from("reels")
+        .select("id, posted_at, thumbnail_url, video_url")
+        .eq("shortcode", data.shortcode)
+        .maybeSingle();
+
+      // Auto-fetch caption and thumbnail from Instagram if not provided
+      if (!caption || !thumbnailUrl) {
+        try {
+          const info = await fetchInstagramEmbedInfo(data.shortcode);
+          if (!caption && info.caption) {
+            caption = info.caption;
+          }
+          if (!thumbnailUrl && info.posterUrl) {
+            thumbnailUrl = info.posterUrl;
+          }
+        } catch {
+          // non-fatal
         }
+      }
+
+      if (!thumbnailUrl && existing?.thumbnail_url) {
+        thumbnailUrl = existing.thumbnail_url;
+      }
+
+      if (!postedAt) {
+        postedAt = existing?.posted_at || new Date().toISOString();
       }
 
       const payload: Record<string, unknown> = {
         shortcode: data.shortcode,
         caption: caption ? caption.slice(0, 500) : null,
         is_active: true,
+        posted_at: postedAt,
       };
 
-      if (videoUrl) {
-        payload["video_url"] = videoUrl;
+      if (thumbnailUrl) {
+        payload["thumbnail_url"] = thumbnailUrl;
+      }
+
+      const finalVideoUrl = videoUrl || existing?.video_url;
+      if (finalVideoUrl) {
+        payload["video_url"] = finalVideoUrl;
       }
 
       const { data: inserted, error } = await supabaseAdmin
@@ -170,7 +204,19 @@ export const saveReelServerFn = createServerFn({ method: "POST" })
 export const bulkSaveReelsServerFn = createServerFn({ method: "POST" })
   .inputValidator((input) =>
     z.object({
-      shortcodes: z.array(z.string().min(3).max(60)),
+      shortcodes: z.array(z.string().min(3).max(60)).optional(),
+      items: z.array(
+        z.object({
+          shortcode: z.string().min(3).max(60),
+          caption: z.string().optional().nullable(),
+          thumbnailUrl: z.string().optional().nullable(),
+          thumbnail_url: z.string().optional().nullable(),
+          postedAt: z.string().optional().nullable(),
+          posted_at: z.string().optional().nullable(),
+          videoUrl: z.string().optional().nullable(),
+          video_url: z.string().optional().nullable(),
+        })
+      ).optional(),
     }).parse(input)
   )
   .handler(async ({ data }) => {
@@ -178,20 +224,61 @@ export const bulkSaveReelsServerFn = createServerFn({ method: "POST" })
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { fetchInstagramEmbedInfo } = await import("@/lib/instagram-sync");
 
+      const itemsList =
+        data.items ?? (data.shortcodes ?? []).map((code) => ({ shortcode: code }));
+      const codes = itemsList.map((i) => i.shortcode);
+      if (!codes.length) {
+        return { success: true, count: 0 };
+      }
+
+      const { data: existingRows } = await supabaseAdmin
+        .from("reels")
+        .select("shortcode, posted_at, thumbnail_url, video_url")
+        .in("shortcode", codes);
+      const existingMap = new Map((existingRows || []).map((r) => [r.shortcode, r]));
+
       let added = 0;
-      for (const code of data.shortcodes) {
-        let caption: string | null = null;
-        try {
-          const info = await fetchInstagramEmbedInfo(code);
-          if (info.caption) caption = info.caption;
-        } catch {}
+      for (const item of itemsList) {
+        const existing = existingMap.get(item.shortcode);
+        let caption: string | null = item.caption?.trim() || null;
+        let thumbnailUrl: string | null =
+          (item.thumbnailUrl || item.thumbnail_url)?.trim() ||
+          existing?.thumbnail_url ||
+          null;
+
+        if (!caption || !thumbnailUrl) {
+          try {
+            const info = await fetchInstagramEmbedInfo(item.shortcode);
+            if (!caption && info.caption) caption = info.caption;
+            if (!thumbnailUrl && info.posterUrl) thumbnailUrl = info.posterUrl;
+          } catch {}
+        }
+
+        const postedAt =
+          (item.postedAt || item.posted_at)?.trim() ||
+          existing?.posted_at ||
+          new Date().toISOString();
+
+        const payload: Record<string, unknown> = {
+          shortcode: item.shortcode,
+          caption: caption ? caption.slice(0, 500) : null,
+          is_active: true,
+          posted_at: postedAt,
+        };
+
+        if (thumbnailUrl) {
+          payload["thumbnail_url"] = thumbnailUrl;
+        }
+
+        const videoUrl =
+          (item.videoUrl || item.video_url)?.trim() ||
+          existing?.video_url;
+        if (videoUrl) {
+          payload["video_url"] = videoUrl;
+        }
 
         const { error } = await supabaseAdmin.from("reels").upsert(
-          {
-            shortcode: code,
-            caption: caption ? caption.slice(0, 500) : null,
-            is_active: true,
-          },
+          payload,
           { onConflict: "shortcode" },
         );
         if (!error) added++;

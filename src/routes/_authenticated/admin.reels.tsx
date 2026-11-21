@@ -115,7 +115,7 @@ function AdminReels() {
           `Sync successful: ${res.added} new reels added, ${res.updated} updated (${res.count} total).`,
           { id: t },
         );
-        refresh();
+        await refresh();
       } else {
         toast.error(res?.error || "Failed to sync reels", { id: t });
       }
@@ -183,7 +183,7 @@ function AdminReels() {
     setCaption("");
     setVideoUrl("");
     toast.success("Reel synced and added successfully!", { id: t });
-    refresh();
+    await refresh();
   };
 
   const addBulk = async (e: React.FormEvent) => {
@@ -215,7 +215,7 @@ function AdminReels() {
       `${res.count ?? codes.length} reel${codes.length > 1 ? "s" : ""} saved successfully${bad.length ? `, ${bad.length} invalid skipped` : ""}`,
       { id: t },
     );
-    refresh();
+    await refresh();
   };
 
   const uploadVideo = async (id: string, file: File) => {
@@ -232,7 +232,7 @@ function AdminReels() {
         return;
       }
       toast.success("Video attached — it will play directly in the app", { id: t });
-      refresh();
+      await refresh();
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Failed to upload video", { id: t });
     }
@@ -421,7 +421,7 @@ function AdminReels() {
                         });
                         if (res.success) {
                           toast.success(r.is_active ? "Reel hidden" : "Reel made visible");
-                          refresh();
+                          await refresh();
                         } else {
                           toast.error(res.error || "Failed to update reel status");
                         }
@@ -443,7 +443,7 @@ function AdminReels() {
                           const res = await deleteReel({ data: { id: r.id } });
                           if (res.success) {
                             toast.success("Reel deleted");
-                            refresh();
+                            await refresh();
                           } else {
                             toast.error(res.error || "Failed to delete reel");
                           }
