@@ -15,9 +15,12 @@ import { getRouter } from "./router";
 
 // Capacitor core — must be imported before plugins
 import { Capacitor } from "@capacitor/core";
+import { App } from "@capacitor/app";
+import { Browser } from "@capacitor/browser";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { SplashScreen } from "@capacitor/splash-screen";
 import { PushNotifications } from "@capacitor/push-notifications";
+import { supabase } from "@/integrations/supabase/client";
 
 import "./styles.css";
 
@@ -50,6 +53,71 @@ async function initNative() {
   // 2. Status bar: match app theme colour #D40000
   await StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
   await StatusBar.setBackgroundColor({ color: "#D40000" }).catch(() => {});
+
+  // 3. Deep link and OAuth callback handling (returns Google Sign-In directly to app)
+  App.addListener("appUrlOpen", async (event) => {
+    console.log("[DeepLink] Received deep link:", event.url);
+    try {
+      // Close in-app browser tab immediately if active
+      await Browser.close().catch(() => {});
+
+      const rawUrl = event.url;
+
+      // Extract OAuth access_token and refresh_token from hash
+      if (rawUrl.includes("access_token")) {
+        const hashPart = rawUrl.split("#")[1];
+        if (hashPart) {
+          const params = new URLSearchParams(hashPart);
+          const access_token = params.get("access_token");
+          const refresh_token = params.get("refresh_token");
+          if (access_token && refresh_token) {
+            const { error } = await supabase.auth.setSession({
+              access_token,
+              refresh_token,
+            });
+            if (!error) {
+              await router.navigate({ to: "/auth" }).catch(() => {});
+              return;
+            }
+          }
+        }
+      }
+
+      // Extract OAuth code from query parameters
+      if (rawUrl.includes("code=")) {
+        const queryPart = rawUrl.split("?")[1]?.split("#")[0];
+        if (queryPart) {
+          const params = new URLSearchParams(queryPart);
+          const code = params.get("code");
+          if (code) {
+            const { error } = await supabase.auth.exchangeCodeForSession(code);
+            if (!error) {
+              await router.navigate({ to: "/auth" }).catch(() => {});
+              return;
+            }
+          }
+        }
+      }
+
+      // Route regular internal deep link paths
+      try {
+        const parsed = new URL(rawUrl);
+        const pathname = parsed.pathname;
+        if (pathname && pathname.startsWith("/")) {
+          await router.navigate({ to: pathname as "/" }).catch(() => {});
+        }
+      } catch {
+        if (rawUrl.startsWith("com.abhitak.news://")) {
+          const routePath = rawUrl.replace("com.abhitak.news://", "/").split("?")[0].split("#")[0];
+          if (routePath && routePath.startsWith("/")) {
+            await router.navigate({ to: routePath as "/" }).catch(() => {});
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("[DeepLink] Error handling URL:", err);
+    }
+  });
 
   // 3. Asynchronously register push notifications without blocking the UI thread
   setTimeout(async () => {

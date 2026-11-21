@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2 } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/lib/auth";
@@ -226,11 +227,17 @@ function AuthPage() {
         }
       }
 
-      // 2. Direct Supabase Google OAuth (standard for Supabase web & mobile apps)
+      // 2. Direct Supabase Google OAuth (adapted for both Web and Mobile Capacitor)
+      const isNative = Capacitor.isNativePlatform();
+      const redirectTo = isNative
+        ? "com.abhitak.news://auth"
+        : `${window.location.origin}/auth`;
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth`,
+          redirectTo,
+          skipBrowserRedirect: isNative,
           queryParams: {
             access_type: "offline",
             prompt: "consent",
@@ -252,7 +259,12 @@ function AuthPage() {
         }
         setGoogleBusy(false);
       } else if (data?.url) {
-        window.location.assign(data.url);
+        if (isNative) {
+          const { Browser } = await import("@capacitor/browser");
+          await Browser.open({ url: data.url, windowName: "_self" });
+        } else {
+          window.location.assign(data.url);
+        }
       }
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Failed to initiate Google sign-in");
