@@ -1,0 +1,43 @@
+name: Sync Instagram Reels
+
+on:
+  # Runs every 30 minutes automatically
+  schedule:
+    - cron: "*/30 * * * *"
+  # Allows manual 1-click run from GitHub Actions tab
+  workflow_dispatch:
+
+concurrency:
+  group: sync-instagram-reels
+  cancel-in-progress: true
+
+jobs:
+  sync-reels:
+    name: Fetch & Sync @abhitaknews Reels
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install Project Dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: Install Playwright & Chromium
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+
+      - name: Run Reels Auto-Sync
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || secrets.VITE_SUPABASE_URL || 'https://xhxjroxdgdftsngfkggi.supabase.co' }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          APP_URL: ${{ secrets.APP_URL }}
+        run: node scripts/sync-instagram.mjs
