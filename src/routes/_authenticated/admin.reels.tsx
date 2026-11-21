@@ -73,8 +73,13 @@ function AdminReels() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-reels"],
     queryFn: async () =>
-      (await supabase.from("reels").select("*").order("created_at", { ascending: false })).data ??
-      [],
+      (
+        await supabase
+          .from("reels")
+          .select("*")
+          .order("posted_at", { ascending: false, nullsFirst: false })
+          .order("created_at", { ascending: false })
+      ).data ?? [],
   });
 
   // Query like counts from reel_likes
@@ -91,10 +96,12 @@ function AdminReels() {
     staleTime: 30_000,
   });
 
-  const refresh = () => {
-    qc.invalidateQueries({ queryKey: ["admin-reels"] });
-    qc.invalidateQueries({ queryKey: ["reels"] });
-    qc.invalidateQueries({ queryKey: ["admin-reel-likes-summary"] });
+  const refresh = async () => {
+    await Promise.all([
+      qc.refetchQueries({ queryKey: ["admin-reels"] }),
+      qc.invalidateQueries({ queryKey: ["reels"] }),
+      qc.invalidateQueries({ queryKey: ["admin-reel-likes-summary"] }),
+    ]);
   };
 
   const handleSyncFromInstagram = async () => {
