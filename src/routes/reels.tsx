@@ -714,7 +714,7 @@ function ReelsPage() {
     triggerManualSync,
   } = useRealtimeReels({ autoSync: true });
 
-  const { data: reels, isLoading } = useQuery<Reel[]>({
+  const { data: reelsData, isLoading } = useQuery({
     queryKey: ["reels"],
     queryFn: async () => {
       const { data } = await supabase
@@ -726,6 +726,7 @@ function ReelsPage() {
       return (data ?? []) as Reel[];
     },
   });
+  const reels: Reel[] = (reelsData as Reel[]) ?? [];
 
   const [active, setActive] = useState(0);
   const [manualSyncing, setManualSyncing] = useState(false);
@@ -736,7 +737,7 @@ function ReelsPage() {
 
   // Sync active index when reels change (e.g. from real-time WebSocket or background refetch)
   useEffect(() => {
-    if (!reels || reels.length === 0) return;
+    if (reels.length === 0) return;
 
     if (!prevReelsRef.current) {
       prevReelsRef.current = reels;
@@ -796,7 +797,7 @@ function ReelsPage() {
             const idx = Number((e.target as HTMLElement).dataset["i"]);
             if (!Number.isNaN(idx)) {
               setActive(idx);
-              if (reels?.[idx]) {
+              if (reels[idx]) {
                 activeReelIdRef.current = reels[idx].id;
               }
             }
@@ -811,7 +812,7 @@ function ReelsPage() {
 
   // Keyboard navigation for desktop (ArrowUp / ArrowDown)
   useEffect(() => {
-    if (!reels || reels.length === 0) return;
+    if (reels.length === 0) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "ArrowDown" || e.key === "PageDown") {
         e.preventDefault();
@@ -842,10 +843,10 @@ function ReelsPage() {
   };
 
   const h = "h-[100dvh]";
-  if (isLoading && (!reels || reels.length === 0))
+  if (isLoading && reels.length === 0)
     return <div className={`${h} grid place-items-center text-muted-foreground bg-black`}>…</div>;
 
-  if (!reels || reels.length === 0)
+  if (reels.length === 0)
     return (
       <div className={`${h} grid place-items-center p-6 text-center bg-black text-white`}>
         <div className="space-y-4">
