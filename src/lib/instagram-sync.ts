@@ -236,6 +236,58 @@ export async function fetchInstagramEmbedInfo(shortcode: string): Promise<{
 }
 
 /**
+ * Dynamically scrapes the latest reel shortcodes from the public Instagram profile
+ * without requiring any Meta Graph API tokens or login credentials.
+ */
+export async function fetchFromPublicProfile(): Promise<InstagramReelItem[]> {
+  try {
+    const res = await fetch(`https://www.instagram.com/${INSTAGRAM_USERNAME}/`, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-User": "?1",
+        "Sec-Fetch-Dest": "document",
+      },
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!res.ok) return [];
+    const html = await res.text();
+
+    const shortcodes: string[] = [];
+    const regex = /\/(?:reel|p)\/([A-Za-z0-9_-]{5,40})/g;
+    let match;
+    while ((match = regex.exec(html)) !== null) {
+      const code = match[1];
+      if (code && !shortcodes.includes(code)) {
+        shortcodes.push(code);
+      }
+    }
+
+    const items: InstagramReelItem[] = [];
+    for (const code of shortcodes) {
+      const info = await fetchInstagramEmbedInfo(code);
+      items.push({
+        shortcode: code,
+        caption: info.caption,
+        thumbnailUrl: info.posterUrl,
+        postedAt: new Date().toISOString(),
+      });
+    }
+
+    return items;
+  } catch (err) {
+    console.warn("[InstagramSync] fetchFromPublicProfile error:", err);
+    return [];
+  }
+}
+
+/**
  * Attempts to fetch live reels from the official Meta Instagram Graph API
  * if an access token or business account is configured in the environment.
  */
@@ -282,15 +334,24 @@ export async function syncInstagramReelsToDatabase(
   customItems?: InstagramReelItem[],
 ): Promise<ReelSyncResult> {
   try {
-    // 1. Collect items from Meta Graph API (if configured)
+    // 1. Dynamically scrape latest reels from the public Instagram page (no tokens needed)
+    const livePublicItems = await fetchFromPublicProfile();
+
+    // 2. Collect items from Meta Graph API (if configured)
     const apiItems = await fetchFromMetaGraphApi();
 
-    // 2. Combine sources with verified catalog as base/fallback
+    // 3. Combine sources with verified catalog as base/fallback
     const combinedMap = new Map<string, InstagramReelItem>();
 
     // Start with verified catalog
     for (const item of VERIFIED_ABHITAK_REELS) {
       combinedMap.set(item.shortcode, item);
+    }
+
+    // Overlay dynamically scraped items from live public profile
+    for (const item of livePublicItems) {
+      const prev = combinedMap.get(item.shortcode);
+      combinedMap.set(item.shortcode, { ...prev, ...item });
     }
 
     // Overlay any live items from Meta Graph API

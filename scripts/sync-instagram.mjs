@@ -132,16 +132,23 @@ async function scrapeWithPlaywright() {
 }
 
 /**
- * Method 2: Direct HTTP Fetch fallback
+ * Method 2: Direct HTTP Fetch from public Instagram profile
  */
 async function scrapeWithFetch() {
   try {
-    console.log(`[Fetch] Querying ${PROFILE_URL}...`);
-    const res = await fetch(PROFILE_URL, {
+    const profileUrl = `https://www.instagram.com/${INSTAGRAM_USERNAME}/`;
+    console.log(`[Fetch] Querying ${profileUrl}...`);
+    const res = await fetch(profileUrl, {
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1",
-        Accept: "text/html,application/xhtml+xml",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-User": "?1",
+        "Sec-Fetch-Dest": "document",
       },
       signal: AbortSignal.timeout(15000),
     });
@@ -162,7 +169,7 @@ async function scrapeWithFetch() {
       }
     }
 
-    console.log(`[Fetch] Extracted ${shortcodes.length} shortcode(s) from HTML.`);
+    console.log(`[Fetch] Extracted ${shortcodes.length} shortcode(s) dynamically from HTML.`);
     return shortcodes;
   } catch (err) {
     console.warn("[Fetch] Error:", err.message);
