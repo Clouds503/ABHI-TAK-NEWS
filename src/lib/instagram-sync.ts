@@ -162,6 +162,20 @@ export const VERIFIED_ABHITAK_REELS: InstagramReelItem[] = [
   },
 ];
 
+function decodeJsonString(value: string): string | null {
+  try {
+    const decoded = JSON.parse(`"${value}"`) as unknown;
+    if (typeof decoded !== "string") return null;
+    return decoded
+      .replace(/\\\//g, "/")
+      .replace(/\\u([0-9a-f]{4})/gi, (_, hex: string) =>
+        String.fromCharCode(Number.parseInt(hex, 16)),
+      );
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Extracts Instagram shortcode from an arbitrary link or code.
  */
@@ -177,16 +191,17 @@ export function extractInstagramShortcode(input: string): string | null {
 }
 
 /**
- * Fetches public caption and thumbnail info from Instagram's embed endpoint.
+ * Fetches public caption, thumbnail, and direct video URL from Instagram's embed endpoint.
  * Works reliably without any login or tokens.
  */
 export async function fetchInstagramEmbedInfo(shortcode: string): Promise<{
   caption: string | null;
   posterUrl: string | null;
+  videoUrl: string | null;
 }> {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 6000);
+    const timeout = setTimeout(() => controller.abort(), 8000);
     const res = await fetch(`https://www.instagram.com/reel/${shortcode}/embed/captioned/`, {
       headers: {
         "User-Agent":
@@ -196,7 +211,7 @@ export async function fetchInstagramEmbedInfo(shortcode: string): Promise<{
       signal: controller.signal,
     });
     clearTimeout(timeout);
-    if (!res.ok) return { caption: null, posterUrl: null };
+    if (!res.ok) return { caption: null, posterUrl: null, videoUrl: null };
 
     const html = await res.text();
     let caption: string | null = null;
@@ -229,9 +244,20 @@ export async function fetchInstagramEmbedInfo(shortcode: string): Promise<{
       posterUrl = posterMatch[1].replace(/&amp;/g, "&");
     }
 
-    return { caption, posterUrl };
+    let videoUrl: string | null = null;
+    const m1 = html.match(/\\"video_url\\":\\"((?:\\\\.|[^"\\])*)\\"/);
+    const m2 = html.match(/"video_url":"((?:\\.|[^"\\])*)"/);
+    const raw = m1?.[1] || m2?.[1];
+    if (raw) {
+      const decoded = decodeJsonString(raw);
+      if (decoded && decoded.startsWith("https://")) {
+        videoUrl = decoded;
+      }
+    }
+
+    return { caption, posterUrl, videoUrl };
   } catch {
-    return { caption: null, posterUrl: null };
+    return { caption: null, posterUrl: null, videoUrl: null };
   }
 }
 
@@ -276,6 +302,7 @@ export async function fetchFromPublicProfile(): Promise<InstagramReelItem[]> {
         shortcode: code,
         caption: info.caption,
         thumbnailUrl: info.posterUrl,
+        videoUrl: info.videoUrl,
         postedAt: new Date().toISOString(),
       });
     }
@@ -407,11 +434,12 @@ export async function syncInstagramReelsToDatabase(
         existing?.thumbnail_url ??
         null;
 
-      if (!itemCaption || !itemThumbnail) {
+      if (!itemCaption || !itemThumbnail || !item.videoUrl) {
         try {
           const info = await fetchInstagramEmbedInfo(item.shortcode);
           if (!itemCaption && info.caption) itemCaption = info.caption.slice(0, 500);
           if (!itemThumbnail && info.posterUrl) itemThumbnail = info.posterUrl;
+          if (!item.videoUrl && info.videoUrl) item.videoUrl = info.videoUrl;
         } catch {
           // non-fatal
         }

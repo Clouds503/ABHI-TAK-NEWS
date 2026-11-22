@@ -142,8 +142,9 @@ export const saveReelServerFn = createServerFn({ method: "POST" })
         .eq("shortcode", data.shortcode)
         .maybeSingle();
 
-      // Auto-fetch caption and thumbnail from Instagram if not provided
-      if (!caption || !thumbnailUrl) {
+      // Auto-fetch caption, thumbnail, and videoUrl from Instagram if not provided
+      let finalVideoUrl = videoUrl || existing?.video_url;
+      if (!caption || !thumbnailUrl || !finalVideoUrl) {
         try {
           const info = await fetchInstagramEmbedInfo(data.shortcode);
           if (!caption && info.caption) {
@@ -151,6 +152,9 @@ export const saveReelServerFn = createServerFn({ method: "POST" })
           }
           if (!thumbnailUrl && info.posterUrl) {
             thumbnailUrl = info.posterUrl;
+          }
+          if (!finalVideoUrl && info.videoUrl) {
+            finalVideoUrl = info.videoUrl;
           }
         } catch {
           // non-fatal
@@ -176,7 +180,6 @@ export const saveReelServerFn = createServerFn({ method: "POST" })
         payload["thumbnail_url"] = thumbnailUrl;
       }
 
-      const finalVideoUrl = videoUrl || existing?.video_url;
       if (finalVideoUrl) {
         payload["video_url"] = finalVideoUrl;
       }
@@ -246,11 +249,17 @@ export const bulkSaveReelsServerFn = createServerFn({ method: "POST" })
           existing?.thumbnail_url ||
           null;
 
-        if (!caption || !thumbnailUrl) {
+        let videoUrl: string | null =
+          (item.videoUrl || item.video_url)?.trim() ||
+          existing?.video_url ||
+          null;
+
+        if (!caption || !thumbnailUrl || !videoUrl) {
           try {
             const info = await fetchInstagramEmbedInfo(item.shortcode);
             if (!caption && info.caption) caption = info.caption;
             if (!thumbnailUrl && info.posterUrl) thumbnailUrl = info.posterUrl;
+            if (!videoUrl && info.videoUrl) videoUrl = info.videoUrl;
           } catch {}
         }
 
@@ -270,9 +279,6 @@ export const bulkSaveReelsServerFn = createServerFn({ method: "POST" })
           payload["thumbnail_url"] = thumbnailUrl;
         }
 
-        const videoUrl =
-          (item.videoUrl || item.video_url)?.trim() ||
-          existing?.video_url;
         if (videoUrl) {
           payload["video_url"] = videoUrl;
         }

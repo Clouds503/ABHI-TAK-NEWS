@@ -35,8 +35,22 @@ const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
 const APP_URL = process.env.APP_URL;
 
+function decodeJsonString(value) {
+  try {
+    const decoded = JSON.parse(`"${value}"`);
+    if (typeof decoded !== "string") return null;
+    return decoded
+      .replace(/\\\//g, "/")
+      .replace(/\\u([0-9a-f]{4})/gi, (_, hex) =>
+        String.fromCharCode(Number.parseInt(hex, 16)),
+      );
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Fetches caption and poster image from Instagram embed page.
+ * Fetches caption, poster image, and direct video MP4 URL from Instagram embed page.
  */
 async function fetchEmbedDetails(shortcode) {
   try {
@@ -49,7 +63,7 @@ async function fetchEmbedDetails(shortcode) {
       signal: AbortSignal.timeout(8000),
     });
 
-    if (!res.ok) return { caption: null, posterUrl: null };
+    if (!res.ok) return { caption: null, posterUrl: null, videoUrl: null };
     const html = await res.text();
 
     let caption = null;
@@ -79,9 +93,20 @@ async function fetchEmbedDetails(shortcode) {
       posterUrl = posterMatch[1].replace(/&amp;/g, "&");
     }
 
-    return { caption: caption ? caption.slice(0, 500) : null, posterUrl };
+    let videoUrl = null;
+    const m1 = html.match(/\\"video_url\\":\\"((?:\\\\.|[^"\\])*)\\"/);
+    const m2 = html.match(/"video_url":"((?:\\.|[^"\\])*)"/);
+    const raw = m1?.[1] || m2?.[1];
+    if (raw) {
+      const decoded = decodeJsonString(raw);
+      if (decoded && decoded.startsWith("https://")) {
+        videoUrl = decoded;
+      }
+    }
+
+    return { caption: caption ? caption.slice(0, 500) : null, posterUrl, videoUrl };
   } catch (err) {
-    return { caption: null, posterUrl: null };
+    return { caption: null, posterUrl: null, videoUrl: null };
   }
 }
 
@@ -213,11 +238,12 @@ async function main() {
     const isNew = !existingCodes.has(code);
     console.log(`[Reel ${code}] ${isNew ? "NEW" : "Already exists"}. Fetching metadata...`);
 
-    const { caption, posterUrl } = await fetchEmbedDetails(code);
+    const { caption, posterUrl, videoUrl } = await fetchEmbedDetails(code);
     reelsToSync.push({
       shortcode: code,
       caption,
       thumbnail_url: posterUrl,
+      video_url: videoUrl,
       posted_at: new Date().toISOString(),
       is_active: true,
     });
@@ -238,6 +264,9 @@ async function main() {
       };
       if (reel.thumbnail_url) {
         payload.thumbnail_url = reel.thumbnail_url;
+      }
+      if (reel.video_url) {
+        payload.video_url = reel.video_url;
       }
 
       const { error } = await supabase.from("reels").upsert(payload, { onConflict: "shortcode" });

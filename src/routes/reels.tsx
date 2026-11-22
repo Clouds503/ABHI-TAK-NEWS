@@ -57,6 +57,7 @@ type Reel = {
   shortcode: string;
   caption: string | null;
   video_url: string | null;
+  thumbnail_url?: string | null;
   posted_at?: string | null;
   created_at?: string;
   views?: number | null;
@@ -93,21 +94,23 @@ function InstagramIframeReel({ reel, lang }: { reel: Reel; lang: string | null }
   };
 
   return (
-    <div className="relative flex h-full w-full flex-col items-center justify-center bg-black">
-      <iframe
-        src={`https://www.instagram.com/reel/${reel.shortcode}/embed`}
-        title={`Instagram Reel ${reel.shortcode}`}
-        className="h-full w-full border-0"
-        allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-        allowFullScreen
-      />
+    <div className="relative flex h-full w-full flex-col items-center justify-center bg-black overflow-hidden px-2 py-4">
+      <div className="relative w-full max-w-[420px] aspect-[9/16] max-h-[84vh] rounded-2xl overflow-hidden shadow-2xl bg-neutral-900 border border-white/10 flex items-center justify-center">
+        <iframe
+          src={`https://www.instagram.com/reel/${reel.shortcode}/embed`}
+          title={`Instagram Reel ${reel.shortcode}`}
+          className="h-full w-full border-0"
+          allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+          allowFullScreen
+        />
+      </div>
       <div className="absolute top-4 right-4 z-20">
         <Button
           type="button"
           size="sm"
           variant="secondary"
           onClick={openInstagram}
-          className="gap-1.5 rounded-full bg-background/80 px-3 text-xs font-semibold backdrop-blur-md"
+          className="gap-1.5 rounded-full bg-black/70 text-white border border-white/20 px-3 text-xs font-semibold backdrop-blur-md hover:bg-black/90 shadow-lg cursor-pointer"
         >
           <Instagram className="h-3.5 w-3.5 text-rose-500" />
           {lang === "en" ? "Open in Instagram" : "Instagram पर देखें"}
@@ -158,7 +161,7 @@ function ReelSlide({
     staleTime: 30_000,
   });
 
-  const rawSrc = reel.video_url ?? (!isNative ? scrapedMedia?.videoUrl : null);
+  const rawSrc = reel.video_url ?? scrapedMedia?.videoUrl ?? null;
   const [videoFailed, setVideoFailed] = useState(false);
   const [paused, setPaused] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -582,67 +585,67 @@ function ReelSlide({
       )}
 
       {/* Right Action Rail (Mobile) */}
-      <div className="absolute right-3 bottom-[max(5rem,calc(env(safe-area-inset-bottom)+5rem))] z-30 flex flex-col items-center gap-4">
-        {/* Like Button */}
-        <button
-          type="button"
-          onClick={toggleLike}
-          aria-label="Like reel"
-          className="flex flex-col items-center gap-1 active:scale-90 transition-transform"
-        >
-          <div
-            className={cn(
-              "grid h-12 w-12 place-items-center rounded-full backdrop-blur-md shadow-lg",
-              isLiked ? "bg-rose-500 text-white" : "bg-black/60 text-white hover:bg-black/80",
-            )}
+      {rawSrc && !videoFailed && (
+        <div className="absolute right-3 bottom-[max(5rem,calc(env(safe-area-inset-bottom)+5rem))] z-30 flex flex-col items-center gap-4">
+          {/* Like Button */}
+          <button
+            type="button"
+            onClick={toggleLike}
+            aria-label="Like reel"
+            className="flex flex-col items-center gap-1 active:scale-90 transition-transform"
           >
-            <Heart className="h-6 w-6" fill={isLiked ? "currentColor" : "none"} strokeWidth={2} />
-          </div>
-          <span className="text-[12px] font-bold text-white drop-shadow-md tabular-nums">
-            {formatMetricCount(effectiveLikes)}
-          </span>
-        </button>
+            <div
+              className={cn(
+                "grid h-12 w-12 place-items-center rounded-full backdrop-blur-md shadow-lg",
+                isLiked ? "bg-rose-500 text-white" : "bg-black/60 text-white hover:bg-black/80",
+              )}
+            >
+              <Heart className="h-6 w-6" fill={isLiked ? "currentColor" : "none"} strokeWidth={2} />
+            </div>
+            <span className="text-[12px] font-bold text-white drop-shadow-md tabular-nums">
+              {formatMetricCount(effectiveLikes)}
+            </span>
+          </button>
 
-        {/* Views Display */}
-        <div className="flex flex-col items-center gap-1 select-none">
-          <div className="grid h-12 w-12 place-items-center rounded-full bg-black/60 text-white backdrop-blur-md shadow-lg">
-            <Eye className="h-5 w-5 text-sky-400" />
+          {/* Views Display */}
+          <div className="flex flex-col items-center gap-1 select-none">
+            <div className="grid h-12 w-12 place-items-center rounded-full bg-black/60 text-white backdrop-blur-md shadow-lg">
+              <Eye className="h-5 w-5 text-sky-400" />
+            </div>
+            <span className="text-[11px] font-bold text-white drop-shadow-md tabular-nums">
+              {formatMetricCount(effectiveViews)}
+            </span>
           </div>
-          <span className="text-[11px] font-bold text-white drop-shadow-md tabular-nums">
-            {formatMetricCount(effectiveViews)}
-          </span>
-        </div>
 
-        {/* Share Button */}
-        <button
-          type="button"
-          onClick={shareReel}
-          aria-label="Share reel"
-          className="flex flex-col items-center gap-1 active:scale-90 transition-transform"
-        >
-          <div className="grid h-12 w-12 place-items-center rounded-full bg-black/60 text-white backdrop-blur-md hover:bg-black/80 shadow-lg">
-            <Share2 className="h-5 w-5" />
-          </div>
-          <span className="text-[11px] font-semibold text-white drop-shadow-md">
-            {lang === "en" ? "Share" : "शेयर"}
-          </span>
-        </button>
+          {/* Share Button */}
+          <button
+            type="button"
+            onClick={shareReel}
+            aria-label="Share reel"
+            className="flex flex-col items-center gap-1 active:scale-90 transition-transform"
+          >
+            <div className="grid h-12 w-12 place-items-center rounded-full bg-black/60 text-white backdrop-blur-md hover:bg-black/80 shadow-lg">
+              <Share2 className="h-5 w-5" />
+            </div>
+            <span className="text-[11px] font-semibold text-white drop-shadow-md">
+              {lang === "en" ? "Share" : "शेयर"}
+            </span>
+          </button>
 
-        {/* Open in Instagram */}
-        <button
-          type="button"
-          onClick={openInstagram}
-          aria-label="Open on Instagram"
-          className="flex flex-col items-center gap-1 active:scale-90 transition-transform"
-        >
-          <div className="grid h-12 w-12 place-items-center rounded-full bg-black/60 text-white backdrop-blur-md hover:bg-black/80 shadow-lg">
-            <Instagram className="h-5 w-5 text-rose-400" />
-          </div>
-          <span className="text-[11px] font-semibold text-white drop-shadow-md">Insta</span>
-        </button>
+          {/* Open in Instagram */}
+          <button
+            type="button"
+            onClick={openInstagram}
+            aria-label="Open on Instagram"
+            className="flex flex-col items-center gap-1 active:scale-90 transition-transform"
+          >
+            <div className="grid h-12 w-12 place-items-center rounded-full bg-black/60 text-white backdrop-blur-md hover:bg-black/80 shadow-lg">
+              <Instagram className="h-5 w-5 text-rose-400" />
+            </div>
+            <span className="text-[11px] font-semibold text-white drop-shadow-md">Insta</span>
+          </button>
 
-        {/* Mute/Unmute (if direct video) */}
-        {rawSrc && !videoFailed && (
+          {/* Mute/Unmute */}
           <button
             type="button"
             onClick={() => setMuted((m) => !m)}
@@ -651,8 +654,8 @@ function ReelSlide({
           >
             {muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Sound prompt banner if muted autoplay */}
       {needsSound && !videoFailed && rawSrc && (
@@ -675,7 +678,7 @@ function ReelSlide({
       )}
 
       {/* Reel Caption */}
-      {reel.caption && (
+      {rawSrc && !videoFailed && reel.caption && (
         <p className="pointer-events-none absolute bottom-[max(1.5rem,env(safe-area-inset-bottom))] left-4 right-20 z-20 line-clamp-3 text-sm font-medium text-white drop-shadow-md">
           {reel.caption}
         </p>
@@ -719,7 +722,7 @@ function ReelsPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("reels")
-        .select("id, shortcode, caption, video_url, posted_at, created_at")
+        .select("id, shortcode, caption, video_url, thumbnail_url, posted_at, created_at")
         .eq("is_active", true)
         .order("posted_at", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false });
