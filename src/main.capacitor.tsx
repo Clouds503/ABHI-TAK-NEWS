@@ -55,15 +55,58 @@ async function initNative() {
   await StatusBar.setBackgroundColor({ color: "#D40000" }).catch(() => {});
 
   // 3. Deep link and OAuth callback handling (returns Google Sign-In directly to app)
-  App.addListener("appUrlOpen", async (event) => {
-    console.log("[DeepLink] Received deep link:", event.url);
+  const handleDeepLink = async (rawUrl: string) => {
+    console.log("[DeepLink] Processing URL:", rawUrl);
     try {
       // Close in-app browser tab immediately if active
       await Browser.close().catch(() => {});
 
-      const rawUrl = event.url;
+      // Helper to route to the appropriate post-login screen
+      const navigatePostLogin = async () => {
+        try {
+          const { data } = await supabase.auth.getUser();
+          const user = data?.user;
+          const savedTarget =
+            sessionStorage.getItem("abhitak.post_onboarding_redirect") ||
+            sessionStorage.getItem("abhitak.redirect") ||
+            localStorage.getItem("abhitak.redirect");
 
-      // Extract OAuth access_token and refresh_token from hash
+          sessionStorage.removeItem("abhitak.post_onboarding_redirect");
+          sessionStorage.removeItem("abhitak.redirect");
+          localStorage.removeItem("abhitak.redirect");
+
+          if (user) {
+            const { data: prof } = await supabase
+              .from("profiles")
+              .select("full_name, phone")
+              .eq("id", user.id)
+              .maybeSingle();
+
+            if (!prof || !prof.full_name || !prof.phone) {
+              await router.navigate({ to: "/onboarding", replace: true }).catch(() => {});
+              return;
+            }
+          }
+
+          const destination =
+            savedTarget && savedTarget.startsWith("/") && !savedTarget.startsWith("//")
+              ? savedTarget
+              : "/";
+          await router.navigate({ to: destination as "/", replace: true }).catch(() => {});
+        } catch (e) {
+          console.warn("[DeepLink] Navigation error:", e);
+          await router.navigate({ to: "/", replace: true }).catch(() => {});
+        }
+      };
+
+      // 1. Check for OAuth errors in callback
+      if (rawUrl.includes("error=") || rawUrl.includes("error_description=")) {
+        console.warn("[DeepLink] OAuth returned an error parameter");
+        await router.navigate({ to: "/auth" }).catch(() => {});
+        return;
+      }
+
+      // 2. Extract OAuth access_token and refresh_token from hash (implicit flow)
       if (rawUrl.includes("access_token")) {
         const hashPart = rawUrl.split("#")[1];
         if (hashPart) {
@@ -76,14 +119,16 @@ async function initNative() {
               refresh_token,
             });
             if (!error) {
-              await router.navigate({ to: "/auth" }).catch(() => {});
+              await navigatePostLogin();
               return;
+            } else {
+              console.error("[DeepLink] setSession error:", error);
             }
           }
         }
       }
 
-      // Extract OAuth code from query parameters
+      // 3. Extract OAuth code from query parameters (PKCE flow)
       if (rawUrl.includes("code=")) {
         const queryPart = rawUrl.split("?")[1]?.split("#")[0];
         if (queryPart) {
@@ -92,32 +137,53 @@ async function initNative() {
           if (code) {
             const { error } = await supabase.auth.exchangeCodeForSession(code);
             if (!error) {
-              await router.navigate({ to: "/auth" }).catch(() => {});
+              await navigatePostLogin();
               return;
+            } else {
+              console.error("[DeepLink] exchangeCodeForSession error:", error);
             }
           }
         }
       }
 
-      // Route regular internal deep link paths
+      // 4. Route regular internal deep link paths
       try {
         const parsed = new URL(rawUrl);
         const pathname = parsed.pathname;
-        if (pathname && pathname.startsWith("/")) {
+        if (pathname && pathname.startsWith("/") && pathname !== "/") {
           await router.navigate({ to: pathname as "/" }).catch(() => {});
+          return;
         }
       } catch {
         if (rawUrl.startsWith("com.abhitak.news://")) {
           const routePath = rawUrl.replace("com.abhitak.news://", "/").split("?")[0].split("#")[0];
-          if (routePath && routePath.startsWith("/")) {
+          if (routePath && routePath.startsWith("/") && routePath !== "/") {
             await router.navigate({ to: routePath as "/" }).catch(() => {});
+            return;
           }
         }
       }
     } catch (err) {
       console.warn("[DeepLink] Error handling URL:", err);
     }
+  };
+
+  // Listen for deep link events while the app is active
+  App.addListener("appUrlOpen", async (event) => {
+    if (event?.url) {
+      await handleDeepLink(event.url);
+    }
   });
+
+  // Also check if app was opened/cold-started via a deep link URL
+  try {
+    const launchUrl = await App.getLaunchUrl();
+    if (launchUrl?.url) {
+      await handleDeepLink(launchUrl.url);
+    }
+  } catch (e) {
+    console.warn("[DeepLink] getLaunchUrl check skipped:", e);
+  }
 
   // 3. Asynchronously register push notifications without blocking the UI thread
   setTimeout(async () => {

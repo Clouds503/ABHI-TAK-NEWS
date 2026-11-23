@@ -65,6 +65,7 @@ function AuthPage() {
     // Notify user if OAuth returned with an error parameter
     const err = searchParams.error || searchParams.error_description;
     if (err) {
+      setGoogleBusy(false);
       if (err.toLowerCase().includes("access_denied")) {
         toast.info("Google sign-in was canceled");
       } else {
@@ -75,15 +76,18 @@ function AuthPage() {
 
   useEffect(() => {
     if (!loading && user) {
+      setGoogleBusy(false);
       if (needsOnboarding) {
         navigate({ to: "/onboarding", replace: true });
       } else {
         const saved =
           sessionStorage.getItem("abhitak.post_onboarding_redirect") ||
-          sessionStorage.getItem("abhitak.redirect");
+          sessionStorage.getItem("abhitak.redirect") ||
+          localStorage.getItem("abhitak.redirect");
         if (saved) {
           sessionStorage.removeItem("abhitak.post_onboarding_redirect");
           sessionStorage.removeItem("abhitak.redirect");
+          localStorage.removeItem("abhitak.redirect");
           navigate({ to: saved, replace: true });
         } else {
           navigate({ to: safePath(redirect), replace: true });
@@ -200,6 +204,9 @@ function AuthPage() {
       if (redirect) {
         sessionStorage.setItem("abhitak.redirect", safePath(redirect));
         sessionStorage.setItem("abhitak.post_onboarding_redirect", safePath(redirect));
+        try {
+          localStorage.setItem("abhitak.redirect", safePath(redirect));
+        } catch {}
       }
 
       // 1. If running inside Lovable editor iframe, attempt lovable cloud auth broker
@@ -261,6 +268,11 @@ function AuthPage() {
       } else if (data?.url) {
         if (isNative) {
           const { Browser } = await import("@capacitor/browser");
+          // Reset loading state if user cancels or closes browser tab
+          const listener = await Browser.addListener("browserFinished", () => {
+            setGoogleBusy(false);
+            listener.remove();
+          });
           await Browser.open({ url: data.url, windowName: "_self" });
         } else {
           window.location.assign(data.url);
