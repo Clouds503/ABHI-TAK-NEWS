@@ -689,11 +689,21 @@ function Home() {
                     <span className="h-5 w-1.5 rounded-full bg-primary" />
                     {t("districtRadar")}
                   </h2>
-                  <span className="text-xs text-muted-foreground">
-                    {lang === "en"
-                      ? "All major cities and towns"
-                      : "सभी प्रमुख शहरों एवं कस्बों की ख़बरें"}
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-muted-foreground">
+                      {lang === "en"
+                        ? "All major cities and towns"
+                        : "सभी प्रमुख शहरों एवं कस्बों की ख़बरें"}
+                    </span>
+                    {isAdmin && (
+                      <Link
+                        to="/admin/cities"
+                        className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/5 px-2.5 py-1 text-xs font-semibold text-primary hover:bg-primary/10 transition-colors"
+                      >
+                        Edit City Radar ⚙️
+                      </Link>
+                    )}
+                  </div>
                 </div>
                 <div className="grid grid-cols-7 gap-3.5">
                   {towns?.slice(0, 7).map((tw) => {
