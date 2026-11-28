@@ -22,6 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { categoriesQuery } from "@/lib/queries";
 
 export const Route = createFileRoute("/_authenticated/admin/editor")({
   head: () => ({
@@ -42,6 +43,7 @@ function EditorPanel() {
   const [processingId, setProcessingId] = useState<string | null>(null);
 
   // Queries
+  const { data: allCats = [] } = useQuery(categoriesQuery);
   const { data: articles = [], isLoading: articlesLoading } = useQuery({
     queryKey: ["editor-articles"],
     queryFn: async () => {
@@ -350,7 +352,26 @@ function EditorPanel() {
                         📍 {a.town.name_en}
                       </span>
                     )}
-                    {a.category?.name_en && (
+                    {allCats.length > 0 && (
+                      (() => {
+                        const assignedCats = allCats.filter(
+                          (c) => (a as any).category_ids?.includes(c.id) || c.id === a.category_id
+                        );
+                        if (!assignedCats.length && a.category?.name_en) {
+                          return (
+                            <span className="rounded-full bg-muted px-2 py-0.5 text-[11px]">
+                              🏷️ {a.category.name_en}
+                            </span>
+                          );
+                        }
+                        return assignedCats.map((c) => (
+                          <span key={c.id} className="rounded-full bg-muted border px-2 py-0.5 text-[11px] font-medium text-foreground">
+                            🏷️ {c.name_en}
+                          </span>
+                        ));
+                      })()
+                    )}
+                    {allCats.length === 0 && a.category?.name_en && (
                       <span className="rounded-full bg-muted px-2 py-0.5 text-[11px]">
                         🏷️ {a.category.name_en}
                       </span>

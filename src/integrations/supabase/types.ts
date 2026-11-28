@@ -151,6 +151,8 @@ export type Database = {
           media_type: string;
           placement: string;
           device_visibility?: string | null;
+          aspect_ratio?: string | null;
+          auto_sizing?: boolean | null;
           starts_at: string | null;
           title: string;
           town_id: string | null;
@@ -170,6 +172,8 @@ export type Database = {
           media_type?: string;
           placement?: string;
           device_visibility?: string | null;
+          aspect_ratio?: string | null;
+          auto_sizing?: boolean | null;
           starts_at?: string | null;
           title: string;
           town_id?: string | null;
@@ -189,6 +193,8 @@ export type Database = {
           media_type?: string;
           placement?: string;
           device_visibility?: string | null;
+          aspect_ratio?: string | null;
+          auto_sizing?: boolean | null;
           starts_at?: string | null;
           title?: string;
           town_id?: string | null;
@@ -211,6 +217,7 @@ export type Database = {
           body_en: string | null;
           body_hi: string | null;
           category_id: string | null;
+          category_ids?: string[] | null;
           city: string | null;
           city_id: string | null;
           cover_url: string | null;
@@ -240,6 +247,7 @@ export type Database = {
           body_en?: string | null;
           body_hi?: string | null;
           category_id?: string | null;
+          category_ids?: string[] | null;
           city?: string | null;
           city_id?: string | null;
           cover_url?: string | null;
@@ -269,6 +277,7 @@ export type Database = {
           body_en?: string | null;
           body_hi?: string | null;
           category_id?: string | null;
+          category_ids?: string[] | null;
           city?: string | null;
           city_id?: string | null;
           cover_url?: string | null;

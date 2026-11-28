@@ -52,6 +52,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSiteSettings } from "@/lib/site-settings";
+import { AdSlot } from "@/components/news";
 
 export function Logo({ className, alt }: { className?: string; alt?: string }) {
   const { settings } = useSiteSettings();
@@ -1339,6 +1340,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="mx-auto min-h-screen w-full max-w-lg lg:max-w-none lg:shadow-none bg-background shadow-[0_0_0_1px_var(--color-border)]">
       <Header onMenu={() => setOpen(true)} />
       <DesktopHeader />
+      <AdSlot placement="header_banner" className="my-2 max-w-7xl mx-auto px-4" />
       <main className="pb-28 lg:pb-0">{children}</main>
       <BottomNav />
       <DesktopFooter />

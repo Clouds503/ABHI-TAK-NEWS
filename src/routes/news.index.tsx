@@ -7,6 +7,7 @@ import { categoriesQuery, townsQuery, villagesQuery, type ArticleCard } from "@/
 import { useI18n, timeAgo } from "@/lib/i18n";
 import { img } from "@/lib/media";
 import { ArticleRow, Empty } from "@/components/news";
+import { QuickShareButton } from "@/components/NewsShareDialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -48,14 +49,25 @@ function ArchiveDesktopCard({ a }: { a: ArticleCard }) {
         )}
       </div>
       <div className="flex flex-1 flex-col p-4">
-        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-          {a.category && (
-            <span className="font-bold text-primary uppercase tracking-wider">
-              {pick(a.category.name_hi, a.category.name_en)}
-            </span>
-          )}
-          {a.town && <span>· {pick(a.town.name_hi, a.town.name_en)}</span>}
-          <span suppressHydrationWarning>· {timeAgo(a.published_at, lang)}</span>
+        <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-2 truncate">
+            {a.category && (
+              <span className="font-bold text-primary uppercase tracking-wider">
+                {pick(a.category.name_hi, a.category.name_en)}
+              </span>
+            )}
+            {a.town && <span>· {pick(a.town.name_hi, a.town.name_en)}</span>}
+            <span suppressHydrationWarning>· {timeAgo(a.published_at, lang)}</span>
+          </div>
+          <QuickShareButton
+            article={{
+              id: a.id,
+              title: pick(a.title_hi, a.title_en),
+              summary: pick(a.summary_hi, a.summary_en),
+              slug: a.slug,
+              coverUrl: a.cover_url,
+            }}
+          />
         </div>
         <h3 className="mt-2 font-serif text-base font-bold leading-snug line-clamp-2 text-foreground group-hover:text-primary transition-colors">
           {pick(a.title_hi, a.title_en)}
@@ -142,6 +154,9 @@ function NewsArchivePage() {
     queryKey: ["news-archive", filters, debouncedTerm],
     initialPageParam: 0,
     queryFn: async ({ pageParam = 0 }) => {
+      const hasCategories = filters.categories && filters.categories.length > 0;
+      const isCategoryFiltered = hasCategories || !!filters.category;
+
       let q = supabase
         .from("articles")
         .select(
@@ -150,7 +165,7 @@ function NewsArchivePage() {
             filters.town ? "town:towns!inner(" : "town:towns(",
           ).replace(
             "category:categories(",
-            filters.category ? "category:categories!inner(" : "category:categories(",
+            isCategoryFiltered ? "category:categories!inner(" : "category:categories(",
           ),
         )
         .eq("status", "published")
@@ -159,7 +174,11 @@ function NewsArchivePage() {
         .range(pageParam * PAGE_SIZE, (pageParam + 1) * PAGE_SIZE - 1);
 
       if (filters.town) q = q.eq("town.slug", filters.town);
-      if (filters.category) q = q.eq("category.slug", filters.category);
+      if (hasCategories) {
+        q = q.in("category.slug", filters.categories!);
+      } else if (filters.category) {
+        q = q.eq("category.slug", filters.category);
+      }
       if (filters.village) q = q.eq("village_id", filters.village);
       if (filters.fromDate) q = q.gte("published_at", filters.fromDate);
       if (filters.toDate) q = q.lte("published_at", filters.toDate);

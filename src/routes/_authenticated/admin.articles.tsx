@@ -27,6 +27,7 @@ import { UploadNote } from "@/components/UploadNote";
 import { uploadMedia } from "@/lib/upload";
 import { ArticleGalleryEditor, type GalleryItem } from "@/components/ArticleGalleryEditor";
 import { ArticleBodyEditor } from "@/components/ArticleBodyEditor";
+import { CategoryMultiSelect } from "@/components/CategoryMultiSelect";
 import type { Database } from "@/integrations/supabase/types";
 
 type Article = Database["public"]["Tables"]["articles"]["Row"];
@@ -48,6 +49,7 @@ const empty = {
   video_url: "",
   gallery: [] as GalleryItem[],
   category_id: "",
+  category_ids: [] as string[],
   town_id: "",
   city_id: "",
   village_id: "",
@@ -123,11 +125,19 @@ function Articles() {
     const initialVillage =
       (a as any)?.village || villages?.find((v) => v.id === a?.village_id)?.name_en || "";
 
+    const initialCategoryIds: string[] = Array.isArray((a as any)?.category_ids) && (a as any).category_ids.length > 0
+      ? (a as any).category_ids
+      : a?.category_id
+        ? [a.category_id]
+        : [];
+
     setF(
       a
         ? ({
             ...empty,
             ...Object.fromEntries(Object.entries(a).map(([k, v]) => [k, v ?? ""])),
+            category_ids: initialCategoryIds,
+            category_id: a.category_id || initialCategoryIds[0] || "",
             district: initialDistrict,
             city: initialCity,
             village: initialVillage,
@@ -190,6 +200,13 @@ function Articles() {
         v.name_hi.trim() === f.village.trim(),
     );
 
+    const categoryIds = f.category_ids && f.category_ids.length > 0
+      ? f.category_ids
+      : f.category_id
+        ? [f.category_id]
+        : [];
+    const primaryCatId = f.category_id || categoryIds[0] || null;
+
     const row: any = {
       slug,
       title_hi: f.title_hi,
@@ -201,7 +218,8 @@ function Articles() {
       cover_url: f.cover_url || null,
       video_url: f.video_url || null,
       gallery: f.gallery.length > 0 ? f.gallery : null,
-      category_id: f.category_id || null,
+      category_id: primaryCatId,
+      category_ids: categoryIds,
       district: f.district.trim() || null,
       city: f.city.trim() || null,
       village: f.village.trim() || null,
@@ -223,7 +241,8 @@ function Articles() {
           .single();
 
     if (res.error) {
-      // Fallback if remote DB doesn't have district/city/village/video_url text columns yet
+      // Fallback if remote DB doesn't have district/city/village/video_url/category_ids text columns yet
+      delete row.category_ids;
       delete row.district;
       delete row.city;
       delete row.village;
@@ -437,6 +456,19 @@ function Articles() {
                     {a.village.name_en}
                   </span>
                 )}
+                {cats && (
+                  (() => {
+                    const assignedCats = cats.filter(
+                      (c) => (a as any).category_ids?.includes(c.id) || c.id === a.category_id
+                    );
+                    if (!assignedCats.length) return null;
+                    return assignedCats.map((c) => (
+                      <span key={c.id} className="rounded-full bg-muted border px-2 py-0.5 text-[11px] font-medium text-foreground">
+                        🏷️ {c.name_en}
+                      </span>
+                    ));
+                  })()
+                )}
                 <span>{new Date(a.created_at).toLocaleDateString("en-IN")}</span>
                 {a.is_breaking && <span className="font-semibold text-primary">· BREAKING</span>}
               </div>
@@ -504,18 +536,22 @@ function Articles() {
               />
             </div>
 
+            <div>
+              <CategoryMultiSelect
+                categories={cats || []}
+                selectedIds={f.category_ids || []}
+                primaryId={f.category_id || (f.category_ids?.[0] ?? null)}
+                onChange={(ids, primary) => {
+                  setF((prev) => ({
+                    ...prev,
+                    category_ids: ids,
+                    category_id: primary || ids[0] || "",
+                  }));
+                }}
+              />
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>Category</Label>
-                <select className={sel} value={f.category_id} onChange={set("category_id")}>
-                  <option value="">—</option>
-                  {cats?.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name_en}
-                    </option>
-                  ))}
-                </select>
-              </div>
               <div>
                 <Label>District</Label>
                 <Input

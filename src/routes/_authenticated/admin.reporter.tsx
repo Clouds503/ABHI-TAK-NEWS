@@ -33,6 +33,7 @@ import { UploadNote } from "@/components/UploadNote";
 import { uploadMedia } from "@/lib/upload";
 import { ArticleGalleryEditor, type GalleryItem } from "@/components/ArticleGalleryEditor";
 import { ArticleBodyEditor } from "@/components/ArticleBodyEditor";
+import { CategoryMultiSelect } from "@/components/CategoryMultiSelect";
 import type { Database } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/_authenticated/admin/reporter")({
@@ -59,6 +60,7 @@ const emptyStory = {
   video_url: "",
   gallery: [] as GalleryItem[],
   category_id: "",
+  category_ids: [] as string[],
   town_id: "",
   city_id: "",
   village_id: "",
@@ -152,6 +154,12 @@ function ReporterPanel() {
       const initialVillage =
         (articleToEdit as any)?.village || villages?.find((v) => v.id === articleToEdit?.village_id)?.name_en || "";
 
+      const initialCategoryIds: string[] = Array.isArray((articleToEdit as any)?.category_ids) && (articleToEdit as any).category_ids.length > 0
+        ? (articleToEdit as any).category_ids
+        : articleToEdit?.category_id
+          ? [articleToEdit.category_id]
+          : [];
+
       setForm({
         id: articleToEdit.id,
         title_hi: articleToEdit.title_hi || "",
@@ -163,7 +171,8 @@ function ReporterPanel() {
         cover_url: articleToEdit.cover_url || "",
         video_url: (articleToEdit as any)?.video_url || "",
         gallery: parsedGallery,
-        category_id: articleToEdit.category_id || "",
+        category_id: articleToEdit.category_id || initialCategoryIds[0] || "",
+        category_ids: initialCategoryIds,
         town_id: articleToEdit.town_id || "",
         city_id: articleToEdit.city_id || "",
         village_id: articleToEdit.village_id || "",
@@ -233,6 +242,13 @@ function ReporterPanel() {
         v.name_hi.trim() === form.village.trim(),
     );
 
+    const categoryIds = form.category_ids && form.category_ids.length > 0
+      ? form.category_ids
+      : form.category_id
+        ? [form.category_id]
+        : [];
+    const primaryCatId = form.category_id || categoryIds[0] || null;
+
     const payload: any = {
       slug,
       title_hi: form.title_hi.trim(),
@@ -244,7 +260,8 @@ function ReporterPanel() {
       cover_url: form.cover_url || null,
       video_url: form.video_url || null,
       gallery: form.gallery.length > 0 ? form.gallery : null,
-      category_id: form.category_id || null,
+      category_id: primaryCatId,
+      category_ids: categoryIds,
       district: form.district.trim() || null,
       city: form.city.trim() || null,
       village: form.village.trim() || null,
@@ -259,7 +276,8 @@ function ReporterPanel() {
       if (form.id) {
         let { error } = await supabase.from("articles").update(payload).eq("id", form.id);
         if (error) {
-          // Fallback if remote DB doesn't have district/city/village/video_url text columns yet
+          // Fallback if remote DB doesn't have district/city/village/video_url/category_ids text columns yet
+          delete payload.category_ids;
           delete payload.district;
           delete payload.city;
           delete payload.village;
@@ -271,7 +289,8 @@ function ReporterPanel() {
       } else {
         let { error } = await supabase.from("articles").insert(payload);
         if (error) {
-          // Fallback if remote DB doesn't have district/city/village/video_url text columns yet
+          // Fallback if remote DB doesn't have district/city/village/video_url/category_ids text columns yet
+          delete payload.category_ids;
           delete payload.district;
           delete payload.city;
           delete payload.village;
@@ -454,7 +473,21 @@ function ReporterPanel() {
                   )}
                   <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                     {a.town?.name_en && <span>📍 {a.town.name_en}</span>}
-                    {a.category?.name_en && <span>🏷️ {a.category.name_en}</span>}
+                    {cats && (
+                      (() => {
+                        const assignedCats = cats.filter(
+                          (c) => (a as any).category_ids?.includes(c.id) || c.id === a.category_id
+                        );
+                        if (!assignedCats.length && a.category?.name_en) {
+                          return <span>🏷️ {a.category.name_en}</span>;
+                        }
+                        return assignedCats.map((c) => (
+                          <span key={c.id} className="rounded-full bg-muted border px-2 py-0.5 text-[11px] font-medium text-foreground">
+                            🏷️ {c.name_en}
+                          </span>
+                        ));
+                      })()
+                    )}
                     <span>Filed: {new Date(a.created_at).toLocaleDateString("en-IN")}</span>
                     <span>· 👁️ {a.views || 0} views</span>
                   </div>
@@ -572,23 +605,22 @@ function ReporterPanel() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs">Category</Label>
-                <select
-                  className={sel}
-                  value={form.category_id}
-                  onChange={(e) => setForm((p) => ({ ...p, category_id: e.target.value }))}
-                >
-                  <option value="">Select Category</option>
-                  {cats.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name_en}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div>
+              <CategoryMultiSelect
+                categories={cats || []}
+                selectedIds={form.category_ids || []}
+                primaryId={form.category_id || (form.category_ids?.[0] ?? null)}
+                onChange={(ids, primary) => {
+                  setForm((prev) => ({
+                    ...prev,
+                    category_ids: ids,
+                    category_id: primary || ids[0] || "",
+                  }));
+                }}
+              />
+            </div>
 
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs">District</Label>
                 <Input

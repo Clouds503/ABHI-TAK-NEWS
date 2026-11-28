@@ -126,12 +126,16 @@ export type ArticleCard = {
   village?: string | null;
   town: { slug: string; name_hi: string; name_en: string } | null;
   category: { slug: string; name_hi: string; name_en: string } | null;
+  category_id?: string | null;
+  category_ids?: string[] | null;
+  categories?: { id?: string; slug: string; name_hi: string; name_en: string }[] | null;
 };
 
 export type ArticleDetail = ArticleCard & {
   body_hi: string | null;
   body_en: string | null;
   category_id: string | null;
+  category_ids?: string[] | null;
   district?: string | null;
   city?: string | null;
   village?: string | null;
@@ -145,16 +149,23 @@ export const articleQuery = (slug: string) =>
     queryFn: async () => {
       let { data, error } = await supabase
         .from("articles")
-        .select(`${ARTICLE_COLS}, body_hi, body_en, category_id, gallery, video_url`)
+        .select(`${ARTICLE_COLS}, body_hi, body_en, category_id, category_ids, gallery, video_url`)
         .eq("slug", slug)
         .maybeSingle();
       if (error) {
-        // Fallback if gallery or video_url columns not yet present in remote db
+        // Fallback if category_ids, gallery or video_url columns not yet present in remote db
         let fb = await supabase
           .from("articles")
-          .select(`${ARTICLE_COLS}, body_hi, body_en, category_id, gallery`)
+          .select(`${ARTICLE_COLS}, body_hi, body_en, category_id, gallery, video_url`)
           .eq("slug", slug)
           .maybeSingle();
+        if (fb.error) {
+          fb = await supabase
+            .from("articles")
+            .select(`${ARTICLE_COLS}, body_hi, body_en, category_id, gallery`)
+            .eq("slug", slug)
+            .maybeSingle();
+        }
         if (fb.error) {
           fb = await supabase
             .from("articles")
@@ -175,7 +186,7 @@ export const articleQuery = (slug: string) =>
         if (altSlug !== slug) {
           const altRes = await supabase
             .from("articles")
-            .select(`${ARTICLE_COLS}, body_hi, body_en, category_id, gallery, video_url`)
+            .select(`${ARTICLE_COLS}, body_hi, body_en, category_id, category_ids, gallery, video_url`)
             .eq("slug", altSlug)
             .maybeSingle();
           if (altRes.data) {
@@ -217,6 +228,21 @@ export const liveQuery = queryOptions({
   },
 });
 
+export type AdItem = {
+  id: string;
+  title: string;
+  advertiser: string | null;
+  image_url: string;
+  link_url: string | null;
+  campaign_type: string;
+  media_type: string;
+  video_url: string | null;
+  placement: string;
+  device_visibility: "all" | "mobile" | "desktop";
+  aspect_ratio?: string;
+  auto_sizing?: boolean;
+};
+
 export const adsQuery = (placement: string) =>
   queryOptions({
     queryKey: ["ads", placement],
@@ -230,7 +256,9 @@ export const adsQuery = (placement: string) =>
       ];
       const { data, error } = await supabase
         .from("advertisements")
-        .select("id,title,advertiser,image_url,link_url,campaign_type,media_type,video_url,placement,device_visibility")
+        .select(
+          "id,title,advertiser,image_url,link_url,campaign_type,media_type,video_url,placement,device_visibility,aspect_ratio,auto_sizing",
+        )
         .in("placement", placementVariants)
         .eq("is_active", true)
         .or(`starts_at.is.null,starts_at.lte.${now}`)
@@ -239,8 +267,21 @@ export const adsQuery = (placement: string) =>
         .limit(10);
 
       if (error) {
-        if (error.message.includes("device_visibility")) {
-          const { data: fbData, error: fbError } = await supabase
+        // Fallback without aspect_ratio/auto_sizing if not in remote DB
+        const { data: fbData, error: fbError } = await supabase
+          .from("advertisements")
+          .select(
+            "id,title,advertiser,image_url,link_url,campaign_type,media_type,video_url,placement,device_visibility",
+          )
+          .in("placement", placementVariants)
+          .eq("is_active", true)
+          .or(`starts_at.is.null,starts_at.lte.${now}`)
+          .or(`ends_at.is.null,ends_at.gt.${now}`)
+          .order("created_at", { ascending: false })
+          .limit(10);
+
+        if (fbError) {
+          const { data: rawData, error: rawError } = await supabase
             .from("advertisements")
             .select("id,title,advertiser,image_url,link_url,campaign_type,media_type,video_url,placement")
             .in("placement", placementVariants)
@@ -249,20 +290,33 @@ export const adsQuery = (placement: string) =>
             .or(`ends_at.is.null,ends_at.gt.${now}`)
             .order("created_at", { ascending: false })
             .limit(10);
-          if (fbError) throw fbError;
-          return (fbData ?? []).map((row) => ({
+          if (rawError) throw rawError;
+          return (rawData ?? []).map((row) => ({
             ...row,
             device_visibility: (row.placement.endsWith("_desktop")
               ? "desktop"
               : row.placement.endsWith("_mobile")
                 ? "mobile"
                 : "all") as "all" | "mobile" | "desktop",
-          }));
+            aspect_ratio: "auto",
+            auto_sizing: true,
+          })) as AdItem[];
         }
-        throw error;
+
+        return (fbData ?? []).map((row) => ({
+          ...row,
+          device_visibility: (row.device_visibility ||
+            (row.placement.endsWith("_desktop")
+              ? "desktop"
+              : row.placement.endsWith("_mobile")
+                ? "mobile"
+                : "all")) as "all" | "mobile" | "desktop",
+          aspect_ratio: "auto",
+          auto_sizing: true,
+        })) as AdItem[];
       }
 
-      return (data ?? []).map((row) => ({
+      return (data ?? []).map((row: any) => ({
         ...row,
         device_visibility: (row.device_visibility ||
           (row.placement.endsWith("_desktop")
@@ -270,7 +324,9 @@ export const adsQuery = (placement: string) =>
             : row.placement.endsWith("_mobile")
               ? "mobile"
               : "all")) as "all" | "mobile" | "desktop",
-      }));
+        aspect_ratio: row.aspect_ratio || "auto",
+        auto_sizing: row.auto_sizing ?? true,
+      })) as AdItem[];
     },
     staleTime: 5 * 60_000,
   });

@@ -18,6 +18,7 @@ export type FilterState = {
   town?: string | undefined;
   village?: string | undefined;
   category?: string | undefined;
+  categories?: string[] | undefined;
   datePreset?: ("all" | "today" | "week" | "month") | undefined;
   fromDate?: string | undefined;
   toDate?: string | undefined;
@@ -48,7 +49,11 @@ export function getActiveFilterCount(filters: FilterState): number {
   let count = 0;
   if (filters.town) count++;
   if (filters.village) count++;
-  if (filters.category) count++;
+  if (filters.categories && filters.categories.length > 0) {
+    count += filters.categories.length;
+  } else if (filters.category) {
+    count++;
+  }
   if (filters.datePreset && filters.datePreset !== "all") count++;
   return count;
 }
@@ -90,6 +95,7 @@ export function FilterDrawer({ filters, onFiltersChange, triggerClassName }: Fil
       town: undefined,
       village: undefined,
       category: undefined,
+      categories: [],
       datePreset: "all",
       fromDate: undefined,
       toDate: undefined,
@@ -226,42 +232,66 @@ export function FilterDrawer({ filters, onFiltersChange, triggerClassName }: Fil
 
           {/* Categories Selector */}
           <div>
-            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              {lang === "en" ? "Category" : "श्रेणी"}
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                {lang === "en" ? "Categories (Select One or More)" : "श्रेणियाँ (एक या अधिक चुनें)"}
+              </label>
+              {(draft.categories?.length ?? 0) > 0 && (
+                <span className="text-[11px] font-semibold text-primary">
+                  {draft.categories!.length} {lang === "en" ? "selected" : "चयनित"}
+                </span>
+              )}
+            </div>
             <div className="no-scrollbar mt-2 flex flex-wrap gap-1.5">
               <button
                 type="button"
-                onClick={() => setDraft((p) => ({ ...p, category: undefined }))}
+                onClick={() => setDraft((p) => ({ ...p, category: undefined, categories: [] }))}
                 className={cn(
                   "rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
-                  !draft.category
+                  !draft.category && (!draft.categories || draft.categories.length === 0)
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted text-foreground hover:bg-muted/80",
                 )}
               >
                 {lang === "en" ? "All Categories" : "सभी श्रेणियाँ"}
               </button>
-              {categories?.map((cat) => (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() =>
-                    setDraft((p) => ({
-                      ...p,
-                      category: p.category === cat.slug ? undefined : cat.slug,
-                    }))
-                  }
-                  className={cn(
-                    "rounded-full px-3 py-1.5 text-xs font-semibold transition-colors",
-                    draft.category === cat.slug
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-foreground hover:bg-muted/80",
-                  )}
-                >
-                  {pick(cat.name_hi, cat.name_en)}
-                </button>
-              ))}
+              {categories?.map((cat) => {
+                const isSelected =
+                  draft.categories && draft.categories.length > 0
+                    ? draft.categories.includes(cat.slug)
+                    : draft.category === cat.slug;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => {
+                      const currentSelected =
+                        draft.categories && draft.categories.length > 0
+                          ? draft.categories
+                          : draft.category
+                            ? [draft.category]
+                            : [];
+                      const next = currentSelected.includes(cat.slug)
+                        ? currentSelected.filter((s) => s !== cat.slug)
+                        : [...currentSelected, cat.slug];
+                      setDraft((p) => ({
+                        ...p,
+                        categories: next,
+                        category: next[0] || undefined,
+                      }));
+                    }}
+                    className={cn(
+                      "rounded-full px-3 py-1.5 text-xs font-semibold transition-colors inline-flex items-center gap-1",
+                      isSelected
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-foreground hover:bg-muted/80",
+                    )}
+                  >
+                    {isSelected && <Check className="h-3 w-3" />}
+                    <span>{pick(cat.name_hi, cat.name_en)}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -371,19 +401,42 @@ export function ActiveFilterChips({
         </span>
       )}
 
-      {selectedCategory && (
-        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
-          {pick(selectedCategory.name_hi, selectedCategory.name_en)}
-          <button
-            type="button"
-            onClick={() => onFiltersChange({ ...filters, category: undefined })}
-            aria-label="Remove category filter"
-            className="hover:opacity-70"
-          >
-            <X className="h-3 w-3" />
-          </button>
-        </span>
-      )}
+      {/* Multi-category chips */}
+      {(() => {
+        const catSlugs =
+          filters.categories && filters.categories.length > 0
+            ? filters.categories
+            : filters.category
+              ? [filters.category]
+              : [];
+        return catSlugs.map((slug) => {
+          const catObj = categories?.find((c) => c.slug === slug);
+          if (!catObj) return null;
+          return (
+            <span
+              key={slug}
+              className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary"
+            >
+              {pick(catObj.name_hi, catObj.name_en)}
+              <button
+                type="button"
+                onClick={() => {
+                  const next = catSlugs.filter((s) => s !== slug);
+                  onFiltersChange({
+                    ...filters,
+                    categories: next,
+                    category: next[0] || undefined,
+                  });
+                }}
+                aria-label={`Remove ${catObj.name_en} filter`}
+                className="hover:opacity-70"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          );
+        });
+      })()}
 
       {filters.datePreset && filters.datePreset !== "all" && dateLabels[filters.datePreset] && (
         <span className="inline-flex shrink-0 items-center gap-1 rounded-full border bg-muted px-2.5 py-1 text-xs font-semibold text-foreground">

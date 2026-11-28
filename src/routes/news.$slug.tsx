@@ -12,13 +12,24 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { articleQuery, articlesQuery } from "@/lib/queries";
+import { articleQuery, articlesQuery, categoriesQuery } from "@/lib/queries";
 import { useI18n, timeAgo } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 import { img, getShareImageUrl } from "@/lib/media";
 import { supabase } from "@/integrations/supabase/client";
 import { ArticleRow, Meta, Empty, AdSlot } from "@/components/news";
 import { ArticleGalleryView } from "@/components/ArticleGalleryView";
+import {
+  NewsShareDialog,
+  NewsShareBar,
+  shareToWhatsApp,
+  shareToFacebook,
+  shareToTwitter,
+  shareToTelegram,
+  copyArticleLink,
+  shareNativeDevice,
+  type ShareableArticle,
+} from "@/components/NewsShareDialog";
 import { Button } from "@/components/ui/button";
 import { cn, cleanArticleBody } from "@/lib/utils";
 import { useDoubleTap } from "@/lib/useDoubleTap";
@@ -119,6 +130,17 @@ function ArticlePage() {
     show: false,
   });
   const [fontSize, setFontSize] = useState<"normal" | "large">("normal");
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const { data: allCats } = useQuery(categoriesQuery);
+
+  const activeCats = (() => {
+    if (a?.categories && a.categories.length > 0) return a.categories;
+    if (a?.category_ids && a.category_ids.length > 0 && allCats) {
+      const matched = allCats.filter((c) => a.category_ids!.includes(c.id));
+      if (matched.length > 0) return matched;
+    }
+    return a?.category ? [a.category] : [];
+  })();
 
   // Track article telemetry view on mount
   useEffect(() => {
@@ -226,15 +248,17 @@ function ArticlePage() {
     return `https://abhitak.in/news/${a.slug}`;
   };
 
+  const shareableArticle: ShareableArticle = {
+    id: a?.id,
+    title: pick(a?.title_hi, a?.title_en) || "Abhitak News",
+    summary: pick(a?.summary_hi, a?.summary_en),
+    slug: a?.slug || slug,
+    coverUrl: a?.cover_url || (a?.gallery?.[0] as any)?.url,
+    url: getShareUrl(),
+  };
+
   const share = async () => {
-    const url = getShareUrl();
-    if (navigator.share)
-      await navigator.share({ title: pick(a.title_hi, a.title_en), url }).catch(() => {});
-    else {
-      await navigator.clipboard.writeText(url);
-      toast.success("Link copied");
-    }
-    void trackEngagement("share", "article", a.id);
+    setShareDialogOpen(true);
   };
 
   const toggleSave = async () => {
@@ -248,32 +272,6 @@ function ArticlePage() {
       void trackEngagement("bookmark", "article", a.id);
     }
     qc.invalidateQueries({ queryKey: ["bookmark"] });
-  };
-
-  const copyArticleLink = async () => {
-    const url = getShareUrl();
-    await navigator.clipboard.writeText(url);
-    toast.success(lang === "en" ? "Link copied" : "लिंक कॉपी हो गया");
-    void trackEngagement("share", "article", a.id);
-  };
-
-  const shareWhatsApp = () => {
-    if (!a) return;
-    const url = getShareUrl();
-    const text = encodeURIComponent(`${pick(a.title_hi, a.title_en)}\n${url}`);
-    window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
-    void trackEngagement("share", "article", a.id);
-  };
-
-  const shareTwitter = () => {
-    if (!a) return;
-    const url = getShareUrl();
-    const title = pick(a.title_hi, a.title_en) ?? "";
-    window.open(
-      `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`,
-      "_blank",
-    );
-    void trackEngagement("share", "article", a.id);
   };
 
   const body = cleanArticleBody(pick(a.body_hi, a.body_en));
@@ -345,7 +343,7 @@ function ArticlePage() {
 
             {/* Share button */}
             <Button
-              onClick={share}
+              onClick={() => setShareDialogOpen(true)}
               variant="ghost"
               size="icon"
               className="h-9 w-9 rounded-full"
@@ -358,6 +356,20 @@ function ArticlePage() {
 
         <div className="px-4">
           <Meta a={a} />
+          {activeCats.length > 0 && (
+            <div className="mt-2.5 flex flex-wrap gap-1.5">
+              {activeCats.map((cat) => (
+                <Link
+                  key={cat.slug}
+                  to="/news"
+                  search={{ category: cat.slug }}
+                  className="rounded-full bg-primary/10 hover:bg-primary/20 text-primary px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider transition-colors"
+                >
+                  {pick(cat.name_hi, cat.name_en)}
+                </Link>
+              ))}
+            </div>
+          )}
           <h1 className="mt-3 text-[28px] font-bold leading-[1.25]">
             {pick(a.title_hi, a.title_en)}
           </h1>
@@ -428,6 +440,9 @@ function ArticlePage() {
           </div>
         )}
 
+        {/* Mobile Story Share Options */}
+        <NewsShareBar article={shareableArticle} className="my-6 mx-4" />
+
         {/* Mobile Article Inline Ad / Promotion */}
         <AdSlot placement="article_inline" device="mobile" />
 
@@ -451,7 +466,25 @@ function ArticlePage() {
             {t("home")}
           </Link>
           <span>/</span>
-          {a.category && (
+          {activeCats.length > 0 ? (
+            <>
+              <div className="inline-flex items-center gap-1 flex-wrap">
+                {activeCats.map((cat, idx) => (
+                  <span key={cat.slug} className="inline-flex items-center gap-1">
+                    <Link
+                      to="/news"
+                      search={{ category: cat.slug }}
+                      className="hover:text-primary transition-colors"
+                    >
+                      {pick(cat.name_hi, cat.name_en)}
+                    </Link>
+                    {idx < activeCats.length - 1 && <span className="opacity-40">,</span>}
+                  </span>
+                ))}
+              </div>
+              <span>/</span>
+            </>
+          ) : a.category ? (
             <>
               <Link
                 to="/news"
@@ -462,7 +495,7 @@ function ArticlePage() {
               </Link>
               <span>/</span>
             </>
-          )}
+          ) : null}
           {a.town && (
             <>
               <Link
@@ -532,36 +565,78 @@ function ArticlePage() {
             {/* WhatsApp Share Button */}
             <button
               type="button"
-              onClick={shareWhatsApp}
+              onClick={() => shareToWhatsApp(shareableArticle)}
               aria-label="Share on WhatsApp"
-              className="flex flex-col items-center gap-1 group"
+              title="Share on WhatsApp"
+              className="flex flex-col items-center gap-1 group cursor-pointer"
             >
               <div className="h-11 w-11 rounded-full grid place-items-center border border-emerald-200 bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:border-emerald-800 hover:scale-105 transition-transform shadow-xs">
                 <MessageCircle className="h-5 w-5" />
               </div>
             </button>
 
+            {/* Facebook Share Button */}
+            <button
+              type="button"
+              onClick={() => shareToFacebook(shareableArticle)}
+              aria-label="Share on Facebook"
+              title="Share on Facebook"
+              className="flex flex-col items-center gap-1 group cursor-pointer"
+            >
+              <div className="h-11 w-11 rounded-full grid place-items-center border border-blue-200 bg-blue-50 text-[#1877F2] dark:bg-blue-950/40 dark:border-blue-800 hover:scale-105 transition-transform shadow-xs">
+                <span className="font-sans font-bold text-sm">f</span>
+              </div>
+            </button>
+
             {/* Twitter / X Share Button */}
             <button
               type="button"
-              onClick={shareTwitter}
+              onClick={() => shareToTwitter(shareableArticle)}
               aria-label="Share on X"
-              className="flex flex-col items-center gap-1 group"
+              title="Share on X"
+              className="flex flex-col items-center gap-1 group cursor-pointer"
             >
               <div className="h-11 w-11 rounded-full grid place-items-center border border-border bg-card text-foreground hover:border-primary transition-colors shadow-xs">
                 <span className="font-serif font-black text-sm">𝕏</span>
               </div>
             </button>
 
+            {/* Telegram Share Button */}
+            <button
+              type="button"
+              onClick={() => shareToTelegram(shareableArticle)}
+              aria-label="Share on Telegram"
+              title="Share on Telegram"
+              className="flex flex-col items-center gap-1 group cursor-pointer"
+            >
+              <div className="h-11 w-11 rounded-full grid place-items-center border border-sky-200 bg-sky-50 text-[#229ED9] dark:bg-sky-950/40 dark:border-sky-800 hover:scale-105 transition-transform shadow-xs">
+                <Send className="h-4 w-4 fill-current -rotate-12 translate-x-0.5" />
+              </div>
+            </button>
+
             {/* Copy Link Button */}
             <button
               type="button"
-              onClick={copyArticleLink}
+              onClick={() => copyArticleLink(shareableArticle, lang)}
               aria-label="Copy link"
-              className="flex flex-col items-center gap-1 group"
+              title="Copy link"
+              className="flex flex-col items-center gap-1 group cursor-pointer"
             >
               <div className="h-11 w-11 rounded-full grid place-items-center border border-border bg-card text-muted-foreground hover:text-foreground hover:border-primary transition-colors shadow-xs">
                 <Copy className="h-4 w-4" />
+              </div>
+            </button>
+
+            {/* More Share Options Dialog Button */}
+            <button
+              type="button"
+              onClick={() => setShareDialogOpen(true)}
+              aria-label="More share options"
+              title="More share options"
+              className="flex flex-col items-center gap-1 group cursor-pointer"
+            >
+              <div className="h-11 w-11 rounded-full grid place-items-center border border-primary/30 bg-primary/5 text-primary hover:bg-primary/15 transition-colors shadow-xs">
+                <Share2 className="h-4 w-4" />
               </div>
             </button>
 
@@ -658,6 +733,9 @@ function ArticlePage() {
             {a.gallery && (a.gallery as any[]).length > 0 && (
               <ArticleGalleryView items={a.gallery as any} variant="desktop" />
             )}
+
+            {/* Desktop Story Share Options */}
+            <NewsShareBar article={shareableArticle} className="my-6" />
 
             {/* Desktop Article Inline Ad / Promotion */}
             <div className="pt-4">
@@ -785,6 +863,12 @@ function ArticlePage() {
           </div>
         )}
       </div>
+
+      <NewsShareDialog
+        open={shareDialogOpen}
+        onOpenChange={setShareDialogOpen}
+        article={shareableArticle}
+      />
     </article>
   );
 }

@@ -35,6 +35,7 @@ import { img } from "@/lib/media";
 import { townsQuery } from "@/lib/queries";
 import { uploadMedia } from "@/lib/upload";
 import { exportToCsv, sanitizeExportFilename } from "@/lib/export-data";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -56,12 +57,55 @@ import type { Database } from "@/integrations/supabase/types";
 
 type Campaign = Database["public"]["Tables"]["advertisements"]["Row"] & {
   device_visibility?: string | null;
+  aspect_ratio?: string | null;
+  auto_sizing?: boolean | null;
   town?: { name_en: string } | null;
 };
 
 type CampaignKind = "advertisement" | "promotion";
 type MediaKind = "image" | "video";
 export type DeviceVisibility = "all" | "mobile" | "desktop";
+export type AdAspectRatio = "auto" | "16:9" | "3:1" | "1:1" | "4:3" | "8:1";
+
+export const AD_ASPECT_RATIOS: Record<
+  AdAspectRatio,
+  {
+    label: string;
+    description: string;
+    badge: string;
+  }
+> = {
+  auto: {
+    label: "Auto Sizing (Responsive / Creative Natural Ratio)",
+    description: "Container dynamically adapts to the image dimensions without cropping logos, text, or contacts.",
+    badge: "Auto Sizing",
+  },
+  "16:9": {
+    label: "16:9 Landscape (Widescreen)",
+    description: "Standard landscape banner, ideal for Home In-Feed, Article Story, and Video ads.",
+    badge: "16:9 Landscape",
+  },
+  "3:1": {
+    label: "3:1 Panoramic Billboard",
+    description: "Wide desktop header/hero billboard banner across the full page width.",
+    badge: "3:1 Billboard",
+  },
+  "1:1": {
+    label: "1:1 Square Card",
+    description: "Square display unit, recommended for Desktop Sidebar and Instagram creatives.",
+    badge: "1:1 Square",
+  },
+  "4:3": {
+    label: "4:3 Classic (300×250 Rectangle)",
+    description: "Standard medium rectangle ad for sidebars and article in-feed placement.",
+    badge: "4:3 Rectangle",
+  },
+  "8:1": {
+    label: "8:1 Thin Leaderboard",
+    description: "Slim horizontal strip banner, ideal for Global Header navigation bar.",
+    badge: "8:1 Leaderboard",
+  },
+};
 
 export const PLACEMENTS: Record<
   string,
@@ -166,6 +210,8 @@ const empty = {
   link_url: "",
   placement: "home_top",
   device_visibility: "all" as DeviceVisibility,
+  aspect_ratio: "auto" as AdAspectRatio,
+  auto_sizing: true,
   town_id: "",
   starts_at: "",
   ends_at: "",
@@ -181,6 +227,8 @@ const campaignSchema = z
     video_url: z.string(),
     placement: z.string(),
     device_visibility: z.enum(["all", "mobile", "desktop"]).default("all"),
+    aspect_ratio: z.enum(["auto", "16:9", "3:1", "1:1", "4:3", "8:1"]).default("auto"),
+    auto_sizing: z.boolean().default(true),
     starts_at: z.string(),
     ends_at: z.string(),
   })
@@ -326,6 +374,8 @@ function AdsAdmin() {
             link_url: campaign.link_url ?? "",
             placement: getBasePlacement(campaign.placement),
             device_visibility: getDeviceVisibility(campaign),
+            aspect_ratio: (campaign.aspect_ratio || "auto") as AdAspectRatio,
+            auto_sizing: campaign.auto_sizing ?? true,
             town_id: campaign.town_id ?? "",
             starts_at: toLocalInput(campaign.starts_at),
             ends_at: toLocalInput(campaign.ends_at),
@@ -438,6 +488,8 @@ function AdsAdmin() {
       link_url: form.link_url.trim() || null,
       placement: effPlacement,
       device_visibility: form.device_visibility,
+      aspect_ratio: form.aspect_ratio || "auto",
+      auto_sizing: form.auto_sizing ?? true,
       town_id: form.town_id || null,
       starts_at: form.starts_at ? new Date(form.starts_at).toISOString() : new Date().toISOString(),
       ends_at: form.ends_at ? new Date(form.ends_at).toISOString() : null,
@@ -448,17 +500,17 @@ function AdsAdmin() {
       ? await supabase.from("advertisements").update(row).eq("id", form.id).select("id").single()
       : await supabase.from("advertisements").insert(row).select("id").single();
 
-    // Fallback if device_visibility column not present in DB
-    if (result.error && result.error.message.includes("device_visibility")) {
-      const { device_visibility: _omit, ...rowWithoutDev } = row;
+    // Fallback if aspect_ratio, auto_sizing or device_visibility columns not present in DB
+    if (result.error && (result.error.message.includes("aspect_ratio") || result.error.message.includes("auto_sizing") || result.error.message.includes("device_visibility"))) {
+      const { aspect_ratio: _ar, auto_sizing: _as, device_visibility: _omit, ...rowWithoutNewCols } = row;
       result = form.id
         ? await supabase
             .from("advertisements")
-            .update(rowWithoutDev)
+            .update(rowWithoutNewCols)
             .eq("id", form.id)
             .select("id")
             .single()
-        : await supabase.from("advertisements").insert(rowWithoutDev).select("id").single();
+        : await supabase.from("advertisements").insert(rowWithoutNewCols).select("id").single();
     }
 
     if (result.error) {
@@ -710,7 +762,7 @@ function AdsAdmin() {
             >
               {/* Media Preview Box */}
               <div>
-                <div className="relative aspect-[3/1] bg-muted overflow-hidden">
+                <div className="relative aspect-[16/9] sm:aspect-[3/1] bg-muted overflow-hidden flex items-center justify-center">
                   {campaign.media_type === "video" && campaign.video_url ? (
                     <video
                       src={campaign.video_url}
@@ -726,12 +778,16 @@ function AdsAdmin() {
                       alt=""
                       loading="lazy"
                       decoding="async"
-                      className="h-full w-full object-cover"
+                      className={cn(
+                        campaign.auto_sizing || campaign.aspect_ratio === "auto"
+                          ? "h-full w-full object-contain"
+                          : "h-full w-full object-cover"
+                      )}
                     />
                   )}
 
-                  {/* Device Tag on Media */}
-                  <div className="absolute top-2 left-2 flex gap-1.5">
+                  {/* Device & Aspect Ratio Tags on Media */}
+                  <div className="absolute top-2 left-2 flex flex-wrap gap-1.5">
                     <span className="inline-flex items-center gap-1 rounded-full bg-black/75 px-2.5 py-0.5 text-[10px] font-semibold text-white backdrop-blur-xs">
                       {dev === "mobile" ? (
                         <>
@@ -746,6 +802,9 @@ function AdsAdmin() {
                           <MonitorSmartphone className="h-3 w-3 text-emerald-400" /> Mobile & Desktop
                         </>
                       )}
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-black/75 px-2.5 py-0.5 text-[10px] font-semibold text-amber-300 backdrop-blur-xs">
+                      📐 {AD_ASPECT_RATIOS[(campaign.aspect_ratio as AdAspectRatio) || "auto"]?.badge || "Auto"}
                     </span>
                   </div>
 
@@ -1015,6 +1074,49 @@ function AdsAdmin() {
               </p>
             </div>
 
+            {/* Aspect Ratio & Auto Sizing (NEW) */}
+            <div>
+              <div className="flex items-center justify-between">
+                <Label>Creative Aspect Ratio & Auto Sizing *</Label>
+                <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={form.auto_sizing}
+                    onChange={(e) => setForm((c) => ({ ...c, auto_sizing: e.target.checked }))}
+                    className="rounded border-input text-primary"
+                  />
+                  <span>Auto-fit without cropping</span>
+                </label>
+              </div>
+
+              <div className="mt-2 grid grid-cols-3 gap-2">
+                {(Object.keys(AD_ASPECT_RATIOS) as AdAspectRatio[]).map((ratioKey) => {
+                  const ratioInfo = AD_ASPECT_RATIOS[ratioKey];
+                  const selected = form.aspect_ratio === ratioKey;
+                  return (
+                    <button
+                      key={ratioKey}
+                      type="button"
+                      onClick={() => setForm((c) => ({ ...c, aspect_ratio: ratioKey }))}
+                      className={`flex flex-col items-center justify-center rounded-lg border p-2 text-center transition-all cursor-pointer ${
+                        selected
+                          ? "border-primary bg-primary/10 text-primary font-bold shadow-xs"
+                          : "border-border bg-card text-muted-foreground hover:border-border/80 hover:bg-muted/30"
+                      }`}
+                    >
+                      <span className="text-xs font-semibold">{ratioInfo.badge}</span>
+                      <span className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">
+                        {ratioKey === "auto" ? "Responsive" : ratioKey}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                {AD_ASPECT_RATIOS[form.aspect_ratio]?.description}
+              </p>
+            </div>
+
             <div>
               <Label>Campaign Title *</Label>
               <Input
@@ -1096,14 +1198,46 @@ function AdsAdmin() {
                   controls
                   playsInline
                   preload="metadata"
-                  className="mt-2 aspect-video w-full rounded-md bg-ink"
+                  className={cn(
+                    "mt-2 w-full rounded-md bg-ink",
+                    form.aspect_ratio === "1:1"
+                      ? "aspect-square max-w-[320px] mx-auto"
+                      : form.aspect_ratio === "3:1"
+                        ? "aspect-[3/1]"
+                        : form.aspect_ratio === "4:3"
+                          ? "aspect-[4/3] max-w-[360px] mx-auto"
+                          : form.aspect_ratio === "8:1"
+                            ? "aspect-[8/1]"
+                            : "aspect-video"
+                  )}
                 />
               ) : form.image_url ? (
-                <img
-                  src={img(form.image_url)}
-                  alt="Campaign preview"
-                  className="mt-2 aspect-[3/1] w-full rounded-md object-cover border"
-                />
+                <div
+                  className={cn(
+                    "mt-2 w-full overflow-hidden rounded-md border bg-black/5 dark:bg-black/40 flex items-center justify-center p-1",
+                    form.aspect_ratio === "1:1"
+                      ? "aspect-square max-w-[320px] mx-auto"
+                      : form.aspect_ratio === "3:1"
+                        ? "aspect-[3/1]"
+                        : form.aspect_ratio === "4:3"
+                          ? "aspect-[4/3] max-w-[360px] mx-auto"
+                          : form.aspect_ratio === "8:1"
+                            ? "aspect-[8/1]"
+                            : form.aspect_ratio === "16:9"
+                              ? "aspect-video"
+                              : "min-h-[160px] max-h-[300px]"
+                  )}
+                >
+                  <img
+                    src={img(form.image_url)}
+                    alt="Campaign preview"
+                    className={cn(
+                      form.auto_sizing || form.aspect_ratio === "auto"
+                        ? "w-full h-auto max-h-[290px] object-contain rounded"
+                        : "h-full w-full object-cover rounded"
+                    )}
+                  />
+                </div>
               ) : null}
             </div>
 

@@ -5,10 +5,11 @@ import { Capacitor } from "@capacitor/core";
 import { toast } from "sonner";
 import { useI18n, timeAgo } from "@/lib/i18n";
 import { img, homeBanner } from "@/lib/media";
-import { adsQuery, type ArticleCard } from "@/lib/queries";
+import { adsQuery, categoriesQuery, type ArticleCard } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 import { useDoubleTap } from "@/lib/useDoubleTap";
 import { HeartPop } from "@/components/HeartPop";
+import { QuickShareButton } from "@/components/NewsShareDialog";
 import { toggleGuestLike } from "@/lib/guest-likes";
 import { trackEngagement } from "@/lib/analytics";
 
@@ -21,6 +22,17 @@ function getCampaignEventEndpoint(): string {
 
 export function Meta({ a, light }: { a: ArticleCard; light?: boolean }) {
   const { pick, lang } = useI18n();
+  const { data: allCats } = useQuery(categoriesQuery);
+
+  const activeCats = (() => {
+    if (a.categories && a.categories.length > 0) return a.categories;
+    if (a.category_ids && a.category_ids.length > 0 && allCats) {
+      const matched = allCats.filter((c) => a.category_ids!.includes(c.id));
+      if (matched.length > 0) return matched;
+    }
+    return a.category ? [a.category] : [];
+  })();
+
   return (
     <div
       className={cn(
@@ -28,9 +40,14 @@ export function Meta({ a, light }: { a: ArticleCard; light?: boolean }) {
         light ? "text-ink-foreground/75" : "text-muted-foreground",
       )}
     >
-      {a.category && (
-        <span className="font-semibold uppercase tracking-wide text-primary">
-          {pick(a.category.name_hi, a.category.name_en)}
+      {activeCats.length > 0 && (
+        <span className="inline-flex flex-wrap items-center gap-1 font-semibold uppercase tracking-wide text-primary">
+          {activeCats.map((cat, i) => (
+            <span key={cat.slug || i}>
+              {pick(cat.name_hi, cat.name_en)}
+              {i < activeCats.length - 1 && <span className="opacity-50 mx-1">/</span>}
+            </span>
+          ))}
         </span>
       )}
       {(a.district || a.town) && (
@@ -215,8 +232,17 @@ export function ArticleRow({ a, index }: { a: ArticleCard; index?: number }) {
         <h3 className="line-clamp-3 text-[17px] font-bold leading-snug">
           {pick(a.title_hi, a.title_en)}
         </h3>
-        <div className="mt-2">
+        <div className="mt-2 flex items-center justify-between gap-2">
           <Meta a={a} />
+          <QuickShareButton
+            article={{
+              id: a.id,
+              title: pick(a.title_hi, a.title_en),
+              summary: pick(a.summary_hi, a.summary_en),
+              slug: a.slug,
+              coverUrl: a.cover_url,
+            }}
+          />
         </div>
       </Link>
       <div
@@ -297,8 +323,17 @@ export function FeatureCard({ a }: { a: ArticleCard }) {
         />
       </div>
       <Link to="/news/$slug" params={{ slug: a.slug }} className="block">
-        <div className="mt-2">
+        <div className="mt-2 flex items-center justify-between gap-2">
           <Meta a={a} />
+          <QuickShareButton
+            article={{
+              id: a.id,
+              title: pick(a.title_hi, a.title_en),
+              summary: pick(a.summary_hi, a.summary_en),
+              slug: a.slug,
+              coverUrl: a.cover_url,
+            }}
+          />
         </div>
         <h3 className="mt-1 line-clamp-2 text-[17px] font-bold leading-snug">
           {pick(a.title_hi, a.title_en)}
@@ -334,6 +369,79 @@ export function Ticker({ items }: { items: ArticleCard[] }) {
       </div>
     </div>
   );
+}
+
+export function getAdSizingStyles(
+  placement: string,
+  aspectRatio?: string | null,
+  autoSizing: boolean = true,
+) {
+  const ratio = aspectRatio || "auto";
+
+  if (ratio === "auto") {
+    switch (placement) {
+      case "sidebar_ad":
+        return {
+          containerClass: "w-full max-w-[360px] mx-auto min-h-[200px] aspect-[4/3] sm:aspect-square md:aspect-auto",
+          mediaClass: autoSizing ? "w-full h-auto max-h-[380px] object-contain" : "w-full h-full object-cover",
+        };
+      case "header_banner":
+        return {
+          containerClass: "w-full aspect-[8/1] min-h-[50px] max-h-[120px]",
+          mediaClass: autoSizing ? "w-full h-auto max-h-[120px] object-contain" : "w-full h-full object-cover",
+        };
+      case "home_top":
+        return {
+          containerClass: "w-full aspect-[16/9] md:aspect-[3/1] max-h-[420px]",
+          mediaClass: autoSizing ? "w-full h-auto max-h-[420px] object-contain md:object-cover" : "w-full h-full object-cover",
+        };
+      case "article_inline":
+        return {
+          containerClass: "w-full aspect-[16/9] max-h-[380px]",
+          mediaClass: autoSizing ? "w-full h-auto max-h-[380px] object-contain" : "w-full h-full object-cover",
+        };
+      case "jan_ki_awaaz":
+      case "home_inline":
+      default:
+        return {
+          containerClass: "w-full aspect-[16/9] md:aspect-[3/1] max-h-[340px]",
+          mediaClass: autoSizing ? "w-full h-auto max-h-[340px] object-contain md:object-cover" : "w-full h-full object-cover",
+        };
+    }
+  }
+
+  switch (ratio) {
+    case "16:9":
+      return {
+        containerClass: "w-full aspect-video",
+        mediaClass: autoSizing ? "w-full h-full object-contain" : "w-full h-full object-cover",
+      };
+    case "3:1":
+      return {
+        containerClass: "w-full aspect-[3/1]",
+        mediaClass: autoSizing ? "w-full h-full object-contain" : "w-full h-full object-cover",
+      };
+    case "1:1":
+      return {
+        containerClass: "w-full aspect-square max-w-[400px] mx-auto",
+        mediaClass: autoSizing ? "w-full h-full object-contain" : "w-full h-full object-cover",
+      };
+    case "4:3":
+      return {
+        containerClass: "w-full aspect-[4/3] max-w-[480px] mx-auto",
+        mediaClass: autoSizing ? "w-full h-full object-contain" : "w-full h-full object-cover",
+      };
+    case "8:1":
+      return {
+        containerClass: "w-full aspect-[8/1] min-h-[50px]",
+        mediaClass: autoSizing ? "w-full h-full object-contain" : "w-full h-full object-cover",
+      };
+    default:
+      return {
+        containerClass: "w-full aspect-[16/9] md:aspect-[3/1]",
+        mediaClass: "w-full h-full object-cover",
+      };
+  }
 }
 
 export function AdSlot({
@@ -407,6 +515,9 @@ export function AdSlot({
           : ""
       : "";
 
+  const isAutoSizing = (ad as any).auto_sizing !== false;
+  const sizing = getAdSizingStyles(placement, (ad as any).aspect_ratio, isAutoSizing);
+
   return (
     <div ref={adRef} className={cn("mx-4 my-6", responsiveClass, className)}>
       <div className="mb-1 text-[10px] uppercase tracking-widest text-muted-foreground flex items-center justify-between">
@@ -418,7 +529,10 @@ export function AdSlot({
         target="_blank"
         rel="noopener sponsored"
         onClick={recordClick}
-        className="relative block overflow-hidden rounded-xl border bg-ink shadow-xs hover:opacity-95 transition-opacity"
+        className={cn(
+          "relative block overflow-hidden rounded-xl border bg-ink shadow-xs hover:opacity-95 transition-all flex items-center justify-center",
+          sizing.containerClass,
+        )}
       >
         {ad.media_type === "video" && ad.video_url ? (
           <video
@@ -429,24 +543,24 @@ export function AdSlot({
             loop
             playsInline
             preload="none"
-            className="aspect-[3/1] w-full object-cover"
+            className={cn(sizing.mediaClass)}
           />
         ) : (
           <img
             src={img(ad.image_url)}
             alt={ad.title}
-            width={600}
-            height={200}
+            width={1200}
+            height={600}
             loading="lazy"
             decoding="async"
-            className="aspect-[3/1] w-full object-cover"
+            className={cn(sizing.mediaClass)}
           />
         )}
-        <div className="absolute inset-0 flex flex-col justify-center bg-gradient-to-r from-ink/85 to-transparent p-4 text-ink-foreground">
-          <div className="text-[11px] uppercase tracking-widest text-ink-foreground/70">
+        <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-ink/90 via-ink/25 to-transparent p-4 text-ink-foreground pointer-events-none">
+          <div className="text-[11px] uppercase tracking-widest text-ink-foreground/75 font-semibold">
             {ad.campaign_type === "promotion" ? "Promotion" : ad.advertiser}
           </div>
-          <div className="mt-1 max-w-[75%] text-lg font-bold leading-tight drop-shadow-xs">{ad.title}</div>
+          <div className="mt-1 max-w-[85%] text-base sm:text-lg font-bold leading-tight drop-shadow-xs">{ad.title}</div>
         </div>
       </a>
     </div>
