@@ -18,6 +18,7 @@ import {
   Mic,
   Megaphone,
   Download,
+  Radar,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -358,6 +359,84 @@ function SiteIdentityQuickCard() {
   );
 }
 
+function CityRadarQuickCard() {
+  const { data: radarTowns } = useQuery({
+    queryKey: ["admin-radar-towns-summary"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("towns")
+        .select("*")
+        .order("sort_order", { ascending: true });
+      return data ?? [];
+    },
+  });
+
+  const activeTowns = radarTowns?.filter((t) => t.is_active) ?? [];
+
+  return (
+    <div className="mt-8 rounded-xl border bg-card p-5 shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-4">
+        <div className="flex items-center gap-3">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Radar className="h-6 w-6" />
+          </span>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-bold">City Radar (सिटीज रडार)</h2>
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                {activeTowns.length} Active Cities
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Local city pills and desktop 7-column highlight grid for regional news stories.
+            </p>
+          </div>
+        </div>
+
+        <Button asChild size="sm" className="gap-2 bg-primary font-semibold">
+          <Link to="/admin/cities">
+            <Radar className="h-4 w-4" />
+            Edit City Radar & Order →
+          </Link>
+        </Button>
+      </div>
+
+      <div className="mt-4">
+        <div className="no-scrollbar flex snap-x gap-2 overflow-x-auto py-1">
+          {activeTowns.map((tw, idx) => (
+            <Link
+              key={tw.id}
+              to="/admin/cities"
+              className="group flex h-[68px] w-[116px] shrink-0 snap-start flex-col justify-between rounded-lg border bg-muted/40 p-2.5 transition-all hover:border-primary hover:bg-card hover:shadow-xs"
+              title={`Click to edit ${tw.name_en} (${tw.name_hi})`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold truncate group-hover:text-primary transition-colors">
+                  {tw.name_hi}
+                </span>
+                <span className="text-[10px] font-mono text-muted-foreground">#{tw.sort_order}</span>
+              </div>
+              <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                <span className="truncate">{tw.name_en}</span>
+                {idx < 7 && (
+                  <span className="rounded bg-primary/10 px-1 text-[9px] font-semibold text-primary">
+                    Top 7
+                  </span>
+                )}
+              </div>
+            </Link>
+          ))}
+          {activeTowns.length === 0 && (
+            <div className="py-4 text-center text-xs text-muted-foreground w-full">
+              No active towns in City Radar. Click "Edit City Radar & Order →" to configure.
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Dashboard() {
   const qc = useQueryClient();
   const navigate = useNavigate();
@@ -400,6 +479,17 @@ function Dashboard() {
       ).data ?? [],
   });
 
+  const { data: radarCount } = useQuery({
+    queryKey: ["admin-radar-count"],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("towns")
+        .select("id", { count: "exact", head: true })
+        .eq("is_active", true);
+      return count ?? 0;
+    },
+  });
+
   const syncServerVideos = useServerFn(syncYouTubeVideosServerFn);
   useRealtimeVideos();
   useRealtimeReels();
@@ -433,7 +523,7 @@ function Dashboard() {
     { label: "Total issues", v: data?.issues, to: "/admin/moderation" },
     { label: "Published news", v: data?.published, to: "/admin/articles" },
     { label: "Drafts", v: data?.drafts, to: "/admin/articles" },
-    { label: "Videos", v: data?.videos, to: "/admin/analytics" },
+    { label: "City Radar (Active)", v: radarCount ? `${radarCount} Cities` : "—", to: "/admin/cities", special: true },
     { label: "Active ads & promotions", v: data?.ads, to: "/admin/ads" },
     { label: "Newsroom Analytics", v: "View →", to: "/admin/analytics", special: true },
     { label: "Registered users", v: undefined, to: "/admin/users" },
@@ -597,6 +687,8 @@ function Dashboard() {
         })}
         </div>
       </div>
+
+      <CityRadarQuickCard />
 
       <SiteIdentityQuickCard />
 

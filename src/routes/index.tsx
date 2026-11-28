@@ -12,6 +12,7 @@ import {
   type ArticleCard,
 } from "@/lib/queries";
 import { useI18n, timeAgo } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth";
 import { img, homeBanner } from "@/lib/media";
 import { SectionHead } from "@/components/AppShell";
 import {
@@ -110,6 +111,7 @@ function DesktopArticleCard({ a }: { a: ArticleCard }) {
 
 function Home() {
   const { t, pick, lang } = useI18n();
+  const { isAdmin } = useAuth();
   useRealtimeVideos();
   useRealtimeReels();
 
@@ -267,7 +269,11 @@ function Home() {
               )}
 
               {/* District Radar */}
-              <SectionHead title={t("districtRadar")} />
+              <SectionHead
+                title={t("districtRadar")}
+                to={isAdmin ? "/admin/cities" : undefined}
+                action={isAdmin ? "Edit ⚙️" : undefined}
+              />
               <div className="no-scrollbar flex snap-x gap-2 overflow-x-auto px-4">
                 {towns?.map((tw) => {
                   const n = counts.get(tw.slug) ?? 0;
