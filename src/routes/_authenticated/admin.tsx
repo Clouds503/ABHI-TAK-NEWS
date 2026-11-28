@@ -20,6 +20,7 @@ import {
   Mic,
   Shield,
   Layers,
+  Radar,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Logo } from "@/components/AppShell";
@@ -94,7 +95,7 @@ function AdminLayout() {
         { to: "/admin/users", label: "Users & Staff Roles", icon: Users },
         { to: "/admin/ads", label: "Ads & Promotions", icon: BadgeIndianRupee },
         { to: "/admin/categories", label: "Categories", icon: FolderTree },
-        { to: "/admin/cities", label: "Cities & Towns", icon: Building2 },
+        { to: "/admin/cities", label: "City Radar & Towns", icon: Radar },
       ]
     : [];
 
